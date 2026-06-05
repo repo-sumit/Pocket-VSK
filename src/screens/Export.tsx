@@ -88,8 +88,8 @@ export default function Export() {
               {Object.entries(entity.meta.gsqac.domains).map(([d, v]) => (
                 <div key={d} className="text-center">
                   <div className="text-2xs font-semibold text-neutral-400">{d}</div>
-                  <ProgressBar value={v as number} status={statusFromScore(v as number)} className="my-1" height={6} />
-                  <div className="text-xs font-bold tnum text-neutral-700">{pct(v as number, lang)}</div>
+                  <ProgressBar value={v} status={statusFromScore(v)} className="my-1" height={6} />
+                  <div className="text-xs font-bold tnum text-neutral-700">{pct(v, lang)}</div>
                 </div>
               ))}
             </div>

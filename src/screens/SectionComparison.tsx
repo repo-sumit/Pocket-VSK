@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import type { Entity } from "@/types";
 import { dataProvider } from "@/data/provider";
 import { getKpiAmong } from "@/engine";
-import { useScope, useFramework, useKpiRecord, PERIODS } from "@/hooks";
+import { useScope, useFramework, useKpiRecord, usePmShri, PERIODS } from "@/hooks";
 import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { rag } from "@/lib/colors";
@@ -20,12 +20,16 @@ export default function SectionComparison() {
   // class-level KPIs only (those that exist at the section level)
   const classKpis = useMemo(() => fw.kpis.filter((k) => k.level_representation.section === "class"), [fw]);
 
-  // resolve the school context for the current scope
+  // resolve the school context for the current scope (cached + PM-SHRI-aware)
+  const pmShri = usePmShri();
   const schoolList = useMemo<Entity[]>(() => {
     if (!entity) return [];
-    if (["state", "district", "block", "cluster"].includes(entity.level)) return dataProvider.getDescendants(entity.id, "school");
+    if (["state", "district", "block", "cluster"].includes(entity.level)) {
+      dataProvider.setSchoolFilter(pmShri);
+      return dataProvider.getSchoolDescendants(entity.id);
+    }
     return [];
-  }, [entity]);
+  }, [entity, pmShri]);
 
   const derivedSchool = useMemo<Entity | undefined>(() => {
     if (!entity) return undefined;

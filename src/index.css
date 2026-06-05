@@ -11,6 +11,22 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Accessibility: honour the OS "reduce motion" preference — disable the
+   fade/scale/bar-grow/ring count-up animations and smooth scroll. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 html {
   scroll-behavior: smooth;
   text-rendering: optimizeLegibility;

@@ -1,4 +1,4 @@
-import type { KpiDef, Level, Role } from "@/types";
+import type { Level, Role } from "@/types";
 import { PUBLISHED } from "./kpiCatalog";
 
 /**
@@ -31,7 +31,7 @@ export function kpiAppliesToRole(kpiId: string, role: Role): boolean {
 export function kpiAppliesAtLevel(kpiId: string, level: Level): boolean {
   if (level === "grade" || level === "section") return GRADE_SECTION_KPIS.has(kpiId);
   // school and up: applies only where the published table has a value ("—" ⇒ no)
-  return PUBLISHED[kpiId]?.[level as keyof (typeof PUBLISHED)[string]] != null;
+  return PUBLISHED[kpiId]?.[level] != null;
 }
 
 /** A KPI shows on an entity's scorecard when it applies to BOTH the viewing
@@ -40,18 +40,13 @@ export function kpiApplies(kpiId: string, role: Role, level: Level): boolean {
   return kpiAppliesToRole(kpiId, role) && kpiAppliesAtLevel(kpiId, level);
 }
 
-/** the applicable KPI list for a (role, level) — used to filter scorecards. */
-export function applicableKpis(kpis: KpiDef[], role: Role, level: Level): KpiDef[] {
-  return kpis.filter((k) => kpiApplies(k.id, role, level));
-}
-
 /** count KPIs must be compared as "avg per school", not raw totals (which grow
  *  with scope). schoolsImplied derives the per-school divisor from the published
  *  ratios so every level lands on the same per-school scale. */
 export function schoolsImplied(kpiId: string, level: Level): number {
   const p = PUBLISHED[kpiId];
   const school = p?.school;
-  const here = p?.[level as keyof typeof p];
+  const here = p?.[level];
   if (!school || here == null || school === 0) return 1;
-  return Math.max(1, Math.round((here as number) / school));
+  return Math.max(1, Math.round(here / school));
 }

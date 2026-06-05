@@ -69,8 +69,8 @@ export default function DomainView() {
             {Object.entries(gsqac.domains).map(([d, v]) => (
               <div key={d} className="flex items-center gap-3">
                 <span className="w-8 text-xs font-bold text-neutral-500">{d}</span>
-                <ProgressBar value={v as number} status={statusFromScore(v as number)} className="flex-1" />
-                <span className="w-12 text-right text-xs font-bold tnum text-neutral-700">{pct(v as number, lang)}</span>
+                <ProgressBar value={v} status={statusFromScore(v)} className="flex-1" />
+                <span className="w-12 text-right text-xs font-bold tnum text-neutral-700">{pct(v, lang)}</span>
               </div>
             ))}
           </div>

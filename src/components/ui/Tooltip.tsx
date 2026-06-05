@@ -1,4 +1,3 @@
-import { type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Info } from "./Icon";
 
@@ -12,20 +11,6 @@ export function InfoTooltip({ text, className, size = 13 }: { text: string; clas
       <span
         role="tooltip"
         className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-1.5 hidden w-[min(14rem,calc(100vw-1.5rem))] -translate-x-1/2 rounded-lg bg-neutral-900 px-3 py-2 text-2xs font-medium leading-snug text-white shadow-raised group-hover:block group-focus-within:block"
-      >
-        {text}
-      </span>
-    </span>
-  );
-}
-
-export function Tooltip({ text, children }: { text: string; children: ReactNode }) {
-  return (
-    <span className="group relative inline-flex">
-      {children}
-      <span
-        role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-1.5 hidden w-[min(13rem,calc(100vw-1.5rem))] -translate-x-1/2 rounded-lg bg-neutral-900 px-3 py-2 text-2xs font-medium leading-snug text-white shadow-raised group-hover:block group-focus-within:block"
       >
         {text}
       </span>

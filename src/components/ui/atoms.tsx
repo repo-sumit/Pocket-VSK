@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 import type { RagStatus, Trend, Unit } from "@/types";
 import { cn } from "@/lib/cn";
 import { rag } from "@/lib/colors";
@@ -7,7 +7,7 @@ import type { Lang } from "@/i18n";
 import { ArrowDownRight, ArrowUpRight, Minus } from "./Icon";
 
 // ── Card ──────────────────────────────────────────────────────────────
-export function Card({ className, children, as: As = "div", ...rest }: { className?: string; children: ReactNode; as?: any } & Record<string, unknown>) {
+export function Card({ className, children, as: As = "div", ...rest }: { className?: string; children: ReactNode; as?: ElementType } & Record<string, unknown>) {
   return (
     <As className={cn("card", className)} {...rest}>
       {children}
@@ -55,17 +55,12 @@ export function Button({
 // ── ProgressBar ───────────────────────────────────────────────────────
 export function ProgressBar({ value, status = "green", className, height = 8, label }: { value: number; status?: RagStatus; className?: string; height?: number; label?: string }) {
   const pctVal = Math.round(Math.max(0, Math.min(100, value)));
+  // labelled → real progressbar semantics; unlabelled → decorative (hidden from AT)
+  const aria = label
+    ? ({ role: "progressbar", "aria-valuenow": pctVal, "aria-valuemin": 0, "aria-valuemax": 100, "aria-label": label } as const)
+    : ({ "aria-hidden": true } as const);
   return (
-    <div
-      className={cn("w-full overflow-hidden rounded-full bg-neutral-100", className)}
-      style={{ height }}
-      role="progressbar"
-      aria-valuenow={pctVal}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label={label}
-      aria-hidden={label ? undefined : true}
-    >
+    <div className={cn("w-full overflow-hidden rounded-full bg-neutral-100", className)} style={{ height }} {...aria}>
       <div className={cn("h-full rounded-full transition-[width] duration-700 ease-out", rag(status).bg)} style={{ width: `${pctVal}%` }} />
     </div>
   );

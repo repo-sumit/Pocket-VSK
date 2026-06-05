@@ -8,6 +8,7 @@ export const en = {
     loading: "Loading…", notFound: "Nothing here", close: "Close", apply: "Apply",
     liveData: "live data", score: "score", notTracked: "Not tracked at this level",
     clear: "Clear", selectAll: "Select all", clearAll: "Clear all", noMatches: "No matches",
+    refineHint: "+{n} more · type to filter",
     scoreAria: "Score {n} of {outOf}, grade {grade}", noDataAria: "No data; not tracked at this level",
   },
   status: { green: "On track", amber: "Needs attention", red: "At risk", na: "Not tracked" },

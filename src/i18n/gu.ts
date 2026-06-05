@@ -10,6 +10,7 @@ export const gu: Dict = {
     loading: "લોડ થઈ રહ્યું છે…", notFound: "અહીં કંઈ નથી", close: "બંધ કરો", apply: "લાગુ કરો",
     liveData: "વાસ્તવિક ડેટા", score: "સ્કોર", notTracked: "આ સ્તરે ટ્રેક થતું નથી",
     clear: "સાફ કરો", selectAll: "બધા પસંદ કરો", clearAll: "બધા સાફ કરો", noMatches: "કોઈ મેળ નથી",
+    refineHint: "+{n} વધુ · ફિલ્ટર કરવા ટાઇપ કરો",
     scoreAria: "{outOf} માંથી {n} સ્કોર, ગ્રેડ {grade}", noDataAria: "ડેટા નથી; આ સ્તરે ટ્રેક થતું નથી",
   },
   status: { green: "સારી સ્થિતિ", amber: "ધ્યાન જરૂરી", red: "જોખમમાં", na: "ટ્રેક થતું નથી" },

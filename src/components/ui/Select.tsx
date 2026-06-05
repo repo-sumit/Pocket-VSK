@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { useT } from "@/i18n";
+import { locNum } from "@/lib/format";
 import { Check, ChevronDown, Search } from "./Icon";
 
 export interface SelectOption { value: string; label: string }
@@ -27,7 +28,7 @@ export function Select({
   triggerClassName?: string;
   align?: "left" | "right";
 }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
@@ -44,6 +45,11 @@ export function Select({
     () => (q ? options.filter((o) => o.label.toLowerCase().includes(q.toLowerCase())) : options),
     [options, q],
   );
+  // PERF: only mount the first CAP rows (long lists e.g. ~1000 schools would
+  // otherwise mount ~1000 DOM nodes). The search box narrows the rest.
+  const CAP = 60;
+  const visible = filtered.length > CAP ? filtered.slice(0, CAP) : filtered;
+  const hidden = filtered.length - visible.length;
 
   // on open: clear the query, point the active row at the current selection, focus
   useEffect(() => {
@@ -55,7 +61,7 @@ export function Select({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  useEffect(() => { setActive((a) => Math.min(a, Math.max(0, filtered.length - 1))); }, [filtered.length]);
+  useEffect(() => { setActive((a) => Math.min(a, Math.max(0, visible.length - 1))); }, [visible.length]);
   useEffect(() => {
     if (open) document.getElementById(`${baseId}-opt-${active}`)?.scrollIntoView({ block: "nearest" });
   }, [active, open, baseId]);
@@ -65,17 +71,17 @@ export function Select({
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     switch (e.key) {
-      case "ArrowDown": e.preventDefault(); setActive((a) => Math.min(a + 1, filtered.length - 1)); break;
+      case "ArrowDown": e.preventDefault(); setActive((a) => Math.min(a + 1, visible.length - 1)); break;
       case "ArrowUp": e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); break;
       case "Home": e.preventDefault(); setActive(0); break;
-      case "End": e.preventDefault(); setActive(filtered.length - 1); break;
-      case "Enter": { e.preventDefault(); const o = filtered[active]; if (o) pick(o); break; }
+      case "End": e.preventDefault(); setActive(visible.length - 1); break;
+      case "Enter": { e.preventDefault(); const o = visible[active]; if (o) pick(o); break; }
       case "Escape": e.preventDefault(); close(); break;
       case "Tab": setOpen(false); break;
     }
   };
 
-  const activeId = filtered[active] ? `${baseId}-opt-${active}` : undefined;
+  const activeId = visible[active] ? `${baseId}-opt-${active}` : undefined;
 
   return (
     <div className={cn("relative", className)}>
@@ -139,8 +145,8 @@ export function Select({
               tabIndex={canSearch ? -1 : 0}
               className="max-h-56 overflow-auto outline-none"
             >
-              {filtered.length ? (
-                filtered.map((o, i) => {
+              {visible.length ? (
+                visible.map((o, i) => {
                   const isSel = o.value === value;
                   return (
                     <div
@@ -164,6 +170,9 @@ export function Select({
                 })
               ) : (
                 <p className="px-2.5 py-3 text-center text-xs text-neutral-400">{t("common.noMatches")}</p>
+              )}
+              {hidden > 0 && (
+                <p className="px-2.5 pb-1 pt-1.5 text-center text-2xs text-neutral-400">{t("common.refineHint", { n: locNum(hidden, lang) })}</p>
               )}
             </div>
           </div>

@@ -47,17 +47,6 @@ export function kpiStatus(value: number | null, kpi: KpiDef, benchmark: number |
   return statusFromScore(normalizedScore(value, kpi, benchmark), kpi.rag);
 }
 
-/** "% of target met" for the vs-benchmark display (direction-aware). */
-export function achievementVsBenchmark(
-  value: number | null,
-  benchmark: number | null,
-  direction: KpiDef["direction"],
-): number | null {
-  if (value == null || benchmark == null || benchmark === 0) return null;
-  const a = direction === "lower" ? (value <= 0 ? 120 : (benchmark / value) * 100) : (value / benchmark) * 100;
-  return Math.round(a);
-}
-
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));
 }

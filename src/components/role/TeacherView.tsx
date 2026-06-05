@@ -5,9 +5,10 @@ import { hash } from "@/data/prng";
 import { dataProvider } from "@/data/provider";
 import { getKpiRecord } from "@/engine";
 import { useScorecard, useFramework, PERIODS } from "@/hooks";
+import { COMPLIANCE } from "@/config/complianceBands";
 import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
-import { rag } from "@/lib/colors";
+import { rag, accent } from "@/lib/colors";
 import { pct, locNum } from "@/lib/format";
 import { Card, SectionLabel, Badge, ProgressBar } from "@/components/ui/atoms";
 import { Sparkline } from "@/components/ui/Sparkline";
@@ -40,13 +41,14 @@ export function TeacherView({ entity, greeting }: { entity: Entity; greeting: st
   );
   if (!sc) return null;
 
+  const tpdTarget = COMPLIANCE.tpdTargetHours; // 50 hrs/yr (config, mirrors tpd_hours KPI target)
   const anchor = entity.meta.anchor ?? 0.6;
-  const tpdDone = Math.min(50, Math.round(28 + anchor * 22)); // hrs / 50
+  const tpdDone = Math.min(tpdTarget, Math.round(28 + anchor * 22));
   const sevenDay = Array.from({ length: 7 }, (_, i) => 0.4 + ((hash(entity.id + "d" + i) % 100) / 100) * 1.8 + i * 0.12);
   const atRisk = Math.max(0, Math.round(2 + (1 - anchor) * 6));
   const evalUp = Math.round(3 + anchor * 8);
-  const baseline = 60;
-  const needsImprovement = (sc.overallPercent ?? 100) < baseline;
+  const tpdStatus = tpdDone >= COMPLIANCE.training.green ? "green" : tpdDone >= COMPLIANCE.training.amber ? "amber" : "red";
+  const needsImprovement = (sc.overallPercent ?? 100) < COMPLIANCE.needsImprovementBelow;
 
   const teacherName = entity.meta.teacher_name ?? "";
   const scoredDomains = sc.domainScores.filter((d) => d.percent != null);
@@ -98,13 +100,13 @@ export function TeacherView({ entity, greeting }: { entity: Entity; greeting: st
         <Card className="card-pad">
           <div className="flex items-center gap-2"><GraduationCap size={18} className="text-violet-600" /><SectionLabel>{t("teacher.tpdJourney")}</SectionLabel></div>
           <div className="mt-3 flex items-end justify-between">
-            <div className="text-2xl font-extrabold tnum text-neutral-900">{locNum(tpdDone, lang)}<span className="text-base font-semibold text-neutral-400"> / 50 {t("teacher.hrs")}</span></div>
-            <Badge status={tpdDone >= 50 ? "green" : tpdDone >= 40 ? "amber" : "red"} className="!text-2xs">{Math.round((tpdDone / 50) * 100)}%</Badge>
+            <div className="text-2xl font-extrabold tnum text-neutral-900">{locNum(tpdDone, lang)}<span className="text-base font-semibold text-neutral-400"> / {locNum(tpdTarget, lang)} {t("teacher.hrs")}</span></div>
+            <Badge status={tpdStatus} className="!text-2xs">{Math.round((tpdDone / tpdTarget) * 100)}%</Badge>
           </div>
-          <ProgressBar value={(tpdDone / 50) * 100} status={tpdDone >= 50 ? "green" : tpdDone >= 40 ? "amber" : "red"} className="mt-2" height={10} label={t("teacher.tpdJourney")} />
+          <ProgressBar value={(tpdDone / tpdTarget) * 100} status={tpdStatus} className="mt-2" height={10} label={t("teacher.tpdJourney")} />
           <div className="mt-3">
             <div className="mb-1 text-2xs font-semibold text-neutral-400">{t("teacher.sevenDay")}</div>
-            <Sparkline data={sevenDay} color="#8B5CF6" width={220} height={36} />
+            <Sparkline data={sevenDay} color={accent("purple").hex} width={220} height={36} />
           </div>
         </Card>
 

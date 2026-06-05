@@ -23,6 +23,11 @@ export function RatingRing({
   const [draw, setDraw] = useState(0);
   const raf = useRef<number>();
   useEffect(() => {
+    // respect reduced-motion: jump straight to the final value, no count-up
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setDraw(clamped);
+      return;
+    }
     const start = performance.now();
     const dur = 900;
     const tick = (t: number) => {

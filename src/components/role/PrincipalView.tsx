@@ -4,6 +4,7 @@ import type { Entity, RagStatus } from "@/types";
 import { hash } from "@/data/prng";
 import { dataProvider } from "@/data/provider";
 import { useScorecard, useKpiRecord, useOverallBenchmark } from "@/hooks";
+import { COMPLIANCE } from "@/config/complianceBands";
 import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { rag } from "@/lib/colors";
@@ -37,21 +38,21 @@ export function PrincipalView({ entity, greeting }: { entity: Entity; greeting: 
   const stateDomainPct: Record<string, number | null> = state?.domainPercents ?? {};
   const scored = sc.domainScores.filter((d) => d.weightage > 0 && d.records.length > 0);
 
-  // ── compliance telemetry (FCR-3.6) ──
-  const enrolment = entity.meta.enrolment ?? 200;
-  const teachers = entity.meta.teachers ?? 10;
+  // ── compliance telemetry (FCR-3.6) — bands/defaults from config/complianceBands ──
+  const enrolment = entity.meta.enrolment ?? COMPLIANCE.defaults.enrolment;
+  const teachers = entity.meta.teachers ?? COMPLIANCE.defaults.teachers;
   const ptr = Math.round(enrolment / teachers);
-  const maxClass = Math.max(...sections.map((s) => (s.meta.students as number) ?? 24), 24);
+  const maxClass = Math.max(...sections.map((s) => s.meta.students ?? 24), 24);
   const avgTraining = Math.round(28 + (entity.meta.anchor ?? 0.6) * 22);
   const chronicCount = chronic?.value ?? 0;
 
-  const ptrStatus: RagStatus = ptr <= 27 ? "green" : ptr <= 32 ? "amber" : "red";
-  const enrolStatus: RagStatus = enrolment >= 150 ? "green" : enrolment >= 120 ? "amber" : "red";
-  const classStatus: RagStatus = maxClass <= 30 ? "green" : maxClass <= 33 ? "amber" : "red";
-  const trainStatus: RagStatus = avgTraining >= 50 ? "green" : avgTraining >= 40 ? "amber" : "red";
+  const ptrStatus: RagStatus = ptr <= COMPLIANCE.ptr.green ? "green" : ptr <= COMPLIANCE.ptr.amber ? "amber" : "red";
+  const enrolStatus: RagStatus = enrolment >= COMPLIANCE.enrolment.green ? "green" : enrolment >= COMPLIANCE.enrolment.amber ? "amber" : "red";
+  const classStatus: RagStatus = maxClass <= COMPLIANCE.classCapacity.green ? "green" : maxClass <= COMPLIANCE.classCapacity.amber ? "amber" : "red";
+  const trainStatus: RagStatus = avgTraining >= COMPLIANCE.training.green ? "green" : avgTraining >= COMPLIANCE.training.amber ? "amber" : "red";
 
-  // ── GSQAC scoreboard (FCR-3.2) ──
-  const gsqacAchieved = gsqac?.value != null ? Math.round((gsqac.value / 100) * 1000) : null;
+  // ── GSQAC scoreboard (FCR-3.2) — /100 quality score shown out of gsqacDisplayMax ──
+  const gsqacAchieved = gsqac?.value != null ? Math.round((gsqac.value / 100) * COMPLIANCE.gsqacDisplayMax) : null;
 
   // ── attendance gap detector (FCR-3.4) ──
   const classes = sections.map((s) => ({ s, submitted: hash(s.id + "att-today") % 5 !== 0 }));
@@ -115,7 +116,7 @@ export function PrincipalView({ entity, greeting }: { entity: Entity; greeting: 
           <div className="flex items-center gap-2"><Award size={18} className="text-pink-600" /><SectionLabel>{t("principal.gsqacScoreboard")}</SectionLabel></div>
           <div className="mt-3 flex items-end gap-2">
             <span className="text-4xl font-extrabold tnum text-neutral-900">{gsqacAchieved != null ? locNum(gsqacAchieved, lang) : t("common.na")}</span>
-            <span className="mb-1 text-lg font-semibold text-neutral-400">/ {locNum(1000, lang)}</span>
+            <span className="mb-1 text-lg font-semibold text-neutral-400">/ {locNum(COMPLIANCE.gsqacDisplayMax, lang)}</span>
           </div>
           {gsqac?.value != null && <ProgressBar value={gsqac.value} status={gsqac.status} className="mt-2" height={10} label={t("principal.gsqacScoreboard")} />}
           {gsqac?.deltaMoM != null && Math.abs(gsqac.deltaMoM) >= 0.1 && (
@@ -146,7 +147,7 @@ export function PrincipalView({ entity, greeting }: { entity: Entity; greeting: 
           <Compliance label={t("principal.classCapacity")} value={locNum(maxClass, lang)} hint={t("principal.classCapTarget")} status={classStatus} />
           <Compliance label={t("principal.enrolment")} value={locNum(enrolment, lang)} hint={t("principal.enrolTarget")} status={enrolStatus} />
           <Compliance label={t("principal.avgTraining")} value={`${locNum(avgTraining, lang)}h`} hint={t("principal.avgTrainTarget")} status={trainStatus} />
-          <Compliance className="col-span-2 lg:col-span-1" label={t("principal.chronicAbs")} value={locNum(chronicCount, lang)} hint={t("principal.sevenDayWindow")} status={chronicCount <= enrolment * 0.05 ? "green" : chronicCount <= enrolment * 0.1 ? "amber" : "red"} />
+          <Compliance className="col-span-2 lg:col-span-1" label={t("principal.chronicAbs")} value={locNum(chronicCount, lang)} hint={t("principal.sevenDayWindow")} status={chronicCount <= enrolment * COMPLIANCE.chronicPctOfEnrolment.green ? "green" : chronicCount <= enrolment * COMPLIANCE.chronicPctOfEnrolment.amber ? "amber" : "red"} />
         </div>
       </Card>
 

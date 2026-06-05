@@ -65,30 +65,11 @@ export function pct(value: number | null, lang: Lang = "en"): string {
   return `${locNum(Math.round(value), lang)}%`;
 }
 
-export function scoreOutOf100(value: number, lang: Lang = "en"): string {
-  return `${locNum(Math.round(value), lang)}`;
-}
-
 /** Time-based greeting key (FCR-1.2): 05–11 morning · 12–16 afternoon · else evening. */
 export function greetingKey(d: Date = new Date()): "morning" | "afternoon" | "evening" {
   const h = d.getHours();
   if (h >= 5 && h < 12) return "morning";
   if (h >= 12 && h < 17) return "afternoon";
   return "evening";
-}
-
-/** Infer the user's role purely from the ID's digit-length (login UX). */
-export function roleFromIdLength(id: string): import("@/types").Role | null {
-  const len = id.trim().replace(/\D/g, "").length;
-  if (id.trim().length !== len) return null; // non-numeric chars present
-  switch (len) {
-    case 2: return "state";
-    case 4: return "deo";
-    case 6: return "brc";
-    case 8: return "teacher";
-    case 10: return "crc";
-    case 11: return "principal";
-    default: return null;
-  }
 }
 
