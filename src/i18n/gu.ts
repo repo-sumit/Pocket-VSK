@@ -36,8 +36,11 @@ export const gu: Dict = {
   scorecard: {
     overall: "એકંદર સ્કોર", rating: "રેટિંગ", domainWise: "ડોમેન મુજબ સ્કોર", youVsParent: "તમે vs {level} સરેરાશ",
     needsAttention: "ધ્યાન જરૂરી", mostImproved: "સૌથી વધુ સુધારો", closeGap: "તફાવત ભરો",
-    viewDomain: "ડોમેન જુઓ", drillInto: "{label} માં જાઓ", contribution: "એકંદરમાં યોગદાન",
+    viewDomain: "ડોમેન જુઓ", drillInto: "{label} માં જાઓ", contribution: "યોગદાન",
     yourScope: "તમારું કાર્યક્ષેત્ર", explore: "નીચે અન્વેષણ કરો",
+    whatChanged: "આ અઠવાડિયે શું બદલાયું", steady: "સ્થિર અઠવાડિયું — કોઈ મોટો ફેરફાર નહીં.",
+    overallMoved: "આ અઠવાડિયે એકંદર {delta}", led: "{kpi} દ્વારા",
+    breakdown: "સ્કોર વિભાજન", weightPlaceholder: "વેઇટેજ: પ્લેસહોલ્ડર",
   },
   domain: { kpisIn: "{name} માં KPIs", achievedVsBench: "{value} vs {benchmark} બેન્ચમાર્ક", noKpis: "કોઈ KPI રૂપરેખાંકિત નથી." },
   kpi: {
@@ -46,6 +49,11 @@ export const gu: Dict = {
     weeklyTrend: "સાપ્તાહિક વલણ", noData: "આ સ્તરે ટ્રેક થતું નથી — NA તરીકે બતાવેલ.",
   },
   cascade: { title: "પ્રદર્શન સરખામણી", subtitle: "{name} દરેક સ્તરે — વિભાગથી રાજ્ય સુધી", overall: "સ્તરો વચ્ચે એકંદર સ્કોર" },
+  compare: {
+    title: "KPI સરખામણી", subtitle: "{name} ના બધા સૂચકો એક નજરમાં — સરખામણી માટે બીજી સંસ્થા ઉમેરો",
+    compareAgainst: "સામે સરખાવો", addComparison: "સરખામણી ઉમેરો", noOptions: "આ કાર્યક્ષેત્ર નીચે સરખાવવા કોઈ સંસ્થા નથી.",
+    comparingHint: "બધા સ્તરે જોવા KPI પર ટેપ કરો",
+  },
   section: {
     title: "વિભાગ સરખામણી", subtitle: "કોઈપણ KPI પર વર્ગના વિભાગો સરખાવો", choose: "KPI પસંદ કરો",
     chooseGrade: "વર્ગ પસંદ કરો", rank: "ક્રમ", yourSection: "તમારો વિભાગ", noSections: "આ કાર્યક્ષેત્ર હેઠળ કોઈ વિભાગ નથી.",

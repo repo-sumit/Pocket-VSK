@@ -72,7 +72,7 @@ export default function Login() {
               {step === "verify" ? (
                 <CheckCircle2 className="text-primary-500" size={28} />
               ) : (
-                <img src="/favicon.png" alt="Vidya Samiksha Kendra" className="h-11 w-11 object-contain" />
+                <img src="/logo-vsk.png" alt="Vidya Samiksha Kendra" className="h-11 w-11 object-contain" />
               )}
             </div>
 

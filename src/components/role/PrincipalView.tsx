@@ -12,6 +12,7 @@ import { Card, SectionLabel, ProgressBar, Button, StatusDot } from "@/components
 import { RatingRing } from "@/components/ui/RatingRing";
 import { RatingBadge } from "@/components/ui/RatingBadge";
 import { DomainBar } from "@/components/ui/DomainBar";
+import { VskBadge } from "@/components/ui/VskBadge";
 import { Award, Download, ShieldCheck, Target } from "@/components/ui/Icon";
 
 /**
@@ -76,16 +77,19 @@ export function PrincipalView({ entity, greeting }: { entity: Entity; greeting: 
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">{greeting}!</h1>
-        <p className="mt-0.5 text-sm text-neutral-500">{tn(entity.name, entity.name_gu)} · {entity.meta.code}{entity.meta.pmShri ? " · PM SHRI" : ""}</p>
+      <div className="flex items-center gap-3">
+        <VskBadge size={40} />
+        <div className="min-w-0">
+          <h1 className="text-xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">{greeting}!</h1>
+          <p className="mt-0.5 truncate text-sm text-neutral-500">{tn(entity.name, entity.name_gu)} · {entity.meta.code}{entity.meta.pmShri ? " · PM SHRI" : ""}</p>
+        </div>
       </div>
 
       {/* hero: school score + School vs State */}
       <div className="grid gap-4 lg:grid-cols-5">
         <Card className="card-pad flex flex-col items-center justify-center gap-2 lg:col-span-2">
           <SectionLabel>{t("scorecard.overall")}</SectionLabel>
-          <RatingRing percent={sc.overallPercent} grade={sc.grade} lang={lang} sublabel={sc.grade ? `${t("common.grade")} ${sc.grade}` : undefined} />
+          <RatingRing percent={sc.overallPercent} grade={sc.grade} lang={lang} sublabel={t("common.grade")} />
           {sc.grade && <RatingBadge grade={sc.grade} size="md" />}
         </Card>
 

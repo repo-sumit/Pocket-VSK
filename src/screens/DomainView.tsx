@@ -21,7 +21,8 @@ export default function DomainView() {
   if (!ds) return <Card className="card-pad text-sm text-neutral-500">{t("domain.noKpis")}</Card>;
 
   const a = accent(ds.domain.accent);
-  const gsqac = ds.domain.id === "quality" ? entity.meta.gsqac : undefined;
+  const gsqac = ds.domain.id === "a5" ? entity.meta.gsqac : undefined;
+  const subs = ds.domain.sub_domains ?? [];
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -67,15 +68,34 @@ export default function DomainView() {
         </Card>
       )}
 
-      {/* KPIs */}
-      <div>
-        <SectionLabel className="mb-2">{t("domain.kpisIn", { name: tn(ds.domain.name, ds.domain.name_gu) })}</SectionLabel>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {ds.records.map((r) => (
-            <KpiCard key={r.kpi.id} rec={r} name={tn(r.kpi.name, r.kpi.name_gu)} lang={lang} onClick={() => navigate(`/app/kpi/${r.kpi.id}`)} />
-          ))}
+      {/* KPIs — grouped by sub-domain when the 3-tier seam is configured */}
+      {subs.length > 0 ? (
+        <div className="space-y-5">
+          {subs.map((sub) => {
+            const recs = ds.records.filter((r) => r.kpi.sub_domain === sub.id);
+            if (!recs.length) return null;
+            return (
+              <div key={sub.id}>
+                <SectionLabel className="mb-2">{tn(sub.name, sub.name_gu)}</SectionLabel>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {recs.map((r) => (
+                    <KpiCard key={r.kpi.id} rec={r} name={tn(r.kpi.name, r.kpi.name_gu)} lang={lang} onClick={() => navigate(`/app/kpi/${r.kpi.id}`)} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </div>
+      ) : (
+        <div>
+          <SectionLabel className="mb-2">{t("domain.kpisIn", { name: tn(ds.domain.name, ds.domain.name_gu) })}</SectionLabel>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {ds.records.map((r) => (
+              <KpiCard key={r.kpi.id} rec={r} name={tn(r.kpi.name, r.kpi.name_gu)} lang={lang} onClick={() => navigate(`/app/kpi/${r.kpi.id}`)} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -87,6 +87,13 @@ export interface RatingBand {
   group?: "A" | "B" | "C" | "D";
 }
 
+/** middle tier of Domain > Sub-Domain > Indicator (configurable seam). */
+export interface SubDomainDef {
+  id: string;
+  name: string;
+  name_gu: string;
+}
+
 /** domains table. */
 export interface DomainDef {
   id: string;
@@ -97,6 +104,8 @@ export interface DomainDef {
   sort_order: number;
   icon?: string; // lucide icon name
   accent?: string; // soft tint key for cards
+  /** optional sub-domain grouping (3-tier seam; pending full breakdown). */
+  sub_domains?: SubDomainDef[];
   /** optional per-domain band override; falls back to framework bands. */
   rating_bands?: RatingBand[];
 }
@@ -105,6 +114,8 @@ export interface DomainDef {
 export interface KpiDef {
   id: string;
   domain_id: string;
+  /** optional middle tier — groups indicators within a domain. */
+  sub_domain?: string;
   name: string;
   name_gu: string;
   /** clarified "what this measures" description (shown in KPI detail). */
@@ -203,6 +214,8 @@ export interface Scorecard {
   framework: FrameworkConfig;
   /** null ⇒ no scored domain has data at this level → render explicit NA. */
   overallPercent: number | null;
+  /** overall change vs last week (the home "what changed" line). */
+  overallDeltaWoW: number | null;
   grade: string | null;
   gradeGroup: "A" | "B" | "C" | "D" | null;
   status: RagStatus;

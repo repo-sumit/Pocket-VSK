@@ -17,7 +17,7 @@ const ROOT = join(__dirname, "..");
 const CSV = join(ROOT, "..", "GSQAC", "gsqac 2024-25.csv");
 const OUT = join(ROOT, "src", "data", "seed");
 
-const N_DISTRICTS = 3, N_BLOCKS = 2, N_CLUSTERS = 3, N_SCHOOLS = 4;
+const N_DISTRICTS = 4, N_BLOCKS = 3, N_CLUSTERS = 4, N_SCHOOLS = 5;
 const PREFERRED = ["KACHCHH", "BANASKANTHA", "AHMEDABAD", "PATAN", "SURENDRANAGAR"];
 const STATE_CODE = "24"; // Gujarat
 

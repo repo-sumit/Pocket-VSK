@@ -9,6 +9,7 @@ import { rag } from "@/lib/colors";
 import { formatValue, pct } from "@/lib/format";
 import { Card, SectionLabel, Badge, StatusDot } from "@/components/ui/atoms";
 import { ComparisonBars, type CompareBar } from "@/components/ui/ComparisonBars";
+import { VskBadge } from "@/components/ui/VskBadge";
 
 export default function SectionComparison() {
   const { entity } = useScope();
@@ -148,9 +149,12 @@ function Select({ label, value, onChange, children }: { label: string; value: st
 
 function Header({ t }: { t: (k: string, v?: Record<string, string | number>) => string }) {
   return (
-    <div>
-      <h1 className="text-xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">{t("section.title")}</h1>
-      <p className="mt-0.5 text-sm text-neutral-500">{t("section.subtitle")}</p>
+    <div className="flex items-center gap-3">
+      <VskBadge size={40} />
+      <div>
+        <h1 className="text-xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">{t("section.title")}</h1>
+        <p className="mt-0.5 text-sm text-neutral-500">{t("section.subtitle")}</p>
+      </div>
     </div>
   );
 }

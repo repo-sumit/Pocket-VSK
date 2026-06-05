@@ -1,36 +1,46 @@
-import type { DomainDef, FrameworkConfig } from "@/types";
+import type { DomainDef, FrameworkConfig, SubDomainDef } from "@/types";
 import { GSQAC_BANDS } from "./ratingBands";
 import { VSK_KPIS } from "./kpiCatalog";
 
 const ALL_LEVELS = ["state", "district", "block", "cluster", "school", "grade", "section"] as const;
 
 /**
- * THE single Unified Portal framework. GSQAC and SQAF are folded in (GSQAC is
- * the A5 Accreditation & School-Quality domain). There is no user-facing
- * framework switcher — but the engine stays fully config-driven: adding a
- * domain/KPI here (or a Supabase row) renders it everywhere with no code
- * change. Domain colours follow the KPI definition file's legend.
+ * THE single Unified Portal framework — 5A (= GSQAC). A1–A5 only; SQAF and the
+ * old A6/District domains are gone. Engine stays fully config-driven (adding a
+ * domain/KPI/sub-domain is a config change, no code edit).
+ *
+ * ⚠ Domain weightages are PLACEHOLDERS pending State sign-off; they sum to 100%.
  */
+const WEIGHTAGE_PLACEHOLDER = true; // domain weightages below await State approval
+
+// A4 sub-domains: a configurable 3-tier seam (Domain > Sub-Domain > Indicator).
+// Placeholder grouping pending the full sub-domain/indicator breakdown (Chaitanya).
+const A4_SUBS: SubDomainDef[] = [
+  { id: "a4_schemes", name: "Schemes & Payments", name_gu: "યોજનાઓ અને ચુકવણી" },
+  { id: "a4_grievances", name: "Grievances & Issues", name_gu: "ફરિયાદો અને સમસ્યાઓ" },
+  { id: "a4_district", name: "District Tracking", name_gu: "જિલ્લા સ્તરનું ટ્રેકિંગ" },
+];
+
 const UNIFIED_DOMAINS: DomainDef[] = [
-  d("a1", "A1 · Attendance & Access", "A1 · હાજરી અને પહોંચ", 0.15, 0, "CalendarCheck", "blue"),
-  d("a2", "A2 · Assessment & Learning", "A2 · મૂલ્યાંકન અને અધ્યયન", 0.25, 1, "ClipboardCheck", "green"),
-  d("a3", "A3 · Adaptive Learning & Remediation", "A3 · અનુકૂલિત અધ્યયન અને ઉપચાર", 0.15, 2, "GraduationCap", "yellow"),
-  d("a4", "A4 · Administration & Service Delivery", "A4 · વહીવટ અને સેવા વિતરણ", 0.1, 3, "Building2", "orange"),
-  d("a5", "A5 · Accreditation & School Quality", "A5 · માન્યતા અને શાળા ગુણવત્તા", 0.2, 4, "Award", "pink"),
-  d("a6", "A6 · Governance, Monitoring & AI", "A6 · શાસન, દેખરેખ અને AI", 0.15, 5, "Gauge", "lightblue"),
-  // weightage 0 ⇒ informational only, excluded from the overall score.
-  d("district", "District Tracking", "જિલ્લા સ્તરનું ટ્રેકિંગ", 0, 6, "Map", "grey"),
+  d("a1", "A1 · Attendance & Access", "A1 · હાજરી અને પહોંચ", 0.2, 0, "CalendarCheck", "blue"),
+  d("a2", "A2 · Assessment & Learning", "A2 · મૂલ્યાંકન અને અધ્યયન", 0.3, 1, "ClipboardCheck", "green"),
+  d("a3", "A3 · TPD for Teachers", "A3 · શિક્ષક વ્યાવસાયિક વિકાસ", 0.1, 2, "GraduationCap", "yellow"),
+  d("a4", "A4 · Administration & Service Delivery", "A4 · વહીવટ અને સેવા વિતરણ", 0.2, 3, "Building2", "orange", A4_SUBS),
+  d("a5", "A5 · School Quality (GSQAC)", "A5 · શાળા ગુણવત્તા (GSQAC)", 0.2, 4, "Award", "pink"),
 ];
 
 export const UNIFIED_FRAMEWORK: FrameworkConfig = {
   id: "unified",
-  name: "Unified Portal · 6A",
-  name_gu: "Unified Portal · 6A",
+  name: "Unified Portal · 5A",
+  name_gu: "Unified Portal · 5A",
   levels: [...ALL_LEVELS],
   rating_bands: GSQAC_BANDS,
-  domains: UNIFIED_DOMAINS.map((dm) => ({ ...dm, framework: "unified" })),
+  domains: UNIFIED_DOMAINS,
   kpis: VSK_KPIS,
 };
+
+/** true when domain weightages are still placeholders (shown in the UI). */
+export const WEIGHTAGE_IS_PLACEHOLDER = WEIGHTAGE_PLACEHOLDER;
 
 function d(
   id: string,
@@ -40,8 +50,9 @@ function d(
   sort_order: number,
   icon: string,
   accent: string,
+  sub_domains?: SubDomainDef[],
 ): DomainDef {
-  return { id, framework: "unified", name, name_gu, weightage, sort_order, icon, accent };
+  return { id, framework: "unified", name, name_gu, weightage, sort_order, icon, accent, sub_domains };
 }
 
 export const DEFAULT_FRAMEWORK_ID = "unified";

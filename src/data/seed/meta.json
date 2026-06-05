@@ -10,27 +10,28 @@
     "student": 18
   },
   "shape": {
-    "districts": 3,
-    "blocksPerDistrict": 2,
-    "clustersPerBlock": 3,
-    "schoolsPerCluster": 4
+    "districts": 4,
+    "blocksPerDistrict": 3,
+    "clustersPerBlock": 4,
+    "schoolsPerCluster": 5
   },
   "counts": {
-    "total": 1828,
+    "total": 6065,
     "state": 1,
-    "district": 3,
-    "block": 6,
-    "cluster": 18,
-    "school": 72,
-    "grade": 576,
-    "section": 1152
+    "district": 4,
+    "block": 12,
+    "cluster": 48,
+    "school": 240,
+    "grade": 1920,
+    "section": 3840
   },
   "districts": [
     "Kachchh",
     "Banaskantha",
-    "Ahmedabad"
+    "Ahmedabad",
+    "Patan"
   ],
-  "pmShriSchools": 7,
+  "pmShriSchools": 35,
   "demoLogins": [
     {
       "role": "teacher",

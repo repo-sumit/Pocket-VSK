@@ -11,6 +11,7 @@ import { Sparkline } from "@/components/ui/Sparkline";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { InfoTooltip } from "@/components/ui/Tooltip";
 import { RatingBadge } from "@/components/ui/RatingBadge";
+import { VskBadge } from "@/components/ui/VskBadge";
 import { GraduationCap, Sparkles, AlertTriangle, BookOpen } from "@/components/ui/Icon";
 
 /**
@@ -39,13 +40,16 @@ export function TeacherView({ entity, greeting }: { entity: Entity; greeting: st
   return (
     <div className="space-y-5">
       {/* greeting + evaluation header */}
-      <div>
-        <h1 className="text-xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">
-          {greeting}{teacherName ? `, ${teacherName.split(" ")[0]}` : ""}!
-        </h1>
-        <p className="mt-0.5 text-sm text-neutral-500">
-          {t("levels.section")} {entity.name} · {sc.grade ? `${t("common.grade")} ${sc.grade}` : t("common.na")}
-        </p>
+      <div className="flex items-center gap-3">
+        <VskBadge size={40} />
+        <div className="min-w-0">
+          <h1 className="text-xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">
+            {greeting}{teacherName ? `, ${teacherName.split(" ")[0]}` : ""}!
+          </h1>
+          <p className="mt-0.5 text-sm text-neutral-500">
+            {t("levels.section")} {entity.name} · {sc.grade ? `${t("common.grade")} ${sc.grade}` : t("common.na")}
+          </p>
+        </div>
       </div>
 
       {needsImprovement ? (

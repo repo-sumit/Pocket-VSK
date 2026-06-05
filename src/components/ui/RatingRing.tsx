@@ -62,20 +62,24 @@ export function RatingRing({
           />
         )}
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <div className="absolute inset-0 grid place-items-center px-3 text-center">
         {na ? (
-          <>
-            <span className="text-3xl font-extrabold leading-none text-rag-naText">NA</span>
-            <span className="mt-1.5 max-w-[8rem] text-center text-2xs font-medium text-neutral-400">{sublabel ?? "Not tracked here"}</span>
-          </>
+          <div>
+            <div className="text-2xl font-extrabold leading-none text-rag-naText">NA</div>
+            <div className="mt-1.5 text-2xs font-medium text-neutral-400">{sublabel ?? "Not tracked here"}</div>
+          </div>
         ) : (
-          <>
-            <div className="flex items-end gap-1">
-              <span className={cn("text-[2.9rem] font-extrabold leading-none tnum", GRADE_GROUP[group].text)}>{locNum(Math.round(draw), lang)}</span>
-              <span className="mb-1 text-base font-semibold text-neutral-400">/{locNum(outOf, lang)}</span>
+          <div className="leading-none">
+            <div className="flex items-baseline justify-center">
+              <span className={cn("font-extrabold tabular-nums tnum", GRADE_GROUP[group].text)} style={{ fontSize: size * 0.26, lineHeight: 1 }}>
+                {locNum(Math.round(draw), lang)}
+              </span>
+              <span className="font-semibold text-neutral-400" style={{ fontSize: size * 0.1 }}>/{locNum(outOf, lang)}</span>
             </div>
-            <span className="mt-1 text-xs font-semibold uppercase tracking-wider text-neutral-400">{sublabel ?? `Grade ${grade}`}</span>
-          </>
+            <div className="mt-1.5 font-bold uppercase tracking-[0.18em] text-neutral-400" style={{ fontSize: Math.max(9, size * 0.06) }}>
+              {sublabel ?? "Grade"}
+            </div>
+          </div>
         )}
       </div>
     </div>

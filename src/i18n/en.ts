@@ -34,8 +34,11 @@ export const en = {
   scorecard: {
     overall: "Overall score", rating: "Rating", domainWise: "Domain-wise score", youVsParent: "You vs {level} average",
     needsAttention: "Needs attention", mostImproved: "Most improved", closeGap: "Close the gap",
-    viewDomain: "View domain", drillInto: "Drill into {label}", contribution: "Contribution to overall",
+    viewDomain: "View domain", drillInto: "Drill into {label}", contribution: "Contribution",
     yourScope: "Your scope", explore: "Explore below",
+    whatChanged: "What changed this week", steady: "Steady week — no major movement.",
+    overallMoved: "Overall {delta} this week", led: "led by {kpi}",
+    breakdown: "Score breakdown", weightPlaceholder: "Weightages: placeholder",
   },
   domain: { kpisIn: "KPIs in {name}", achievedVsBench: "{value} vs {benchmark} benchmark", noKpis: "No KPIs configured." },
   kpi: {
@@ -44,6 +47,11 @@ export const en = {
     weeklyTrend: "Weekly trend", noData: "Not tracked at this level — shown as NA.",
   },
   cascade: { title: "Performance comparison", subtitle: "{name} across every level — Section to State", overall: "Overall score across levels" },
+  compare: {
+    title: "Compare KPIs", subtitle: "All indicators for {name} at a glance — add another entity to compare",
+    compareAgainst: "Compare against", addComparison: "Add comparison", noOptions: "No entities below this scope to compare.",
+    comparingHint: "Tap a KPI to see it across all levels",
+  },
   section: {
     title: "Section comparison", subtitle: "Compare sections of a class on any KPI", choose: "Choose a KPI",
     chooseGrade: "Choose a class", rank: "Rank", yourSection: "Your section", noSections: "No sections under this scope.",

@@ -1,80 +1,127 @@
 import { useMemo, useState } from "react";
-import { useScope, useOverallCascade, useKpiCascade, useFramework } from "@/hooks";
+import { useNavigate } from "react-router-dom";
+import type { Entity } from "@/types";
+import { dataProvider } from "@/data/provider";
+import { getKpiRecord } from "@/engine";
+import { useScope, useFramework, usePmShri, PERIODS } from "@/hooks";
 import { useT } from "@/i18n";
-import type { Unit } from "@/types";
-import { Card } from "@/components/ui/atoms";
+import { accent } from "@/lib/colors";
+import { Card, SectionLabel } from "@/components/ui/atoms";
+import { KpiCard } from "@/components/ui/KpiCard";
 import { ComparisonBars, type CompareBar } from "@/components/ui/ComparisonBars";
+import { MultiSelect, type MsGroup } from "@/components/ui/MultiSelect";
+import { VskBadge } from "@/components/ui/VskBadge";
+import { Icon } from "@/components/ui/Icon";
 
-export default function CascadeComparison() {
-  const { entity, currentId } = useScope();
+const COMPARE_LEVELS = ["district", "block", "cluster", "school"] as const;
+
+export default function CompareView() {
+  const { entity, currentId, homeId } = useScope();
   const fw = useFramework();
+  const pmShri = usePmShri();
   const { t, tn, lang } = useT();
-  const [selected, setSelected] = useState<string>("overall");
+  const navigate = useNavigate();
+  const [compareIds, setCompareIds] = useState<string[]>([]);
 
-  const overall = useOverallCascade(currentId);
-  const kpiRows = useKpiCascade(selected === "overall" ? undefined : selected, currentId);
+  // comparison options: entities below the user's scope (district→school)
+  const options = useMemo<MsGroup[]>(() => {
+    if (!homeId) return [];
+    const byLevel = new Map<string, Entity[]>();
+    for (const e of dataProvider.getDescendants(homeId)) {
+      if ((COMPARE_LEVELS as readonly string[]).includes(e.level) && e.id !== currentId) {
+        (byLevel.get(e.level) ?? byLevel.set(e.level, []).get(e.level)!).push(e);
+      }
+    }
+    return COMPARE_LEVELS.filter((l) => byLevel.get(l)?.length).map((l) => ({
+      key: l,
+      label: t(`levels.${l}`),
+      options: byLevel.get(l)!.map((e) => ({ id: e.id, label: tn(e.name, e.name_gu) })),
+    }));
+  }, [homeId, currentId, lang]);
 
-  const isOverall = selected === "overall";
-  const rows = isOverall ? overall : kpiRows;
-  const kpi = useMemo(() => fw.kpis.find((k) => k.id === selected), [fw, selected]);
-  const unit: Unit = isOverall ? "%" : (kpi?.unit ?? "%");
-  const titleName = isOverall ? t("cascade.overall") : tn(kpi?.name ?? "", kpi?.name_gu);
+  const comparing = compareIds.length > 0;
 
-  const bars: CompareBar[] = rows.map((r) => ({
-    key: r.level,
-    label: lang === "gu" ? r.label_gu : r.label,
-    sublabel: lang === "gu" && r.entity.name_gu ? r.entity.name_gu : r.entity.name,
-    value: r.value,
-    status: r.status,
-    isCurrent: r.isCurrent,
-  }));
+  const data = useMemo(() => {
+    dataProvider.setSchoolFilter(pmShri);
+    const comps = compareIds.map((id) => dataProvider.getEntity(id)).filter((e): e is Entity => !!e);
+    return fw.domains.map((dom) => ({
+      dom,
+      rows: fw.kpis
+        .filter((k) => k.domain_id === dom.id)
+        .map((kpi) => ({
+          kpi,
+          cur: currentId ? getKpiRecord(fw, kpi.id, currentId, PERIODS) : null,
+          comps: comps.map((e) => ({ e, rec: getKpiRecord(fw, kpi.id, e.id, PERIODS) })),
+        })),
+    }));
+  }, [fw, currentId, compareIds, pmShri]);
 
   if (!entity) return null;
+  const shortName = (e: Entity) => (lang === "gu" && e.name_gu ? e.name_gu : e.name);
 
   return (
     <div className="space-y-5 animate-fade-in">
-      <div>
-        <h1 className="text-xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">{t("cascade.title")}</h1>
-        <p className="mt-0.5 text-sm text-neutral-500">{t("cascade.subtitle", { name: titleName })}</p>
+      <div className="flex items-center gap-3">
+        <VskBadge size={40} />
+        <div>
+          <h1 className="text-xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">{t("compare.title")}</h1>
+          <p className="mt-0.5 text-sm text-neutral-500">{t("compare.subtitle", { name: tn(entity.name, entity.name_gu) })}</p>
+        </div>
       </div>
 
-      {/* KPI selector */}
-      <Card className="card-pad">
-        <label className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">{t("section.choose")}</span>
-          <select
-            value={selected}
-            onChange={(e) => setSelected(e.target.value)}
-            className="rounded-full border border-line bg-neutral-50 px-3 py-1.5 text-sm font-semibold text-neutral-700 outline-none focus:border-primary-400"
-          >
-            <option value="overall">{t("cascade.overall")}</option>
-            {fw.domains.map((d) => (
-              <optgroup key={d.id} label={tn(d.name, d.name_gu)}>
-                {fw.kpis.filter((k) => k.domain_id === d.id).map((k) => (
-                  <option key={k.id} value={k.id}>{tn(k.name, k.name_gu)}</option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </label>
-
-        <div className="mt-5">
-          {bars.some((b) => b.value != null) ? (
-            <ComparisonBars bars={bars} unit={unit} lang={lang} height={210} />
-          ) : (
-            <p className="py-8 text-center text-sm text-neutral-400">{t("kpi.noData")}</p>
-          )}
-        </div>
-
-        {/* legend */}
-        <div className="mt-4 flex flex-wrap gap-3 border-t border-line/60 pt-3 text-2xs text-neutral-400">
-          {bars.map((b) => (
-            <span key={b.key} className="flex items-center gap-1">
-              <span className="font-semibold text-neutral-600">{b.label}:</span> {b.sublabel}
-            </span>
-          ))}
-        </div>
+      {/* add-comparison control */}
+      <Card className="card-pad flex flex-wrap items-center gap-2">
+        <span className="text-xs font-bold uppercase tracking-wide text-neutral-400">{t("compare.compareAgainst")}</span>
+        <span className="chip bg-primary-100 text-primary-700">{tn(entity.name, entity.name_gu)}</span>
+        {options.length > 0 ? (
+          <MultiSelect groups={options} selected={compareIds} onChange={setCompareIds} placeholder={t("compare.addComparison")} max={5} />
+        ) : (
+          <span className="text-xs text-neutral-400">{t("compare.noOptions")}</span>
+        )}
+        {comparing && <span className="ml-auto text-2xs text-neutral-400">{t("compare.comparingHint")}</span>}
       </Card>
+
+      {/* small-multiples — every KPI at a glance, grouped by domain */}
+      {data.map(({ dom, rows }) => {
+        const a = accent(dom.accent);
+        return (
+          <Card key={dom.id} className="card-pad">
+            <div className="mb-3 flex items-center gap-2">
+              <span className={`grid h-8 w-8 place-items-center rounded-xl ${a.bg}`}><Icon name={dom.icon} className={a.icon} size={18} /></span>
+              <SectionLabel>{tn(dom.name, dom.name_gu)}</SectionLabel>
+            </div>
+
+            {comparing ? (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {rows.map(({ kpi, cur, comps }) => {
+                  const bars: CompareBar[] = [
+                    { key: "cur", label: shortName(entity), value: cur?.value ?? null, status: cur?.status ?? "na", isCurrent: true },
+                    ...comps.map((c) => ({ key: c.e.id, label: shortName(c.e), value: c.rec?.value ?? null, status: c.rec?.status ?? "na" })),
+                  ];
+                  return (
+                    <button key={kpi.id} onClick={() => navigate(`/app/kpi/${kpi.id}`)} className="rounded-xl border border-line/70 p-3 text-left hover:bg-neutral-50">
+                      <div className="mb-1 line-clamp-2 text-xs font-semibold text-neutral-700">{tn(kpi.name, kpi.name_gu)}</div>
+                      {bars.some((b) => b.value != null) ? (
+                        <ComparisonBars bars={bars} unit={kpi.unit} lang={lang} height={120} />
+                      ) : (
+                        <p className="py-6 text-center text-xs text-rag-naText">{t("common.na")}</p>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {rows.map(({ kpi, cur }) =>
+                  cur ? (
+                    <KpiCard key={kpi.id} rec={cur} name={tn(kpi.name, kpi.name_gu)} lang={lang} onClick={() => navigate(`/app/kpi/${kpi.id}`)} />
+                  ) : null,
+                )}
+              </div>
+            )}
+          </Card>
+        );
+      })}
     </div>
   );
 }

@@ -43,6 +43,11 @@ export function getScorecard(fw: FrameworkConfig, entityId: string, periods: Per
 
   const overall = buildOverall(domainScores, fw.rating_bands);
 
+  // overall change vs last week (for the home "what changed" one-liner)
+  const prevPeriods = periods.length > 1 ? periods.slice(0, -1) : periods;
+  const prevOverall = scoreEntity(fw, entity, getSeries, prevPeriods).percent;
+  const overallDeltaWoW = overall.percent != null && prevOverall != null ? round1(overall.percent - prevOverall) : null;
+
   // immediate parent for the "you vs the level above" comparison bars
   const ancestors = dataProvider.getAncestors(entityId);
   let parent: Scorecard["parent"];
@@ -61,6 +66,7 @@ export function getScorecard(fw: FrameworkConfig, entityId: string, periods: Per
     period: periods[periods.length - 1]?.id ?? "",
     framework: fw,
     overallPercent: overall.percent,
+    overallDeltaWoW,
     grade: overall.grade,
     gradeGroup: overall.group,
     status: overall.status,

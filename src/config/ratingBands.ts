@@ -16,15 +16,6 @@ export const GSQAC_BANDS: RatingBand[] = [
   { grade: "D", min: 0, group: "D" },
 ];
 
-/** Himachal SQAF-style coarse scale (from the School Report Card legend). */
-export const SQAF_BANDS: RatingBand[] = [
-  { grade: "A+", min: 85, group: "A" },
-  { grade: "A", min: 70, group: "A" },
-  { grade: "B", min: 50, group: "B" },
-  { grade: "C", min: 30, group: "C" },
-  { grade: "D", min: 0, group: "D" },
-];
-
 /** RAG thresholds on a 0..100 achievement scale (per-KPI overridable). */
 export const RAG_DEFAULT = { green: 85, amber: 65 } as const;
 

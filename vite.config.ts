@@ -13,7 +13,8 @@ export default defineConfig({
   server: { port: 5173, host: true },
   preview: { port: 4173 },
   build: {
-    chunkSizeWarningLimit: 900,
+    // the bundled mock seed (6k+ entities) is intentionally large; gzip ≈ 140 kB
+    chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
         manualChunks: {
