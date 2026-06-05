@@ -1,7 +1,7 @@
 import {
   Award, Activity, BarChart3, BookOpen, Boxes, Building2, CalendarCheck, ChartNoAxesColumn,
-  CheckCircle2, ChevronRight, ChevronLeft, ClipboardCheck, Drama, DoorOpen, Download, Flag,
-  Gauge, GraduationCap, Landmark, LayoutGrid, LogOut, Map, Medal, Minus, Printer, ShieldCheck, Sparkles,
+  CheckCircle2, Check, ChevronRight, ChevronLeft, ChevronDown, ClipboardCheck, Drama, DoorOpen, Download, Flag,
+  Gauge, GraduationCap, Landmark, LayoutGrid, LogOut, Map, Medal, Minus, Printer, Search, ShieldCheck, Sparkles,
   Target, TrendingDown, TrendingUp, Trophy, Users, User, AlertTriangle, ArrowUpRight, ArrowDownRight,
   ArrowLeft, Info, type LucideIcon,
 } from "lucide-react";
@@ -20,8 +20,8 @@ export function Icon({ name, className, size = 18 }: { name?: string; className?
 }
 
 export {
-  Award, Activity, BarChart3, BookOpen, Boxes, Building2, CalendarCheck, ChartNoAxesColumn, CheckCircle2,
-  ChevronRight, ChevronLeft, ClipboardCheck, Download, Flag, Gauge, GraduationCap, Landmark, LayoutGrid,
-  LogOut, Map, Medal, Minus, Printer, ShieldCheck, Sparkles, Target, TrendingDown, TrendingUp, Trophy,
+  Award, Activity, BarChart3, BookOpen, Boxes, Building2, CalendarCheck, ChartNoAxesColumn, CheckCircle2, Check,
+  ChevronRight, ChevronLeft, ChevronDown, ClipboardCheck, Download, Flag, Gauge, GraduationCap, Landmark, LayoutGrid,
+  LogOut, Map, Medal, Minus, Printer, Search, ShieldCheck, Sparkles, Target, TrendingDown, TrendingUp, Trophy,
   Users, User, AlertTriangle, ArrowUpRight, ArrowDownRight, ArrowLeft, Info,
 };

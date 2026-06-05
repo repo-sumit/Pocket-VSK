@@ -18,7 +18,14 @@
     <title>Unified Portal · Vidya Samiksha Kendra</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Boot shell: shown instantly while the data chunk loads, replaced when React mounts. -->
+      <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#F6F7F9;font-family:system-ui,sans-serif">
+        <div style="width:34px;height:34px;border:3px solid #DCE3F2;border-top-color:#386AF6;border-radius:50%;animation:up-spin .7s linear infinite"></div>
+        <div style="font-size:13px;font-weight:600;color:#6B7280">Loading Unified Portal…</div>
+      </div>
+      <style>@keyframes up-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){[style*="up-spin"]{animation:none}}</style>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

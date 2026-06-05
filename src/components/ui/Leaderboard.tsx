@@ -13,13 +13,17 @@ export function Leaderboard({
 }: { entries: LeaderboardEntry[]; lang?: Lang; onRowClick?: (id: string) => void; youLabel?: string }) {
   return (
     <ol className="flex flex-col gap-1.5">
-      {entries.map((e) => (
+      {entries.map((e) => {
+        // read-only when no click handler (peer/benchmark rows): no button, no hover
+        const RowTag = onRowClick ? "button" : "div";
+        return (
         <li key={e.entity.id}>
-          <button
-            onClick={() => onRowClick?.(e.entity.id)}
+          <RowTag
+            onClick={onRowClick ? () => onRowClick(e.entity.id) : undefined}
             className={cn(
               "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors",
-              e.isCurrent ? "border-primary-300 bg-primary-50/70" : "border-line/70 bg-white hover:bg-neutral-50",
+              e.isCurrent ? "border-primary-300 bg-primary-50/70" : "border-line/70 bg-white",
+              onRowClick && !e.isCurrent && "hover:bg-neutral-50",
             )}
           >
             <RankBadge rank={e.rank} />
@@ -37,9 +41,10 @@ export function Leaderboard({
             </div>
             <Movement delta={e.rankDelta} lang={lang} />
             {e.grade ? <RatingBadge grade={e.grade} size="sm" celebrate={false} /> : <span className="chip bg-rag-naSoft text-rag-naText !py-0.5">NA</span>}
-          </button>
+          </RowTag>
         </li>
-      ))}
+        );
+      })}
     </ol>
   );
 }

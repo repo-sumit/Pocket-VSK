@@ -2,11 +2,7 @@ import type { AppUser, Entity, KpiDef, Level, Period, Role } from "@/types";
 import { PUBLISHED } from "@/config/kpiCatalog";
 import { noise } from "../prng";
 import type { DataProvider, RawSeries } from "./types";
-import entitiesSeed from "../seed/entities.json";
-import usersSeed from "../seed/appUsers.json";
 
-const ENTITIES = entitiesSeed as Entity[];
-const USERS = usersSeed as AppUser[];
 const N_PERIODS = 8; // matches config PERIODS
 type FilterMode = "all" | "pmshri" | "non";
 
@@ -29,17 +25,29 @@ class MockProviderImpl implements DataProvider {
   private schoolCache = new Map<string, Entity[]>();
   private usersByLogin = new Map<string, AppUser>();
   private filterMode: FilterMode = "all";
+  private ready = false;
 
-  constructor() {
-    for (const e of ENTITIES) this.byId.set(e.id, e);
-    for (const e of ENTITIES) {
+  /** Lazily load the (large ~21k-entity) seed as its OWN chunk so it stays out
+   *  of the initial JS bundle. Awaited once at boot (main.tsx) before React
+   *  mounts, so every render sees a fully-populated provider. */
+  async init() {
+    if (this.ready) return;
+    const [eMod, uMod] = await Promise.all([
+      import("../seed/entities.json"),
+      import("../seed/appUsers.json"),
+    ]);
+    const entities = eMod.default as unknown as Entity[];
+    const users = uMod.default as unknown as AppUser[];
+    for (const e of entities) this.byId.set(e.id, e);
+    for (const e of entities) {
       if (e.parent_id) {
         const arr = this.childrenOf.get(e.parent_id) ?? [];
         arr.push(e);
         this.childrenOf.set(e.parent_id, arr);
       }
     }
-    for (const u of USERS) this.usersByLogin.set(u.login_id.toUpperCase(), u);
+    for (const u of users) this.usersByLogin.set(u.login_id.toUpperCase(), u);
+    this.ready = true;
   }
 
   // ── hierarchy ──────────────────────────────────────────────────────
@@ -99,6 +107,16 @@ class MockProviderImpl implements DataProvider {
     if (this.filterMode === "all") return true;
     const isPm = !!e.meta.pmShri;
     return this.filterMode === "pmshri" ? isPm : !isPm;
+  }
+
+  // ── scope / access control ──────────────────────────────────────────
+  /** is `id` the home entity or a descendant of it? Walks up `id`'s ancestor
+   *  chain looking for `homeId`. The chokepoint behind every scope check.
+   *  NOTE: client-side only — the live backend MUST enforce this with RLS too. */
+  isInScope(homeId: string, id: string): boolean {
+    if (!homeId || !id || !this.byId.has(id)) return false;
+    if (id === homeId) return true;
+    return this.getAncestors(id).some((a) => a.id === homeId);
   }
 
   // ── auth ───────────────────────────────────────────────────────────

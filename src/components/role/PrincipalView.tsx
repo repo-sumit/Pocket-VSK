@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { Entity, RagStatus } from "@/types";
 import { hash } from "@/data/prng";
 import { dataProvider } from "@/data/provider";
-import { useScorecard, useKpiRecord } from "@/hooks";
+import { useScorecard, useKpiRecord, useOverallBenchmark } from "@/hooks";
 import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { rag } from "@/lib/colors";
@@ -22,7 +22,10 @@ import { Award, Download, ShieldCheck, Target } from "@/components/ui/Icon";
  */
 export function PrincipalView({ entity, greeting }: { entity: Entity; greeting: string }) {
   const sc = useScorecard(entity.id);
-  const state = useScorecard("st-gj");
+  // read-only State average (overall % + per-domain %) for the "School vs State"
+  // benchmark bars — a minimal projection, NOT the full ancestor scorecard, and
+  // never navigable. State averages are the published public reference figures.
+  const state = useOverallBenchmark("st-gj");
   const gsqac = useKpiRecord("gsqac_score", entity.id);
   const gsqacImprove = useKpiRecord("gsqac_improvement", entity.id);
   const chronic = useKpiRecord("att_chronic", entity.id);
@@ -32,8 +35,7 @@ export function PrincipalView({ entity, greeting }: { entity: Entity; greeting: 
   const sections = useMemo(() => dataProvider.getDescendants(entity.id, "section"), [entity.id]);
 
   if (!sc) return null;
-  const stateDomainPct: Record<string, number | null> = {};
-  state?.domainScores.forEach((d) => (stateDomainPct[d.domain.id] = d.percent));
+  const stateDomainPct: Record<string, number | null> = state?.domainPercents ?? {};
   const scored = sc.domainScores.filter((d) => d.weightage > 0 && d.records.length > 0);
 
   // ── compliance telemetry (FCR-3.6) ──

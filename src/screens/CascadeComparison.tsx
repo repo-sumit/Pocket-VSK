@@ -26,20 +26,33 @@ export default function CompareView() {
   const navigate = useNavigate();
   const [compareIds, setCompareIds] = useState<string[]>([]);
 
-  // comparison options: entities below the user's scope (district→school)
-  const options = useMemo<MsGroup[]>(() => {
-    if (!homeId) return [];
+  // comparison options (ACCESS CONTROL): only (a) PEERS at the user's own level
+  // for benchmarking — siblings of the home entity — and (b) entities WITHIN the
+  // user's own subtree. Never ancestors. All selections render as read-only bars
+  // only; they are not navigable into another dashboard. allowedIds is the
+  // authoritative whitelist used to re-validate compareIds (defense-in-depth).
+  const { options, allowedIds } = useMemo<{ options: MsGroup[]; allowedIds: Set<string> }>(() => {
+    if (!homeId) return { options: [], allowedIds: new Set() };
+    const allowed = new Set<string>();
     const byLevel = new Map<string, Entity[]>();
     for (const e of dataProvider.getDescendants(homeId)) {
       if ((COMPARE_LEVELS as readonly string[]).includes(e.level) && e.id !== currentId) {
         (byLevel.get(e.level) ?? byLevel.set(e.level, []).get(e.level)!).push(e);
+        allowed.add(e.id);
       }
     }
-    return COMPARE_LEVELS.filter((l) => byLevel.get(l)?.length).map((l) => ({
+    const subtreeGroups = COMPARE_LEVELS.filter((l) => byLevel.get(l)?.length).map((l) => ({
       key: l,
       label: t(`levels.${l}`),
       options: byLevel.get(l)!.map((e) => ({ id: e.id, label: tn(e.name, e.name_gu) })),
     }));
+    // peers = other entities at the user's level (read-only benchmark)
+    const peers = dataProvider.getSiblings(homeId).filter((e) => e.id !== currentId);
+    peers.forEach((e) => allowed.add(e.id));
+    const peerGroup: MsGroup[] = peers.length
+      ? [{ key: "peers", label: t("leaderboard.peers"), options: peers.map((e) => ({ id: e.id, label: tn(e.name, e.name_gu) })) }]
+      : [];
+    return { options: [...peerGroup, ...subtreeGroups], allowedIds: allowed };
   }, [homeId, currentId, lang]);
 
   const comparing = compareIds.length > 0;
@@ -47,7 +60,8 @@ export default function CompareView() {
   const data = useMemo(() => {
     dataProvider.setSchoolFilter(pmShri);
     const lvl = entity?.level ?? "state";
-    const comps = compareIds.map((id) => dataProvider.getEntity(id)).filter((e): e is Entity => !!e);
+    // re-validate against the whitelist so only in-scope/peer entities are read
+    const comps = compareIds.filter((id) => allowedIds.has(id)).map((id) => dataProvider.getEntity(id)).filter((e): e is Entity => !!e);
     return fw.domains
       .map((dom) => ({
         dom,
@@ -60,7 +74,7 @@ export default function CompareView() {
           })),
       }))
       .filter((d) => d.rows.length > 0);
-  }, [fw, currentId, compareIds, pmShri, role, entity]);
+  }, [fw, currentId, compareIds, pmShri, role, entity, allowedIds]);
 
   if (!entity) return null;
   const shortName = (e: Entity) => (lang === "gu" && e.name_gu ? e.name_gu : e.name);

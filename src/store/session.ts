@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { AppUser } from "@/types";
 import { DEFAULT_FRAMEWORK_ID } from "@/config";
+import { dataProvider } from "@/data/provider";
 
 export type Lang = "en" | "gu";
 export type PmShriMode = "all" | "pmshri" | "non";
@@ -34,7 +35,16 @@ export const useSession = create<SessionState>()(
       pmShri: "all",
       login: (user) => set({ user, scopeId: user.entity_id }),
       logout: () => set({ user: null, scopeId: null }),
-      setScope: (entityId) => set({ scopeId: entityId }),
+      // ACCESS CONTROL: scope can only move within the user's own subtree. A target
+      // outside it (ancestor, peer, or any out-of-scope entity) is clamped back to
+      // home — never honoured. This is the single write-side chokepoint; useScope
+      // clamps again on read (covers tampered/persisted localStorage values).
+      // NOTE: client-side enforcement only; production also needs server-side authz.
+      setScope: (entityId) => {
+        const home = get().user?.entity_id;
+        if (!home) return;
+        set({ scopeId: dataProvider.isInScope(home, entityId) ? entityId : home });
+      },
       resetScope: () => set({ scopeId: get().user?.entity_id ?? null }),
       setLang: (lang) => set({ lang }),
       toggleLang: () => set({ lang: get().lang === "en" ? "gu" : "en" }),

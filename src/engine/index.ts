@@ -146,6 +146,25 @@ function buildCallouts(
   return out;
 }
 
+// ── Read-only benchmark projection ──────────────────────────────────────
+export interface OverallBenchmark {
+  overallPercent: number | null;
+  domainPercents: Record<string, number | null>;
+}
+
+/** A MINIMAL read-only projection of an entity's aggregate score — overall % +
+ *  per-domain % only. Used to surface a higher-level average (e.g. "vs State")
+ *  as benchmark figures WITHOUT exposing the full scorecard object across the
+ *  scope boundary. Comparison context only; never a navigable dashboard. */
+export function getOverallBenchmark(fw: FrameworkConfig, entityId: string, periods: Period[], role?: Role): OverallBenchmark | null {
+  const entity = dataProvider.getEntity(entityId);
+  if (!entity) return null;
+  const { result, domainScores } = scoreEntity(fw, entity, seriesFn(periods), periods, role);
+  const domainPercents: Record<string, number | null> = {};
+  domainScores.forEach((d) => (domainPercents[d.domain.id] = d.percent));
+  return { overallPercent: result.percent, domainPercents };
+}
+
 // ── Single KPI record ──────────────────────────────────────────────────
 export function getKpiRecord(fw: FrameworkConfig, kpiId: string, entityId: string, periods: Period[]): KpiRecord | null {
   const entity = dataProvider.getEntity(entityId);

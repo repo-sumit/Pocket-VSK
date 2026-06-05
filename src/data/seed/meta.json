@@ -11,28 +11,34 @@
   },
   "principalsAnonymised": true,
   "shape": {
-    "districts": 4,
-    "blocksPerDistrict": 3,
-    "clustersPerBlock": 4,
+    "districts": 10,
+    "blocksPerDistrict": 4,
+    "clustersPerBlock": 5,
     "schoolsPerCluster": 5
   },
   "counts": {
     "state": 1,
-    "district": 4,
-    "block": 12,
-    "cluster": 48,
-    "school": 240,
-    "grade": 1560,
-    "section": 3116,
-    "total": 4981
+    "district": 10,
+    "block": 40,
+    "cluster": 200,
+    "school": 1000,
+    "grade": 6645,
+    "section": 13296,
+    "total": 21192
   },
   "districts": [
     "Kachchh",
     "Banaskantha",
     "Patan",
-    "Mahesana"
+    "Mahesana",
+    "Sabar Kantha",
+    "Gandhinagar",
+    "Ahmedabad",
+    "Surendranagar",
+    "Rajkot",
+    "Jamnagar"
   ],
-  "pmShriSchools": 43,
+  "pmShriSchools": 160,
   "demoLogins": [
     {
       "role": "teacher",

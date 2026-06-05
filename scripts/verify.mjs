@@ -70,8 +70,8 @@ async function run(label, viewport) {
   // ── Teacher journey ──
   await loginTeacher(page);
   ok(`${label} · teacher scorecard loads`, /\/app$/.test(page.url()));
-  // PM SHRI hidden for teacher
-  const pmHiddenTeacher = !(await page.getByText("PM SHRI", { exact: false }).first().isVisible().catch(() => false));
+  // PM SHRI hidden for teacher (control carries aria-label "PM SHRI")
+  const pmHiddenTeacher = (await page.getByRole("button", { name: "PM SHRI" }).count()) === 0;
   ok(`${label} · PM SHRI hidden for teacher`, pmHiddenTeacher);
   await page.waitForTimeout(400);
   await shot(page, `${label}-teacher-scorecard`);
@@ -92,7 +92,7 @@ async function run(label, viewport) {
   ok(`${label} · state scorecard loads`, /\/app$/.test(page.url()));
   await page.waitForTimeout(400);
   await shot(page, `${label}-state-scorecard`);
-  const pmVisibleState = await page.getByText("PM SHRI", { exact: false }).first().isVisible().catch(() => false);
+  const pmVisibleState = await page.getByRole("button", { name: "PM SHRI" }).first().isVisible().catch(() => false);
   // PM SHRI only shows >= sm breakpoint; only assert on desktop
   if (viewport.width >= 640) ok(`${label} · PM SHRI visible for state`, pmVisibleState);
 

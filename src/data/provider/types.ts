@@ -14,6 +14,10 @@ export interface RawSeries {
 export interface DataProvider {
   readonly source: "mock" | "supabase";
 
+  /** Load any data the provider needs (the mock seed chunk; a live client/session
+   *  later). Awaited once at boot before the app renders. */
+  init(): Promise<void>;
+
   // ── hierarchy ──
   getEntity(id: string): Entity | undefined;
   getChildren(id: string): Entity[];
@@ -22,6 +26,10 @@ export interface DataProvider {
   /** all descendants at a given level (or all descendants when omitted). */
   getDescendants(id: string, level?: Level): Entity[];
   getSchoolDescendants(id: string): Entity[];
+  /** access-control predicate: is `id` the home entity itself or a descendant
+   *  of it? The single source of truth for "is this entity in the user's scope".
+   *  NOTE: client-side only — production MUST also enforce this server-side (RLS). */
+  isInScope(homeId: string, id: string): boolean;
 
   // ── auth ──
   getUserByLogin(loginId: string): AppUser | undefined;

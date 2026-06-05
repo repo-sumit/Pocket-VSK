@@ -6,6 +6,7 @@ import {
   getChildLeaderboard,
   getKpiCascade,
   getKpiRecord,
+  getOverallBenchmark,
   getOverallCascade,
   getPeerLeaderboard,
   getScorecard,
@@ -33,7 +34,12 @@ export function useScope() {
   const resetScope = useSession((s) => s.resetScope);
 
   const homeId = user?.entity_id ?? null;
-  const currentId = scopeId ?? homeId;
+  // ACCESS CONTROL (read-side clamp): never trust the persisted scopeId. If it
+  // points outside the user's subtree (e.g. hand-edited localStorage), fall back
+  // to home so no out-of-scope entity is ever rendered. Pairs with the write-side
+  // guard in setScope. NOTE: client-side only; production needs server-side authz.
+  const rawId = scopeId ?? homeId;
+  const currentId = homeId && rawId && dataProvider.isInScope(homeId, rawId) ? rawId : homeId;
 
   const entity = useMemo(() => (currentId ? dataProvider.getEntity(currentId) : undefined), [currentId]);
   const homeEntity = useMemo(() => (homeId ? dataProvider.getEntity(homeId) : undefined), [homeId]);
@@ -42,7 +48,9 @@ export function useScope() {
     if (!entity || !homeId) return entity ? [entity] : [];
     const chain = [entity, ...dataProvider.getAncestors(entity.id)];
     const homeIdx = chain.findIndex((e) => e.id === homeId);
-    const bounded = homeIdx >= 0 ? chain.slice(0, homeIdx + 1) : chain;
+    // clamp to home → current; if home isn't on the chain (escaped scope), show
+    // only the current entity rather than leaking the full ancestor chain.
+    const bounded = homeIdx >= 0 ? chain.slice(0, homeIdx + 1) : [entity];
     return bounded.reverse();
   }, [entity, homeId]);
 
@@ -88,6 +96,18 @@ export function useChildLeaderboard(entityId: string | null | undefined) {
   return useMemo(() => {
     dataProvider.setSchoolFilter(pmShri);
     return entityId ? getChildLeaderboard(fw, entityId, PERIODS, role) : [];
+  }, [fw, entityId, pmShri, role]);
+}
+
+/** Read-only aggregate benchmark (overall % + per-domain %) for a higher level
+ *  shown as comparison context only — see engine getOverallBenchmark. */
+export function useOverallBenchmark(entityId: string | null | undefined) {
+  const fw = useFramework();
+  const pmShri = usePmShri();
+  const role = useSession((s) => s.user?.role);
+  return useMemo(() => {
+    dataProvider.setSchoolFilter(pmShri);
+    return entityId ? getOverallBenchmark(fw, entityId, PERIODS, role) : null;
   }, [fw, entityId, pmShri, role]);
 }
 

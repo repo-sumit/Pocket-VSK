@@ -25,13 +25,20 @@ export default function Leaderboard() {
 
   const childLevel = entity ? childLevelOf(entity.level) : null;
 
+  // ACCESS CONTROL: only the "scope" (descendants) tab is navigable — drilling into
+  // a child is in-subtree. The "peers" tab lists SIBLINGS (out-of-subtree), so it is
+  // read-only benchmarking: rows render values/ranks but never open another
+  // entity's dashboard. setScope would clamp a sibling anyway; this also removes the
+  // misleading click affordance.
+  const canDrill = tab === "scope" && hasChildren;
+
   const movers = useMemo(
     () => [...active].filter((e) => (e.deltaWoW ?? 0) > 0).sort((a, b) => (b.deltaWoW ?? 0) - (a.deltaWoW ?? 0)).slice(0, 3),
     [active],
   );
   const topMover = movers[0];
 
-  const open = (id: string) => { setScope(id); navigate("/app"); };
+  const open = (id: string) => { if (!canDrill) return; setScope(id); navigate("/app"); };
 
   if (!entity) return null;
 
@@ -80,14 +87,23 @@ export default function Leaderboard() {
         <div>
           <SectionLabel className="mb-2">{t("leaderboard.topMovers")}</SectionLabel>
           <div className="grid grid-cols-3 gap-2">
-            {movers.map((m) => (
-              <button key={m.entity.id} onClick={() => open(m.entity.id)} className="rounded-2xl bg-white p-3 text-left shadow-card hover:shadow-raised">
-                <div className="truncate text-xs font-semibold text-neutral-700">{tn(m.entity.name, m.entity.name_gu)}</div>
-                <div className="mt-1 flex items-center gap-1 text-sm font-extrabold text-rag-greenText">
-                  <ArrowUpRight size={15} /> {formatDelta(m.deltaWoW, "%", lang)}
+            {movers.map((m) =>
+              canDrill ? (
+                <button key={m.entity.id} onClick={() => open(m.entity.id)} className="rounded-2xl bg-white p-3 text-left shadow-card hover:shadow-raised">
+                  <div className="truncate text-xs font-semibold text-neutral-700">{tn(m.entity.name, m.entity.name_gu)}</div>
+                  <div className="mt-1 flex items-center gap-1 text-sm font-extrabold text-rag-greenText">
+                    <ArrowUpRight size={15} /> {formatDelta(m.deltaWoW, "%", lang)}
+                  </div>
+                </button>
+              ) : (
+                <div key={m.entity.id} className="rounded-2xl bg-white p-3 text-left shadow-card">
+                  <div className="truncate text-xs font-semibold text-neutral-700">{tn(m.entity.name, m.entity.name_gu)}</div>
+                  <div className="mt-1 flex items-center gap-1 text-sm font-extrabold text-rag-greenText">
+                    <ArrowUpRight size={15} /> {formatDelta(m.deltaWoW, "%", lang)}
+                  </div>
                 </div>
-              </button>
-            ))}
+              ),
+            )}
           </div>
         </div>
       )}
@@ -96,7 +112,7 @@ export default function Leaderboard() {
       <Card className="card-pad">
         <SectionLabel className="mb-3">{t("leaderboard.rank")}</SectionLabel>
         {active.length > 0 ? (
-          <LeaderboardList entries={active} lang={lang} onRowClick={open} youLabel={t("leaderboard.you")} />
+          <LeaderboardList entries={active} lang={lang} onRowClick={canDrill ? open : undefined} youLabel={t("leaderboard.you")} />
         ) : (
           <p className="py-6 text-center text-sm text-neutral-400">{t("leaderboard.noPeers")}</p>
         )}

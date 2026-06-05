@@ -9,6 +9,7 @@ import { rag } from "@/lib/colors";
 import { formatValue, pct } from "@/lib/format";
 import { Card, SectionLabel, Badge, StatusDot } from "@/components/ui/atoms";
 import { ComparisonBars, type CompareBar } from "@/components/ui/ComparisonBars";
+import { Select } from "@/components/ui/Select";
 import { VskBadge } from "@/components/ui/VskBadge";
 
 export default function SectionComparison() {
@@ -81,18 +82,39 @@ export default function SectionComparison() {
       <Header t={t} />
 
       <Card className="card-pad">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-end gap-3">
           {schoolList.length > 0 && (
-            <Select label={t("levels.school")} value={school.id} onChange={(v) => { setSchoolId(v); setGradeId(null); }}>
-              {schoolList.map((s) => <option key={s.id} value={s.id}>{tn(s.name, s.name_gu)}</option>)}
-            </Select>
+            <Field label={t("levels.school")} className="min-w-[11rem] flex-1 sm:max-w-[16rem]">
+              <Select
+                ariaLabel={t("levels.school")}
+                value={school.id}
+                onChange={(v) => { setSchoolId(v); setGradeId(null); }}
+                options={schoolList.map((s) => ({ value: s.id, label: tn(s.name, s.name_gu) }))}
+                className="w-full"
+                triggerClassName="w-full"
+              />
+            </Field>
           )}
-          <Select label={t("section.chooseGrade")} value={grade?.id ?? ""} onChange={setGradeId}>
-            {grades.map((g) => <option key={g.id} value={g.id}>{tn(g.name, g.name_gu)}</option>)}
-          </Select>
-          <Select label={t("section.choose")} value={kpi?.id ?? ""} onChange={setKpiId}>
-            {classKpis.map((k) => <option key={k.id} value={k.id}>{tn(k.name, k.name_gu)}</option>)}
-          </Select>
+          <Field label={t("section.chooseGrade")} className="min-w-[8.5rem] flex-1 sm:max-w-[12rem]">
+            <Select
+              ariaLabel={t("section.chooseGrade")}
+              value={grade?.id ?? ""}
+              onChange={setGradeId}
+              options={grades.map((g) => ({ value: g.id, label: tn(g.name, g.name_gu) }))}
+              className="w-full"
+              triggerClassName="w-full"
+            />
+          </Field>
+          <Field label={t("section.choose")} className="min-w-[11rem] flex-1 sm:max-w-[16rem]">
+            <Select
+              ariaLabel={t("section.choose")}
+              value={kpi?.id ?? ""}
+              onChange={setKpiId}
+              options={classKpis.map((k) => ({ value: k.id, label: tn(k.name, k.name_gu) }))}
+              className="w-full"
+              triggerClassName="w-full"
+            />
+          </Field>
         </div>
 
         <div className="mt-5">
@@ -136,14 +158,12 @@ export default function SectionComparison() {
   );
 }
 
-function Select({ label, value, onChange, children }: { label: string; value: string; onChange: (v: string) => void; children: React.ReactNode }) {
+function Field({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
   return (
-    <label className="flex items-center gap-1.5">
+    <div className={cn("flex flex-col gap-1", className)}>
       <span className="text-2xs font-bold uppercase tracking-wider text-neutral-400">{label}</span>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="rounded-full border border-line bg-neutral-50 px-3 py-1.5 text-sm font-semibold text-neutral-700 outline-none focus:border-primary-400">
-        {children}
-      </select>
-    </label>
+      {children}
+    </div>
   );
 }
 

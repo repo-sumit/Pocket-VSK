@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { Link, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { dataProvider } from "@/data/provider";
 import { useSession } from "@/store/session";
 import { useScope } from "@/hooks";
 import { useT } from "@/i18n";
@@ -20,10 +22,20 @@ const NAV: { to: string; key: string; icon: LucideIcon; end?: boolean }[] = [
 export function AppShell() {
   const user = useSession((s) => s.user);
   const logout = useSession((s) => s.logout);
+  const scopeId = useSession((s) => s.scopeId);
+  const resetScope = useSession((s) => s.resetScope);
   const { entity } = useScope();
   const { t, tn, lang } = useT();
   const loc = useLocation();
   const navigate = useNavigate();
+
+  // ACCESS CONTROL: repair a tampered/stale persisted scope (localStorage) that
+  // points outside the user's subtree, snapping it back to their home entity.
+  // useScope already clamps on read; this also cleans the stored value.
+  // NOTE: client-side guard only — production must enforce scope server-side (RLS).
+  useEffect(() => {
+    if (user && scopeId && !dataProvider.isInScope(user.entity_id, scopeId)) resetScope();
+  }, [user, scopeId, resetScope]);
 
   if (!user) return <Navigate to="/login" replace />;
 

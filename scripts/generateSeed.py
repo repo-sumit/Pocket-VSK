@@ -18,8 +18,8 @@ XLSX = os.path.join(ROOT, "..", "Docs", "Guj School Master.xlsx")
 OUT = os.path.join(ROOT, "src", "data", "seed")
 SUPA = os.path.join(ROOT, "supabase")
 
-# representative subset (rich but performant) — ~250 schools
-N_DISTRICTS, N_BLOCKS, N_CLUSTERS, N_SCHOOLS = 4, 3, 4, 5
+# representative subset (large + populated) — ~10 districts / ~1,000 schools
+N_DISTRICTS, N_BLOCKS, N_CLUSTERS, N_SCHOOLS = 10, 4, 5, 5
 USE_REAL_PRINCIPAL = False  # anonymise principals by default (one-line switch)
 STATE_CODE = "24"
 
