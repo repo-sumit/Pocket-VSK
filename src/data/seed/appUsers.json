@@ -1,0 +1,112 @@
+[
+  {
+    "id": "u-teacher",
+    "login_id": "TUTL101",
+    "name": "Kiran Makwana",
+    "name_gu": "",
+    "role": "teacher",
+    "designation": "Teacher",
+    "entity_id": "sch-24010111201-g5-A",
+    "school_id": "24010111201",
+    "active": true
+  },
+  {
+    "id": "u-principal",
+    "login_id": "PRIN201",
+    "name": "Bharat Pandya",
+    "name_gu": "ભરત પંડ્યા",
+    "role": "principal",
+    "designation": "Principal",
+    "entity_id": "sch-24010111201",
+    "school_id": "24010111201",
+    "active": true
+  },
+  {
+    "id": "u-crc",
+    "login_id": "NARACRC",
+    "name": "Parmar Geetaben",
+    "name_gu": "પરમાર ગીતાબેન",
+    "role": "crc",
+    "designation": "CRC Coordinator",
+    "entity_id": "cluster-kachchh-lakhapat-nara",
+    "passcode": "1234",
+    "active": true
+  },
+  {
+    "id": "u-brc",
+    "login_id": "LAKHAPBRC",
+    "name": "Suresh Thakor",
+    "name_gu": "સુરેશ ઠાકોર",
+    "role": "brc",
+    "designation": "Block Resource Coordinator (BEO)",
+    "entity_id": "block-kachchh-lakhapat",
+    "passcode": "2345",
+    "active": true
+  },
+  {
+    "id": "u-deo",
+    "login_id": "KACHCHDEO",
+    "name": "Dr. Rekha Mehta",
+    "name_gu": "ડૉ. રેખા મહેતા",
+    "role": "deo",
+    "designation": "District Education Officer",
+    "entity_id": "dist-kachchh",
+    "passcode": "3456",
+    "active": true
+  },
+  {
+    "id": "u-state",
+    "login_id": "GJSTATE",
+    "name": "State VSK Cell",
+    "name_gu": "રાજ્ય VSK કક્ષ",
+    "role": "state",
+    "designation": "State Project Director",
+    "entity_id": "st-gj",
+    "passcode": "0000",
+    "active": true
+  },
+  {
+    "id": "u-teacher-0",
+    "login_id": "TUTL110",
+    "name": "Anjali Patel",
+    "name_gu": "",
+    "role": "teacher",
+    "designation": "Teacher",
+    "entity_id": "sch-24010111201-g7-A",
+    "school_id": "24010111201",
+    "active": true
+  },
+  {
+    "id": "u-teacher-1",
+    "login_id": "TUTL111",
+    "name": "Ramesh Solanki",
+    "name_gu": "",
+    "role": "teacher",
+    "designation": "Teacher",
+    "entity_id": "sch-24010111201-g7-B",
+    "school_id": "24010111201",
+    "active": true
+  },
+  {
+    "id": "u-teacher-2",
+    "login_id": "TUTL112",
+    "name": "Nita Chauhan",
+    "name_gu": "",
+    "role": "teacher",
+    "designation": "Teacher",
+    "entity_id": "sch-24010111001-g7-A",
+    "school_id": "24010111001",
+    "active": true
+  },
+  {
+    "id": "u-teacher-3",
+    "login_id": "TUTL113",
+    "name": "Vikram Desai",
+    "name_gu": "",
+    "role": "teacher",
+    "designation": "Teacher",
+    "entity_id": "sch-24010111001-g7-B",
+    "school_id": "24010111001",
+    "active": true
+  }
+]

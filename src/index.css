@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --content-pad: 16px;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  @apply bg-surface-muted text-neutral-900 font-sans antialiased;
+  margin: 0;
+  min-height: 100dvh;
+}
+
+/* Indic-aware typography: when the document language is Gujarati, body copy
+   uses the Mukta family with slightly taller line-heights (per SwiftChat
+   Indic twin styles). Headings keep their weight. */
+html[lang="gu"] body {
+  @apply font-indic;
+  line-height: 1.55;
+}
+
+/* Numeric tabular alignment for scores / leaderboards */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Focus-visible ring consistent with SwiftChat interactive/focus token */
+:where(a, button, [role="button"], input, select, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(56, 106, 246, 0.45);
+  border-radius: 6px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl bg-white shadow-card border border-line/70;
+  }
+  .card-pad {
+    @apply p-4 sm:p-5;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+  .section-title {
+    @apply text-xs font-bold uppercase tracking-wider text-neutral-500;
+  }
+  .hairline {
+    @apply border-t border-line/70;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* Print: hide chrome, expand cards for the export/print scorecard */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    body {
+      background: #fff;
+    }
+    .card {
+      box-shadow: none;
+      break-inside: avoid;
+    }
+  }
+}

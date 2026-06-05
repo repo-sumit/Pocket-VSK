@@ -1,0 +1,75 @@
+{
+  "generatedFrom": "GSQAC/gsqac 2024-25.csv (real, sliced)",
+  "generatedAtNote": "static seed — regenerate with `npm run seed`",
+  "shape": {
+    "districts": 3,
+    "blocksPerDistrict": 2,
+    "clustersPerBlock": 3,
+    "schoolsPerCluster": 4
+  },
+  "counts": {
+    "state": 1,
+    "district": 3,
+    "block": 6,
+    "cluster": 18,
+    "school": 72,
+    "grade": 576,
+    "section": 1152,
+    "total": 1828
+  },
+  "districts": [
+    "Kachchh",
+    "Banaskantha",
+    "Ahmedabad"
+  ],
+  "demoLogins": [
+    {
+      "role": "teacher",
+      "login_id": "TUTL101",
+      "name": "Kiran Makwana",
+      "designation": "Teacher",
+      "school_id": "24010111201",
+      "passcode": null
+    },
+    {
+      "role": "principal",
+      "login_id": "PRIN201",
+      "name": "Bharat Pandya",
+      "designation": "Principal",
+      "school_id": "24010111201",
+      "passcode": null
+    },
+    {
+      "role": "crc",
+      "login_id": "NARACRC",
+      "name": "Parmar Geetaben",
+      "designation": "CRC Coordinator",
+      "school_id": null,
+      "passcode": "1234"
+    },
+    {
+      "role": "brc",
+      "login_id": "LAKHAPBRC",
+      "name": "Suresh Thakor",
+      "designation": "Block Resource Coordinator (BEO)",
+      "school_id": null,
+      "passcode": "2345"
+    },
+    {
+      "role": "deo",
+      "login_id": "KACHCHDEO",
+      "name": "Dr. Rekha Mehta",
+      "designation": "District Education Officer",
+      "school_id": null,
+      "passcode": "3456"
+    },
+    {
+      "role": "state",
+      "login_id": "GJSTATE",
+      "name": "State VSK Cell",
+      "designation": "State Project Director",
+      "school_id": null,
+      "passcode": "0000"
+    }
+  ]
+}
