@@ -6,6 +6,7 @@ export function Sparkline({
 }: { data: number[]; width?: number; height?: number; color?: string; strokeWidth?: number }) {
   const id = useId();
   if (!data.length) return <svg width={width} height={height} aria-hidden />;
+  const viewBox = `0 0 ${width} ${height}`;
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
@@ -18,7 +19,7 @@ export function Sparkline({
   const line = pts.map((p) => p.join(",")).join(" ");
   const area = `${pad},${height} ${line} ${width - pad},${height}`;
   return (
-    <svg width={width} height={height} className="overflow-visible" aria-hidden>
+    <svg width={width} height={height} viewBox={viewBox} className="max-w-full overflow-visible" aria-hidden>
       <defs>
         <linearGradient id={`sp-${id}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity="0.22" />

@@ -40,8 +40,9 @@ export const PUBLISHED: Record<string, Pub> = {
   reenrollment: { school: 78, cluster: 390, block: 1950, district: 9750, state: 78000 },
   grant_expenditure: { cluster: 75, block: 73, district: 73, state: 64 },
   pmshri_score: { school: 80, cluster: 86, block: 90, district: 77, state: 86 },
-  // A5 · School Quality (GSQAC)
-  gsqac_score: { section: 14, school: 84, cluster: 420, block: 2100, district: 10500, state: 84000 },
+  // A5 · School Quality (GSQAC) — GSQAC score normalised to a /100 quality
+  // score (not the misleading 84,000 aggregate); not applicable below school.
+  gsqac_score: { school: 84, cluster: 84, block: 83, district: 84, state: 84 },
   schools_meeting: { school: 69, cluster: 69, block: 56, district: 58, state: 57 },
   priority_support: { school: 42, cluster: 210, block: 1050, district: 5250, state: 42000 },
   gsqac_improvement: { section: 59, school: 65, cluster: 73, block: 70, district: 60, state: 66 },

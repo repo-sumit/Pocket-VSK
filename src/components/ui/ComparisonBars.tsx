@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 import type { RagStatus, Unit } from "@/types";
 import { rag } from "@/lib/colors";
-import { formatValue } from "@/lib/format";
+import { formatValue, formatValueFull } from "@/lib/format";
 import type { Lang } from "@/i18n";
 
 export interface CompareBar {
@@ -32,7 +32,10 @@ export function ComparisonBars({
         const c = rag(b.status);
         return (
           <div key={b.key} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
-            <span className={cn("text-xs font-bold tnum", b.value == null ? "text-rag-naText" : c.text)}>
+            <span
+              className={cn("text-xs font-bold tnum", b.value == null ? "text-rag-naText" : c.text)}
+              title={b.value == null ? naLabel : formatValueFull(b.value, unit, lang)}
+            >
               {b.value == null ? naLabel : formatValue(b.value, unit, lang)}
             </span>
             <div className="relative flex w-full max-w-[56px] items-end justify-center">
@@ -45,10 +48,10 @@ export function ComparisonBars({
                 />
               )}
             </div>
-            <span className={cn("max-w-full truncate text-center text-2xs font-semibold", b.isCurrent ? "text-primary-600" : "text-neutral-500")}>
+            <span className={cn("max-w-full truncate text-center text-2xs font-semibold", b.isCurrent ? "text-primary-600" : "text-neutral-500")} title={b.label}>
               {b.label}
             </span>
-            {b.sublabel && <span className="max-w-full truncate text-center text-2xs text-neutral-400">{b.sublabel}</span>}
+            {b.sublabel && <span className="max-w-full truncate text-center text-2xs text-neutral-400" title={b.sublabel}>{b.sublabel}</span>}
           </div>
         );
       })}

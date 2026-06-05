@@ -93,20 +93,19 @@ export default function KpiDetail() {
         <EmptyNA hint={t("kpi.noData")} />
       ) : null}
 
-      {/* cascade */}
-      <Card className="card-pad">
-        <SectionLabel>{t("kpi.cascadeTitle", { name })}</SectionLabel>
-        <div className="mt-4">
-          {bars.some((b) => b.value != null) ? (
+      {/* cascade — only when there's more than one level to compare (own + below) */}
+      {bars.filter((b) => b.value != null).length >= 2 && (
+        <Card className="card-pad">
+          <SectionLabel>{t("kpi.cascadeTitle", { name })}</SectionLabel>
+          {rec.kpi.unit === "count" && <p className="mt-0.5 text-2xs text-neutral-400">{t("compare.perSchool")}</p>}
+          <div className="mt-4">
             <ComparisonBars bars={bars} unit={rec.kpi.unit} lang={lang} />
-          ) : (
-            <EmptyNA hint={t("kpi.noData")} />
-          )}
-        </div>
-        <button onClick={() => navigate("/app/compare")} className="mt-3 text-xs font-semibold text-primary-600 hover:underline">
-          {t("cascade.title")} →
-        </button>
-      </Card>
+          </div>
+          <button onClick={() => navigate("/app/compare")} className="mt-3 text-xs font-semibold text-primary-600 hover:underline">
+            {t("cascade.title")} →
+          </button>
+        </Card>
+      )}
     </div>
   );
 }

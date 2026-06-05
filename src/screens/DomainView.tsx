@@ -18,7 +18,16 @@ export default function DomainView() {
 
   if (!sc || !entity) return null;
   const ds = sc.domainScores.find((d) => d.domain.id === domainId);
-  if (!ds) return <Card className="card-pad text-sm text-neutral-500">{t("domain.noKpis")}</Card>;
+  if (!ds || ds.records.length === 0) {
+    return (
+      <div className="space-y-4 animate-fade-in">
+        <button onClick={() => navigate("/app")} className="inline-flex items-center gap-1 text-sm font-semibold text-neutral-500 hover:text-primary-600">
+          <ArrowLeft size={16} /> {t("nav.home")}
+        </button>
+        <Card className="card-pad text-center text-sm text-neutral-500">{t("domain.noKpis")}</Card>
+      </div>
+    );
+  }
 
   const a = accent(ds.domain.accent);
   const gsqac = ds.domain.id === "a5" ? entity.meta.gsqac : undefined;

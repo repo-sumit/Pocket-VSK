@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import type { Entity } from "@/types";
 import { dataProvider } from "@/data/provider";
 import { getKpiRecord } from "@/engine";
+import { kpiApplies, schoolsImplied } from "@/config/applicability";
 import { useScope, useFramework, usePmShri, PERIODS } from "@/hooks";
+import { useSession } from "@/store/session";
 import { useT } from "@/i18n";
 import { accent } from "@/lib/colors";
 import { Card, SectionLabel } from "@/components/ui/atoms";
@@ -19,6 +21,7 @@ export default function CompareView() {
   const { entity, currentId, homeId } = useScope();
   const fw = useFramework();
   const pmShri = usePmShri();
+  const role = useSession((s) => s.user?.role);
   const { t, tn, lang } = useT();
   const navigate = useNavigate();
   const [compareIds, setCompareIds] = useState<string[]>([]);
@@ -43,21 +46,27 @@ export default function CompareView() {
 
   const data = useMemo(() => {
     dataProvider.setSchoolFilter(pmShri);
+    const lvl = entity?.level ?? "state";
     const comps = compareIds.map((id) => dataProvider.getEntity(id)).filter((e): e is Entity => !!e);
-    return fw.domains.map((dom) => ({
-      dom,
-      rows: fw.kpis
-        .filter((k) => k.domain_id === dom.id)
-        .map((kpi) => ({
-          kpi,
-          cur: currentId ? getKpiRecord(fw, kpi.id, currentId, PERIODS) : null,
-          comps: comps.map((e) => ({ e, rec: getKpiRecord(fw, kpi.id, e.id, PERIODS) })),
-        })),
-    }));
-  }, [fw, currentId, compareIds, pmShri]);
+    return fw.domains
+      .map((dom) => ({
+        dom,
+        rows: fw.kpis
+          .filter((k) => k.domain_id === dom.id && (role ? kpiApplies(k.id, role, lvl) : true))
+          .map((kpi) => ({
+            kpi,
+            cur: currentId ? getKpiRecord(fw, kpi.id, currentId, PERIODS) : null,
+            comps: comps.map((e) => ({ e, rec: getKpiRecord(fw, kpi.id, e.id, PERIODS) })),
+          })),
+      }))
+      .filter((d) => d.rows.length > 0);
+  }, [fw, currentId, compareIds, pmShri, role, entity]);
 
   if (!entity) return null;
   const shortName = (e: Entity) => (lang === "gu" && e.name_gu ? e.name_gu : e.name);
+  // count KPIs compare as avg-per-school (raw totals grow with scope)
+  const cmpVal = (kpi: { id: string; unit: string }, ent: Entity, v: number | null | undefined) =>
+    v == null ? null : kpi.unit === "count" ? Math.round((v / schoolsImplied(kpi.id, ent.level)) * 10) / 10 : v;
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -95,8 +104,8 @@ export default function CompareView() {
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {rows.map(({ kpi, cur, comps }) => {
                   const bars: CompareBar[] = [
-                    { key: "cur", label: shortName(entity), value: cur?.value ?? null, status: cur?.status ?? "na", isCurrent: true },
-                    ...comps.map((c) => ({ key: c.e.id, label: shortName(c.e), value: c.rec?.value ?? null, status: c.rec?.status ?? "na" })),
+                    { key: "cur", label: shortName(entity), value: cmpVal(kpi, entity, cur?.value), status: cur?.status ?? "na", isCurrent: true },
+                    ...comps.map((c) => ({ key: c.e.id, label: shortName(c.e), value: cmpVal(kpi, c.e, c.rec?.value), status: c.rec?.status ?? "na" })),
                   ];
                   return (
                     <button key={kpi.id} onClick={() => navigate(`/app/kpi/${kpi.id}`)} className="rounded-xl border border-line/70 p-3 text-left hover:bg-neutral-50">

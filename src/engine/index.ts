@@ -9,10 +9,12 @@ import type {
   LeaderboardEntry,
   Level,
   Period,
+  Role,
   Scorecard,
 } from "@/types";
 import { dataProvider, type RawSeries } from "@/data/provider";
 import { gradeFor } from "@/config/ratingBands";
+import { kpiApplies, kpiAppliesAtLevel } from "@/config/applicability";
 import { buildDomainScore, buildKpiRecord, buildOverall, scoreEntity } from "./score";
 import { buildLeaderboard } from "./leaderboard";
 import { isImproving } from "./story";
@@ -29,14 +31,16 @@ const seriesFn = (periods: Period[]) => (e: Entity, k: KpiDef): RawSeries =>
   dataProvider.getValueSeries(e, k, periods);
 
 // ── Scorecard ─────────────────────────────────────────────────────────
-export function getScorecard(fw: FrameworkConfig, entityId: string, periods: Period[]): Scorecard | null {
+/** `role` (the viewing user) hides non-applicable KPIs entirely (§1). */
+export function getScorecard(fw: FrameworkConfig, entityId: string, periods: Period[], role?: Role): Scorecard | null {
   const entity = dataProvider.getEntity(entityId);
   if (!entity) return null;
   const getSeries = seriesFn(periods);
+  const ok = (kpiId: string, level: Level) => (role ? kpiApplies(kpiId, role, level) : kpiAppliesAtLevel(kpiId, level));
 
   const domainScores: DomainScore[] = fw.domains.map((domain) => {
     const recs = fw.kpis
-      .filter((k) => k.domain_id === domain.id)
+      .filter((k) => k.domain_id === domain.id && ok(k.id, entity.level))
       .map((k) => buildKpiRecord(k, entity, getSeries(entity, k), periods));
     return buildDomainScore(domain, recs, fw.rating_bands);
   });
@@ -45,7 +49,7 @@ export function getScorecard(fw: FrameworkConfig, entityId: string, periods: Per
 
   // overall change vs last week (for the home "what changed" one-liner)
   const prevPeriods = periods.length > 1 ? periods.slice(0, -1) : periods;
-  const prevOverall = scoreEntity(fw, entity, getSeries, prevPeriods).percent;
+  const prevOverall = scoreEntity(fw, entity, getSeries, prevPeriods, role).percent;
   const overallDeltaWoW = overall.percent != null && prevOverall != null ? round1(overall.percent - prevOverall) : null;
 
   // immediate parent for the "you vs the level above" comparison bars
@@ -53,7 +57,7 @@ export function getScorecard(fw: FrameworkConfig, entityId: string, periods: Per
   let parent: Scorecard["parent"];
   if (ancestors[0]) {
     const p = ancestors[0];
-    const pScore = scoreEntity(fw, p, getSeries, periods);
+    const pScore = scoreEntity(fw, p, getSeries, periods, role);
     const domainPercents: Record<string, number | null> = {};
     pScore.domainScores.forEach((d) => (domainPercents[d.domain.id] = d.percent));
     parent = { entity: p, overallPercent: pScore.percent, domainPercents };
@@ -114,8 +118,8 @@ function buildCallouts(
       domainId: best.rec.kpi.domain_id,
       title: best.rec.kpi.name,
       title_gu: best.rec.kpi.name_gu,
-      detail: `Up ${round1(Math.abs(best.gain))}${best.rec.kpi.unit === "%" ? "%" : ""} this week — your top mover.`,
-      detail_gu: `આ અઠવાડિયે ${round1(Math.abs(best.gain))}${best.rec.kpi.unit === "%" ? "%" : ""} વધ્યું — ટોચનો સુધારો.`,
+      detail: `Up ${round1(Math.abs(best.gain))}${best.rec.kpi.unit === "%" ? "%" : ""} this week. Your top mover.`,
+      detail_gu: `આ અઠવાડિયે ${round1(Math.abs(best.gain))}${best.rec.kpi.unit === "%" ? "%" : ""} વધ્યું. ટોચનો સુધારો.`,
       delta: round1(best.gain),
     });
   }
@@ -152,32 +156,48 @@ export function getKpiRecord(fw: FrameworkConfig, kpiId: string, entityId: strin
 
 // ── Leaderboards ───────────────────────────────────────────────────────
 /** peers at the same level (siblings) — ranked. */
-export function getPeerLeaderboard(fw: FrameworkConfig, entityId: string, periods: Period[]): LeaderboardEntry[] {
+export function getPeerLeaderboard(fw: FrameworkConfig, entityId: string, periods: Period[], role?: Role): LeaderboardEntry[] {
   const entity = dataProvider.getEntity(entityId);
   if (!entity) return [];
   const peers = [entity, ...dataProvider.getSiblings(entityId)];
-  return buildLeaderboard(fw, peers, entityId, seriesFn(periods), periods);
+  return buildLeaderboard(fw, peers, entityId, seriesFn(periods), periods, role);
 }
 
 /** the children directly below this entity — ranked (drill-down leaderboard). */
-export function getChildLeaderboard(fw: FrameworkConfig, entityId: string, periods: Period[]): LeaderboardEntry[] {
+export function getChildLeaderboard(fw: FrameworkConfig, entityId: string, periods: Period[], role?: Role): LeaderboardEntry[] {
   const children = dataProvider.getChildren(entityId);
   if (!children.length) return [];
-  return buildLeaderboard(fw, children, null, seriesFn(periods), periods);
+  return buildLeaderboard(fw, children, null, seriesFn(periods), periods, role);
 }
 
 // ── Cascade comparisons ────────────────────────────────────────────────
-export function getOverallCascade(fw: FrameworkConfig, entityId: string, periods: Period[]): CascadeRow[] {
+export function getOverallCascade(fw: FrameworkConfig, entityId: string, periods: Period[], role?: Role): CascadeRow[] {
   const entity = dataProvider.getEntity(entityId);
   if (!entity) return [];
-  return overallCascade(fw, entity, dataProvider.getAncestors(entityId), seriesFn(periods), periods);
+  return overallCascade(fw, entity, dataProvider.getAncestors(entityId), seriesFn(periods), periods, role);
 }
 
 export function getKpiCascade(fw: FrameworkConfig, kpiId: string, entityId: string, periods: Period[]): CascadeRow[] {
   const entity = dataProvider.getEntity(entityId);
   const kpi = fw.kpis.find((k) => k.id === kpiId);
   if (!entity || !kpi) return [];
-  return kpiCascade(kpi, entity, dataProvider.getAncestors(entityId), seriesFn(periods), periods);
+  // §7: own level + a representative entity at each level below (never above)
+  const chain = [entity, ...representativeDescendants(entityId)];
+  return kpiCascade(kpi, chain, entity, seriesFn(periods), periods);
+}
+
+/** one representative descendant per level beneath `entityId` (deterministic
+ *  first-child walk) — used to show how a KPI compares down the levels. */
+function representativeDescendants(entityId: string): Entity[] {
+  const out: Entity[] = [];
+  let cur = dataProvider.getEntity(entityId);
+  while (cur) {
+    const kids = dataProvider.getChildren(cur.id);
+    if (!kids.length) break;
+    out.push(kids[0]);
+    cur = kids[0];
+  }
+  return out;
 }
 
 // ── Section comparison (sections of a grade ranked on a chosen KPI) ─────

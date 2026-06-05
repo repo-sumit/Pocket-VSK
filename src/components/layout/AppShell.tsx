@@ -27,6 +27,7 @@ export function AppShell() {
 
   if (!user) return <Navigate to="/login" replace />;
 
+  const isOfficer = user.role === "crc" || user.role === "brc" || user.role === "deo" || user.role === "state";
   const isActive = (to: string, end?: boolean) => (end ? loc.pathname === to : loc.pathname.startsWith(to));
 
   const onLogout = () => {
@@ -50,7 +51,8 @@ export function AppShell() {
             <Breadcrumb />
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <PmShriFilter className="hidden sm:inline-flex" />
+            {/* PM SHRI is meaningless at teacher/principal scope — Cluster and above only */}
+            {isOfficer && <PmShriFilter className="hidden sm:inline-flex" />}
             <LanguageToggle />
             <div className="hidden items-center gap-2 sm:flex">
               <div className="text-right leading-tight">

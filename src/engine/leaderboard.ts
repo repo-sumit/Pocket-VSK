@@ -1,4 +1,4 @@
-import type { Entity, FrameworkConfig, KpiDef, LeaderboardEntry, Period } from "@/types";
+import type { Entity, FrameworkConfig, KpiDef, LeaderboardEntry, Period, Role } from "@/types";
 import type { RawSeries } from "@/data/provider";
 import { gradeFor } from "@/config/ratingBands";
 import { statusFromGrade } from "./rag";
@@ -15,12 +15,13 @@ export function buildLeaderboard(
   currentEntityId: string | null,
   getSeries: (e: Entity, k: KpiDef) => RawSeries,
   periods: Period[],
+  role?: Role,
 ): LeaderboardEntry[] {
   const prevPeriods = periods.length > 1 ? periods.slice(0, -1) : periods;
 
   const scored = peers.map((entity) => {
-    const now = scoreEntity(fw, entity, getSeries, periods).percent;
-    const prev = scoreEntity(fw, entity, getSeries, prevPeriods).percent;
+    const now = scoreEntity(fw, entity, getSeries, periods, role).percent;
+    const prev = scoreEntity(fw, entity, getSeries, prevPeriods, role).percent;
     return { entity, now, prev };
   });
 

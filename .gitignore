@@ -8,3 +8,4 @@ dist-ssr
 .DS_Store
 *.tsbuildinfo
 .vite
+verify-shots

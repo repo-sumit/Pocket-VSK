@@ -1,7 +1,10 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Entity, Scorecard } from "@/types";
 import { hash } from "@/data/prng";
-import { useScorecard } from "@/hooks";
+import { dataProvider } from "@/data/provider";
+import { getKpiRecord } from "@/engine";
+import { useScorecard, useFramework, PERIODS } from "@/hooks";
 import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { rag } from "@/lib/colors";
@@ -20,10 +23,21 @@ import { GraduationCap, Sparkles, AlertTriangle, BookOpen } from "@/components/u
  * "Improvement Actions for Teachers" admin array is intentionally NOT rendered
  * here (FCR-2.3 data masking).
  */
+// the 5 school-level KPIs in the teacher's 14 (beyond the 8 classroom + TPD tracker)
+const SCHOOL_CONTEXT = ["att_report", "dropout_reduction", "gsqac_score", "gsqac_improvement", "improvement_actions"];
+
 export function TeacherView({ entity, greeting }: { entity: Entity; greeting: string }) {
   const sc = useScorecard(entity.id);
+  const fw = useFramework();
   const { t, tn, lang } = useT();
   const navigate = useNavigate();
+
+  // the teacher's school, for the "your school" context strip
+  const schoolId = useMemo(() => dataProvider.getAncestors(entity.id).find((a) => a.level === "school")?.id, [entity.id]);
+  const schoolCtx = useMemo(
+    () => (schoolId ? SCHOOL_CONTEXT.map((id) => getKpiRecord(fw, id, schoolId, PERIODS)).filter((r): r is NonNullable<typeof r> => !!r && r.value != null) : []),
+    [fw, schoolId],
+  );
   if (!sc) return null;
 
   const anchor = entity.meta.anchor ?? 0.6;
@@ -53,7 +67,7 @@ export function TeacherView({ entity, greeting }: { entity: Entity; greeting: st
       </div>
 
       {needsImprovement ? (
-        <Card className="card-pad border-l-4 border-rag-amber bg-rag-amberSoft/40">
+        <Card className="card-pad border border-rag-amber/30 bg-rag-amberSoft/40">
           <div className="flex items-start gap-3">
             <AlertTriangle className="mt-0.5 shrink-0 text-rag-amberText" size={20} />
             <div>
@@ -68,7 +82,7 @@ export function TeacherView({ entity, greeting }: { entity: Entity; greeting: st
           </div>
         </Card>
       ) : (
-        <Card className="card-pad border-l-4 border-rag-green bg-rag-greenSoft/40">
+        <Card className="card-pad border border-rag-green/30 bg-rag-greenSoft/40">
           <div className="flex items-center gap-3">
             <Sparkles className="shrink-0 text-rag-greenText" size={20} />
             <div>
@@ -114,15 +128,30 @@ export function TeacherView({ entity, greeting }: { entity: Entity; greeting: st
         </Card>
       </div>
 
-      {/* classroom KPIs */}
+      {/* classroom KPIs (the section's applicable learning indicators) */}
       <div>
-        <SectionLabel className="mb-2">{t("scorecard.domainWise")}</SectionLabel>
+        <SectionLabel className="mb-2">{t("teacher.classroomKpis")}</SectionLabel>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {scoredDomains.flatMap((d) => d.records.filter((r) => r.value != null).slice(0, 1)).map((r) => (
+          {scoredDomains.flatMap((d) => d.records.filter((r) => r.value != null)).map((r) => (
             <KpiCard key={r.kpi.id} rec={r} name={tn(r.kpi.name, r.kpi.name_gu)} lang={lang} onClick={() => navigate(`/app/kpi/${r.kpi.id}`)} />
           ))}
         </div>
       </div>
+
+      {/* your school — context KPIs attributed at the school level */}
+      {schoolCtx.length > 0 && (
+        <Card className="card-pad">
+          <SectionLabel>{t("teacher.yourSchool")}</SectionLabel>
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            {schoolCtx.map((r) => (
+              <button key={r.kpi.id} onClick={() => navigate(`/app/kpi/${r.kpi.id}`)} className="rounded-xl border border-line/70 p-2.5 text-left hover:bg-neutral-50">
+                <div className="line-clamp-2 text-2xs font-medium text-neutral-500">{tn(r.kpi.name, r.kpi.name_gu)}</div>
+                <div className={cn("mt-1 text-base font-extrabold tnum", rag(r.status).text)}>{pct(r.value, lang)}</div>
+              </button>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <DomainRagStrip sc={sc} />
     </div>

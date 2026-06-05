@@ -11,7 +11,9 @@ import type {
   Trend,
 } from "@/types";
 import type { RawSeries } from "@/data/provider";
+import type { Role } from "@/types";
 import { gradeFor } from "@/config/ratingBands";
+import { kpiApplies, kpiAppliesAtLevel } from "@/config/applicability";
 import { kpiStatus, normalizedScore, statusFromGrade } from "./rag";
 import { kpiStory } from "./story";
 
@@ -124,16 +126,23 @@ export function buildOverall(domainScores: DomainScore[], bands: RatingBand[]): 
   };
 }
 
-/** Score any entity to a single overall % (used by leaderboards / cascade). */
+/** Whether a KPI applies for this (role, level) — role-aware when role given. */
+function applies(kpiId: string, level: Entity["level"], role?: Role): boolean {
+  return role ? kpiApplies(kpiId, role, level) : kpiAppliesAtLevel(kpiId, level);
+}
+
+/** Score any entity to a single overall % (used by leaderboards / cascade).
+ *  Only KPIs applicable to the viewing role + level are counted. */
 export function scoreEntity(
   fw: FrameworkConfig,
   entity: Entity,
   getSeries: (e: Entity, k: KpiDef) => RawSeries,
   periods: Period[],
+  role?: Role,
 ): { percent: number | null; result: OverallResult; domainScores: DomainScore[] } {
   const domainScores = fw.domains.map((domain) => {
     const recs = fw.kpis
-      .filter((k) => k.domain_id === domain.id)
+      .filter((k) => k.domain_id === domain.id && applies(k.id, entity.level, role))
       .map((k) => buildKpiRecord(k, entity, getSeries(entity, k), periods));
     return buildDomainScore(domain, recs, fw.rating_bands);
   });

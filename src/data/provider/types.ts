@@ -27,6 +27,8 @@ export interface DataProvider {
   getUserByLogin(loginId: string): AppUser | undefined;
   /** resolve a login → user. secondField = schoolId (teacher/principal) or passcode (officer). */
   resolveLogin(role: Role, loginId: string, secondField: string): AppUser | undefined;
+  /** resolve role from a seed lookup of the ID (handles 10-digit teacher vs cluster collisions). */
+  resolveLoginById(loginId: string, secondField: string): AppUser | undefined;
 
   // ── values (raw, shaped like kpi_values) ──
   /** the cascading value series for one entity × KPI across the given periods. */

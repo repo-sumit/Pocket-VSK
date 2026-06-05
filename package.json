@@ -5,11 +5,12 @@
   "type": "module",
   "description": "Unified Portal — Vidya Samiksha Kendra (Gujarat) one-platform school-performance KPI dashboard (config-driven, cascading, bilingual).",
   "scripts": {
-    "seed": "node scripts/generateSeed.mjs",
+    "seed": "python scripts/generateSeed.py",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "verify": "node scripts/verify.mjs",
     "lint": "echo \"(lint stub — add eslint if desired)\""
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
+    "playwright": "^1.60.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.6.3",

@@ -34,7 +34,7 @@ export function PrincipalView({ entity, greeting }: { entity: Entity; greeting: 
   if (!sc) return null;
   const stateDomainPct: Record<string, number | null> = {};
   state?.domainScores.forEach((d) => (stateDomainPct[d.domain.id] = d.percent));
-  const scored = sc.domainScores.filter((d) => d.weightage > 0);
+  const scored = sc.domainScores.filter((d) => d.weightage > 0 && d.records.length > 0);
 
   // ── compliance telemetry (FCR-3.6) ──
   const enrolment = entity.meta.enrolment ?? 200;
@@ -113,7 +113,7 @@ export function PrincipalView({ entity, greeting }: { entity: Entity; greeting: 
         <Card className="card-pad">
           <div className="flex items-center gap-2"><Award size={18} className="text-pink-600" /><SectionLabel>{t("principal.gsqacScoreboard")}</SectionLabel></div>
           <div className="mt-3 flex items-end gap-2">
-            <span className="text-4xl font-extrabold tnum text-neutral-900">{gsqacAchieved != null ? locNum(gsqacAchieved, lang) : "—"}</span>
+            <span className="text-4xl font-extrabold tnum text-neutral-900">{gsqacAchieved != null ? locNum(gsqacAchieved, lang) : t("common.na")}</span>
             <span className="mb-1 text-lg font-semibold text-neutral-400">/ {locNum(1000, lang)}</span>
           </div>
           {gsqac?.value != null && <ProgressBar value={gsqac.value} status={gsqac.status} className="mt-2" height={10} label={t("principal.gsqacScoreboard")} />}
@@ -205,7 +205,7 @@ export function PrincipalView({ entity, greeting }: { entity: Entity; greeting: 
             {scored.filter((d) => d.status !== "green").slice(0, 4).map((d) => (
               <li key={d.domain.id} className="flex items-start gap-2">
                 <StatusDot status={d.status} className="mt-1.5" />
-                <span className="text-neutral-600">{tn(d.domain.name, d.domain.name_gu).replace(/^A\d ·\s*/, "")} — {lang === "gu" ? "ધ્યાન કેન્દ્રિત તાલીમ યોજના" : "focused teacher support plan"}</span>
+                <span className="text-neutral-600">{tn(d.domain.name, d.domain.name_gu).replace(/^A\d ·\s*/, "")}: {lang === "gu" ? "ધ્યાન કેન્દ્રિત તાલીમ યોજના" : "focused teacher support plan"}</span>
               </li>
             ))}
             {scored.every((d) => d.status === "green") && <li className="text-neutral-400">{lang === "gu" ? "બધા ડોમેન સારી સ્થિતિમાં." : "All domains on track."}</li>}

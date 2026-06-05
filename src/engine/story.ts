@@ -26,18 +26,18 @@ export function kpiStory(args: {
 
   if (status === "green") {
     return move && improving
-      ? { en: `On track — up ${move}${unit} this week. Keep the momentum.`, gu: `સારી સ્થિતિ — આ અઠવાડિયે ${move}${unit} વધ્યું. ગતિ જાળવો.` }
-      : { en: "On track and meeting the benchmark.", gu: "બેન્ચમાર્ક પૂર્ણ — સારી સ્થિતિમાં." };
+      ? { en: `On track. Up ${move}${unit} this week; keep the momentum.`, gu: `સારી સ્થિતિ. આ અઠવાડિયે ${move}${unit} વધ્યું; ગતિ જાળવો.` }
+      : { en: "On track and meeting the benchmark.", gu: "બેન્ચમાર્ક પૂર્ણ; સારી સ્થિતિમાં." };
   }
   if (status === "amber") {
     return improving
-      ? { en: move ? `Improving — ${move}${unit} better than last week. Close the last gap.` : "Improving — close the last gap.", gu: move ? `સુધારો — ગયા અઠવાડિયા કરતાં ${move}${unit} સારું. છેલ્લો તફાવત ભરો.` : "સુધારો — છેલ્લો તફાવત ભરો." }
-      : { en: "Slightly below benchmark — your biggest quick win.", gu: "બેન્ચમાર્કથી થોડું નીચે — ઝડપી સુધારાની તક." };
+      ? { en: move ? `Improving: ${move}${unit} better than last week. Close the last gap.` : "Improving. Close the last gap.", gu: move ? `સુધારો: ગયા અઠવાડિયા કરતાં ${move}${unit} સારું. છેલ્લો તફાવત ભરો.` : "સુધારો. છેલ્લો તફાવત ભરો." }
+      : { en: "Slightly below benchmark. Your biggest quick win.", gu: "બેન્ચમાર્કથી થોડું નીચે. ઝડપી સુધારાની તક." };
   }
   // red — framed as opportunity, never shaming
   return improving
-    ? { en: "Below benchmark but moving up — biggest opportunity to grow.", gu: "બેન્ચમાર્કથી નીચે પણ સુધરી રહ્યું — વૃદ્ધિની સૌથી મોટી તક." }
-    : { en: "Biggest opportunity — a focused push here lifts the whole score.", gu: "સૌથી મોટી તક — અહીં ધ્યાન આપવાથી સમગ્ર સ્કોર વધશે." };
+    ? { en: "Below benchmark but moving up. Biggest opportunity to grow.", gu: "બેન્ચમાર્કથી નીચે પણ સુધરી રહ્યું. વૃદ્ધિની સૌથી મોટી તક." }
+    : { en: "Biggest opportunity: a focused push here lifts the whole score.", gu: "સૌથી મોટી તક: અહીં ધ્યાન આપવાથી સમગ્ર સ્કોર વધશે." };
 }
 
 export function isImproving(trend: Trend, direction: KpiDef["direction"]): boolean {

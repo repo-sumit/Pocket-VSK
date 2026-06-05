@@ -107,10 +107,18 @@ class MockProviderImpl implements DataProvider {
   resolveLogin(role: Role, loginId: string, secondField: string) {
     const u = this.getUserByLogin(loginId);
     if (!u || !u.active || u.role !== role) return undefined;
-    if (role === "teacher") {
+    if (role === "teacher" || role === "principal") {
       return u.school_id && secondField.trim() && u.school_id === secondField.trim() ? u : undefined;
     }
     return u.passcode && u.passcode === secondField.trim() ? u : undefined;
+  }
+
+  /** role resolved from the seed (not digit-length): teacher/principal validate
+   *  against School UDISE, officers against a PIN. */
+  resolveLoginById(loginId: string, secondField: string) {
+    const u = this.getUserByLogin(loginId);
+    if (!u || !u.active) return undefined;
+    return this.resolveLogin(u.role, loginId, secondField);
   }
 
   // ── value generation (per-level anchoring) ──────────────────────────

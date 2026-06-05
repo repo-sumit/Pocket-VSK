@@ -55,10 +55,11 @@ export function useScope() {
 export function useScorecard(entityId: string | null | undefined) {
   const fw = useFramework();
   const pmShri = usePmShri();
+  const role = useSession((s) => s.user?.role);
   return useMemo(() => {
     dataProvider.setSchoolFilter(pmShri);
-    return entityId ? getScorecard(fw, entityId, PERIODS) : null;
-  }, [fw, entityId, pmShri]);
+    return entityId ? getScorecard(fw, entityId, PERIODS, role) : null;
+  }, [fw, entityId, pmShri, role]);
 }
 
 export function useKpiRecord(kpiId: string | undefined, entityId: string | null | undefined) {
@@ -73,28 +74,31 @@ export function useKpiRecord(kpiId: string | undefined, entityId: string | null 
 export function usePeerLeaderboard(entityId: string | null | undefined) {
   const fw = useFramework();
   const pmShri = usePmShri();
+  const role = useSession((s) => s.user?.role);
   return useMemo(() => {
     dataProvider.setSchoolFilter(pmShri);
-    return entityId ? getPeerLeaderboard(fw, entityId, PERIODS) : [];
-  }, [fw, entityId, pmShri]);
+    return entityId ? getPeerLeaderboard(fw, entityId, PERIODS, role) : [];
+  }, [fw, entityId, pmShri, role]);
 }
 
 export function useChildLeaderboard(entityId: string | null | undefined) {
   const fw = useFramework();
   const pmShri = usePmShri();
+  const role = useSession((s) => s.user?.role);
   return useMemo(() => {
     dataProvider.setSchoolFilter(pmShri);
-    return entityId ? getChildLeaderboard(fw, entityId, PERIODS) : [];
-  }, [fw, entityId, pmShri]);
+    return entityId ? getChildLeaderboard(fw, entityId, PERIODS, role) : [];
+  }, [fw, entityId, pmShri, role]);
 }
 
 export function useOverallCascade(entityId: string | null | undefined) {
   const fw = useFramework();
   const pmShri = usePmShri();
+  const role = useSession((s) => s.user?.role);
   return useMemo(() => {
     dataProvider.setSchoolFilter(pmShri);
-    return entityId ? getOverallCascade(fw, entityId, PERIODS) : [];
-  }, [fw, entityId, pmShri]);
+    return entityId ? getOverallCascade(fw, entityId, PERIODS, role) : [];
+  }, [fw, entityId, pmShri, role]);
 }
 
 export function useKpiCascade(kpiId: string | undefined, entityId: string | null | undefined) {

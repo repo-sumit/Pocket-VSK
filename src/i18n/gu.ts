@@ -1,7 +1,7 @@
 import type { Dict } from "./en";
 
 export const gu: Dict = {
-  app: { name: "Unified Portal", tagline: "વિદ્યા સમીક્ષા કેન્દ્ર · ગુજરાત", interim: "વચગાળાનું લોગિન — SSO ટૂંક સમયમાં" },
+  app: { name: "Unified Portal", tagline: "વિદ્યા સમીક્ષા કેન્દ્ર · ગુજરાત", interim: "વચગાળાનું લોગિન · SSO ટૂંક સમયમાં" },
   common: {
     na: "લાગુ નથી", back: "પાછળ", all: "બધા", of: "/", points: "પોઈન્ટ", week: "અઠવાડિયું", more: "વધુ",
     viewAll: "બધું જુઓ", search: "શોધો", schools: "શાળાઓ", you: "તમે", average: "સરેરાશ",
@@ -10,7 +10,7 @@ export const gu: Dict = {
     loading: "લોડ થઈ રહ્યું છે…", notFound: "અહીં કંઈ નથી", close: "બંધ કરો", apply: "લાગુ કરો",
     liveData: "વાસ્તવિક ડેટા", score: "સ્કોર", notTracked: "આ સ્તરે ટ્રેક થતું નથી",
     clear: "સાફ કરો", selectAll: "બધા પસંદ કરો", clearAll: "બધા સાફ કરો", noMatches: "કોઈ મેળ નથી",
-    scoreAria: "{outOf} માંથી {n} સ્કોર, ગ્રેડ {grade}", noDataAria: "ડેટા નથી — આ સ્તરે ટ્રેક થતું નથી",
+    scoreAria: "{outOf} માંથી {n} સ્કોર, ગ્રેડ {grade}", noDataAria: "ડેટા નથી; આ સ્તરે ટ્રેક થતું નથી",
   },
   status: { green: "સારી સ્થિતિ", amber: "ધ્યાન જરૂરી", red: "જોખમમાં", na: "ટ્રેક થતું નથી" },
   roles: {
@@ -25,14 +25,21 @@ export const gu: Dict = {
     schoolId: "શાળા ID", schoolIdPh: "તમારી શાળા ID દાખલ કરો",
     cluster: "ક્લસ્ટર ID", block: "બ્લોક ID", district: "જિલ્લા ID", state: "રાજ્ય ID",
     idPh: "તમારું ID દાખલ કરો (અમે ભૂમિકા શોધી લઈશું)", passcode: "PIN", passcodePh: "PIN દાખલ કરો",
-    idHint: "માન્ય ID દાખલ કરો — શિક્ષક ૮ · શાળા ૧૧ · ક્લસ્ટર ૧૦ · બ્લોક ૬ · જિલ્લો ૪ · રાજ્ય ૨ અંક.",
+    idHint: "માન્ય ID દાખલ કરો · શિક્ષક ૧૦ · શાળા ૧૧ · ક્લસ્ટર ૧૦ · બ્લોક ૬ · જિલ્લો ૪ · રાજ્ય ૨ અંક.",
     continue: "ચાલુ રાખો", verifyTitle: "તમારી વિગતો ચકાસો", verifySub: "ચાલુ રાખવા નીચેની વિગતો ખાતરી કરો",
     name: "નામ", role: "ભૂમિકા", designation: "હોદ્દો", Grade: "કાર્યક્ષેત્ર",
     signIn: "ચાલુ રાખો અને સાઇન ઇન કરો", goBack: "પાછા જાઓ",
     permTitle: "Unified Portal તમારી પ્રોફાઇલ ઍક્સેસ કરવા માંગે છે", permBody: "Unified Portal ને તમારી ભૂમિકા અને કાર્યક્ષેત્ર વાંચવાની મંજૂરી આપો.",
     giveAccess: "ઍક્સેસ આપો", cancel: "રદ કરો",
-    invalid: "વિગતો ચકાસી શકાઈ નહીં. તમારું ID / પાસકોડ તપાસો અને ફરી પ્રયાસ કરો.",
+    invalid: "વિગતો ચકાસી શકાઈ નહીં. તમારું ID તપાસો અને ફરી પ્રયાસ કરો.",
     demoHint: "ડેમો લોગિન",
+    modeTP: "શિક્ષક / આચાર્ય", modeOfficer: "અધિકારી (ક્લસ્ટર +)",
+    tpId: "શિક્ષક / આચાર્ય ID", officerId: "યુઝર ID",
+    tpIdPh: "તમારું ૧૦-અંકનું ID", officerIdPh: "તમારું ID",
+    schoolUdise: "શાળા UDISE કોડ", schoolUdisePh: "૧૧-અંકનો UDISE", pinPh: "૪-અંકનો PIN",
+    errId10: "શિક્ષક / આચાર્ય ID બરાબર ૧૦ અંકનું હોવું જોઈએ.",
+    errUdise11: "શાળા UDISE બરાબર ૧૧ અંકનો હોવો જોઈએ.",
+    errPin4: "PIN બરાબર ૪ અંકનો હોવો જોઈએ.",
   },
   nav: { home: "સ્કોરકાર્ડ", domains: "ડોમેન", compare: "સરખામણી", sections: "વિભાગો", leaderboard: "લીડરબોર્ડ", export: "નિકાસ", logout: "લોગ આઉટ", language: "English", menu: "મેનુ", toggleLanguage: "ભાષા બદલો" },
   scorecard: {
@@ -40,7 +47,7 @@ export const gu: Dict = {
     needsAttention: "ધ્યાન જરૂરી", mostImproved: "સૌથી વધુ સુધારો", closeGap: "તફાવત ભરો",
     viewDomain: "ડોમેન જુઓ", drillInto: "{label} માં જાઓ", contribution: "યોગદાન",
     yourScope: "તમારું કાર્યક્ષેત્ર", explore: "નીચે અન્વેષણ કરો",
-    whatChanged: "આ અઠવાડિયે શું બદલાયું", steady: "સ્થિર અઠવાડિયું — કોઈ મોટો ફેરફાર નહીં.",
+    whatChanged: "આ અઠવાડિયે શું બદલાયું", steady: "સ્થિર અઠવાડિયું, કોઈ મોટો ફેરફાર નહીં.",
     overallMoved: "આ અઠવાડિયે એકંદર {delta}", led: "{kpi} દ્વારા",
     breakdown: "સ્કોર વિભાજન", weightPlaceholder: "વેઇટેજ: પ્લેસહોલ્ડર",
   },
@@ -48,13 +55,14 @@ export const gu: Dict = {
   kpi: {
     current: "વર્તમાન મૂલ્ય", deltaWoW: "Δ આ અઠવાડિયે", deltaMoM: "Δ આ મહિને", trend: "અઠવાડિયા મુજબ વલણ",
     why: "આનો અર્થ શું", cascadeTitle: "{name} સ્તરો વચ્ચે કેવી રીતે સરખાવાય", statusLabel: "સ્થિતિ",
-    weeklyTrend: "સાપ્તાહિક વલણ", noData: "આ સ્તરે ટ્રેક થતું નથી — NA તરીકે બતાવેલ.",
+    weeklyTrend: "સાપ્તાહિક વલણ", noData: "આ સ્તરે ટ્રેક થતું નથી; NA તરીકે બતાવેલ.",
   },
-  cascade: { title: "પ્રદર્શન સરખામણી", subtitle: "{name} દરેક સ્તરે — વિભાગથી રાજ્ય સુધી", overall: "સ્તરો વચ્ચે એકંદર સ્કોર" },
+  cascade: { title: "પ્રદર્શન સરખામણી", subtitle: "{name} દરેક સ્તરે · વિભાગથી રાજ્ય સુધી", overall: "સ્તરો વચ્ચે એકંદર સ્કોર" },
   compare: {
-    title: "KPI સરખામણી", subtitle: "{name} ના બધા સૂચકો એક નજરમાં — સરખામણી માટે બીજી સંસ્થા ઉમેરો",
+    title: "KPI સરખામણી", subtitle: "{name} ના બધા સૂચકો એક નજરમાં. સરખામણી માટે બીજી સંસ્થા ઉમેરો.",
     compareAgainst: "સામે સરખાવો", addComparison: "સરખામણી ઉમેરો", noOptions: "આ કાર્યક્ષેત્ર નીચે સરખાવવા કોઈ સંસ્થા નથી.",
     comparingHint: "બધા સ્તરે જોવા KPI પર ટેપ કરો",
+    perSchool: "શાળા દીઠ સરેરાશ તરીકે (કુલ સંખ્યા સ્તર સાથે વધે)",
   },
   section: {
     title: "વિભાગ સરખામણી", subtitle: "કોઈપણ KPI પર વર્ગના વિભાગો સરખાવો", choose: "KPI પસંદ કરો",
@@ -76,6 +84,7 @@ export const gu: Dict = {
     improvementPrev: "અગાઉના મૂલ્યાંકન કરતાં સુધારો", needsImprovement: "સુધારાની જરૂર",
     onTrackHeader: "તમે સારી સ્થિતિમાં છો", trainingModules: "ભલામણ કરેલ તાલીમ મોડ્યુલ", viewModule: "મોડ્યુલ ખોલો", students: "વિદ્યાર્થીઓ",
     moduleFln: "FLN પાયા", moduleMaths: "પ્રવૃત્તિ-આધારિત ગણિત", moduleAssess: "રચનાત્મક મૂલ્યાંકન",
+    classroomKpis: "તમારો વર્ગખંડ", yourSchool: "તમારી શાળા",
   },
   principal: {
     schoolVsState: "શાળા vs રાજ્ય સરેરાશ", school: "શાળા", state: "રાજ્ય",
@@ -83,7 +92,7 @@ export const gu: Dict = {
     complianceTitle: "અનુપાલન બેન્ચમાર્ક", ptr: "વિદ્યાર્થી-શિક્ષક ગુણોત્તર", ptrTarget: "લક્ષ્ય ૨૭:૧",
     classCapacity: "વર્ગ ક્ષમતા", classCapTarget: "મહત્તમ ૩૦ / વર્ગ", enrolment: "કુલ નોંધણી", enrolTarget: "ન્યૂનતમ ૧૫૦+",
     avgTraining: "સરેરાશ શાળા તાલીમ કલાક", chronicAbs: "સતત ગેરહાજર (૭-દિવસ)", avgTrainTarget: "≥ ૫૦ કલાક", sevenDayWindow: "૭-દિવસ",
-    attendanceGap: "હાજરી સબમિશન ગેપ", allSubmitted: "આજે બધા વર્ગોએ સબમિટ કર્યું — કંઈ બાકી નથી.",
+    attendanceGap: "હાજરી સબમિશન ગેપ", allSubmitted: "આજે બધા વર્ગોએ સબમિટ કર્યું. કંઈ બાકી નથી.",
     notSubmitted: "સબમિટ નથી", submitted: "સબમિટ થયું", downloadNames: "નામ ડાઉનલોડ કરો", classId: "વર્ગ", teacherName: "શિક્ષક",
     dropout: "ડ્રોપઆઉટ ઘટાડો", fewerDropouts: "ગયા વર્ષ કરતાં {n} ઓછા ડ્રોપઆઉટ", statusMatrix: "સ્થિતિ ઝાંખી",
     schoolActions: "શાળાની સુધારણા ક્રિયાઓ", teacherActions: "શિક્ષકો માટે સુધારણા ક્રિયાઓ", flag: "ફ્લેગ",

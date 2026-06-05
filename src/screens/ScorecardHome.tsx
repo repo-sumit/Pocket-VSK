@@ -29,7 +29,8 @@ export default function ScorecardHome() {
   if (user?.role === "principal" && entity.level === "school") return <PrincipalView entity={entity} greeting={greeting} />;
 
   const parentLevelLabel = sc.parent ? t(`levels.${sc.parent.entity.level}`) : t("common.average");
-  const scoredDomains = sc.domainScores.filter((d) => d.weightage > 0);
+  // only domains that have at least one applicable KPI at this level (hide, don't NA)
+  const scoredDomains = sc.domainScores.filter((d) => d.weightage > 0 && d.records.length > 0);
   const periodNo = CURRENT_PERIOD().id.split("W")[1];
   const concern = sc.callouts.find((c) => c.kind === "needs_attention");
   const improved = sc.callouts.find((c) => c.kind === "most_improved");

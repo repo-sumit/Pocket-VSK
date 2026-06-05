@@ -22,7 +22,7 @@ export function formatValue(value: number | null, unit: Unit, lang: Lang = "en")
     case "hours":
       return lang === "gu" ? `${locNum(n, lang)} કલાક` : `${n} hrs`;
     case "count":
-      return locNum(formatCount(n), lang);
+      return Math.abs(n) >= 1000 ? compactNum(n, lang) : locNum(formatCount(n), lang);
     case "score":
       return `${locNum(n, lang)}`;
     default:
@@ -32,6 +32,24 @@ export function formatValue(value: number | null, unit: Unit, lang: Lang = "en")
 
 function formatCount(n: number): string {
   return n.toLocaleString("en-IN");
+}
+
+/** Compact large numbers (84,000 → 84K, 10,500 → 10.5K). Full value goes in a tooltip. */
+export function compactNum(n: number, lang: Lang = "en"): string {
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `${locNum(trimZero(n / 1_000_000), lang)}M`;
+  if (abs >= 1000) return `${locNum(trimZero(n / 1000), lang)}K`;
+  return locNum(Math.round(n), lang);
+}
+function trimZero(v: number): string {
+  return (Math.round(v * 10) / 10).toString().replace(/\.0$/, "");
+}
+
+/** Full localized value for tooltips (no K/M abbreviation). */
+export function formatValueFull(value: number | null, unit: Unit, lang: Lang = "en"): string {
+  if (value == null) return "—";
+  if (unit === "count") return locNum(formatCount(Math.round(value)), lang);
+  return formatValue(value, unit, lang);
 }
 
 export function formatDelta(delta: number | null, unit: Unit, lang: Lang = "en"): string {

@@ -33,6 +33,7 @@ export const SupabaseProvider: DataProvider = {
   getSchoolDescendants(_id: string): Entity[] { throw new Error(NOT_WIRED); },
   getUserByLogin(_loginId: string): AppUser | undefined { throw new Error(NOT_WIRED); },
   resolveLogin(_role: Role, _loginId: string, _secondField: string): AppUser | undefined { throw new Error(NOT_WIRED); },
+  resolveLoginById(_loginId: string, _secondField: string): AppUser | undefined { throw new Error(NOT_WIRED); },
   getValueSeries(_entity: Entity, _kpi: KpiDef, _periods: Period[]): RawSeries { throw new Error(NOT_WIRED); },
   setSchoolFilter(_mode: "all" | "pmshri" | "non"): void { /* no-op in the stub */ },
 };

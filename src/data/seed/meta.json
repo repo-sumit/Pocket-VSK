@@ -1,14 +1,15 @@
 {
-  "generatedFrom": "GSQAC/gsqac 2024-25.csv (real names + scores; nested synthetic codes)",
+  "generatedFrom": "Docs/Guj School Master.xlsx (real Gujarat registry, sliced subset)",
   "idFormats": {
     "state": 2,
     "district": 4,
     "block": 6,
     "cluster": 10,
     "school": 11,
-    "teacher": 8,
-    "student": 18
+    "teacherPrincipalId": 10,
+    "pin": 4
   },
+  "principalsAnonymised": true,
   "shape": {
     "districts": 4,
     "blocksPerDistrict": 3,
@@ -16,42 +17,42 @@
     "schoolsPerCluster": 5
   },
   "counts": {
-    "total": 6065,
     "state": 1,
     "district": 4,
     "block": 12,
     "cluster": 48,
     "school": 240,
-    "grade": 1920,
-    "section": 3840
+    "grade": 1560,
+    "section": 3116,
+    "total": 4981
   },
   "districts": [
     "Kachchh",
     "Banaskantha",
-    "Ahmedabad",
-    "Patan"
+    "Patan",
+    "Mahesana"
   ],
-  "pmShriSchools": 35,
+  "pmShriSchools": 43,
   "demoLogins": [
     {
       "role": "teacher",
-      "login_id": "24000009",
-      "name": "Kiran Bhatt",
+      "login_id": "2400000001",
+      "name": "Manisha Shah",
       "designation": "Teacher",
-      "school_id": "24010100011",
+      "school_id": "24010100101",
       "passcode": null
     },
     {
       "role": "principal",
-      "login_id": "24010100011",
-      "name": "Priya Dave",
+      "login_id": "2400000002",
+      "name": "Ramesh Modi",
       "designation": "Principal",
-      "school_id": "24010100011",
-      "passcode": "1111"
+      "school_id": "24010100101",
+      "passcode": null
     },
     {
       "role": "crc",
-      "login_id": "2401010001",
+      "login_id": "2401010005",
       "name": "Anjali Gohil",
       "designation": "Cluster Resource Coordinator",
       "school_id": null,
@@ -60,7 +61,7 @@
     {
       "role": "brc",
       "login_id": "240101",
-      "name": "Hetal Patel",
+      "name": "Ila Patel",
       "designation": "Block Resource Coordinator (BEO)",
       "school_id": null,
       "passcode": "2345"
@@ -68,7 +69,7 @@
     {
       "role": "deo",
       "login_id": "2401",
-      "name": "Jignesh Vasava",
+      "name": "Komal Vasava",
       "designation": "District Education Officer",
       "school_id": null,
       "passcode": "3456"
