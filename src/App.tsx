@@ -8,6 +8,7 @@ import Login from "@/screens/Login";
 // initial / login bundle).
 const ScorecardHome = lazy(() => import("@/screens/ScorecardHome"));
 const DomainView = lazy(() => import("@/screens/DomainView"));
+const SubDomainView = lazy(() => import("@/screens/SubDomainView"));
 const KpiDetail = lazy(() => import("@/screens/KpiDetail"));
 const CascadeComparison = lazy(() => import("@/screens/CascadeComparison"));
 const SectionComparison = lazy(() => import("@/screens/SectionComparison"));
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="/app" element={<AppShell />}>
             <Route index element={<ScorecardHome />} />
             <Route path="domain/:domainId" element={<DomainView />} />
+            <Route path="domain/:domainId/:subId" element={<SubDomainView />} />
             <Route path="kpi/:kpiId" element={<KpiDetail />} />
             <Route path="compare" element={<CascadeComparison />} />
             <Route path="sections" element={<SectionComparison />} />

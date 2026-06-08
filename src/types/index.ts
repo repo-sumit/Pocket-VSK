@@ -50,11 +50,15 @@ export interface EntityMeta {
   teachers?: number;
   /** 0..1 internal performance anchor — drives deterministic mock values. */
   anchor?: number;
-  /** Real GSQAC roll-up for schools sliced from the live CSV. */
+  /** GSQAC (School Quality output) — REAL per-school data from
+   *  `GSQAC/gsqac 2024-25.csv` where the UDISE matches, else synthesized from
+   *  the real distribution. Rolled up (enrolment-weighted) to higher levels. */
   gsqac?: {
-    total_percent: number;
-    grade_text: string;
+    total_percent: number; // 0..1 overall GSQAC score
+    grade_text: string; // A / B / C / D
     domains: Record<string, number>; // { D1: 0.76, D2: 0.88, ... } % achieved
+    improvement?: number; // synth pp change vs last cycle (TODO: real prior-cycle data)
+    synth?: boolean; // true when this school had no real GSQAC row
   };
 }
 
@@ -100,11 +104,14 @@ export interface DomainDef {
   framework: string;
   name: string;
   name_gu: string;
-  weightage: number; // 0..1 (fraction of overall)
+  weightage: number; // 0..1 (fraction of the INPUT composite; output domains use 0)
   sort_order: number;
   icon?: string; // lucide icon name
   accent?: string; // soft tint key for cards
-  /** optional sub-domain grouping (3-tier seam; pending full breakdown). */
+  /** 4A model: "input" (Attendance/Assessment/Administration → composite) vs
+   *  "output" (School Quality / GSQAC — shown standalone, not folded in). */
+  kind?: "input" | "output";
+  /** optional sub-domain grouping (3-tier seam; Administration uses 7). */
   sub_domains?: SubDomainDef[];
   /** optional per-domain band override; falls back to framework bands. */
   rating_bands?: RatingBand[];
@@ -131,6 +138,10 @@ export interface KpiDef {
   weight?: number;
   /** optional per-KPI RAG thresholds override (on 0..100 achievement). */
   rag?: { green: number; amber: number };
+  /** CONTEXT indicator: shown as a tile but NOT folded into the domain score.
+   *  Use for counts and for delta/"improvement"/"reduction" %s whose value is a
+   *  change-magnitude, not a 0–100 level (so averaging it would distort the score). */
+  context?: boolean;
 }
 
 /** kpi_values table — the raw fact row (one per entity × kpi × period). */
@@ -184,16 +195,29 @@ export interface KpiRecord {
   remark_gu: string;
 }
 
+/** middle-tier rollup: a sub-domain's score within a domain (3-tier model). */
+export interface SubDomainScore {
+  sub: SubDomainDef;
+  percent: number | null;
+  grade: string | null;
+  status: RagStatus;
+  records: KpiRecord[];
+}
+
 export interface DomainScore {
   domain: DomainDef;
-  /** 0..100 weighted achievement of the domain's KPIs. */
+  /** 0..100 score of the domain. For domains with sub-domains it is the mean of
+   *  sub-domain scores; otherwise the mean of its scored (%/score) indicators.
+   *  count-type indicators are context (not folded into the %). */
   percent: number | null;
   grade: string | null;
   status: RagStatus;
   weightage: number;
-  /** the domain's contribution to the overall score (weightage × percent). */
+  /** the domain's contribution to the input composite (weightage × percent). */
   contribution: number;
   records: KpiRecord[];
+  /** sub-domain breakdown (empty for domains without sub-domains). */
+  subScores: SubDomainScore[];
 }
 
 export interface Callout {

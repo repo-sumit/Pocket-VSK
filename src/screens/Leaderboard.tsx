@@ -40,6 +40,12 @@ export default function Leaderboard() {
 
   const open = (id: string) => { if (!canDrill) return; setScope(id); navigate("/app"); };
 
+  // peer-group average — the §4 "compare vs the next level up's average" reference
+  const peerAvg = useMemo(() => {
+    const ps = active.map((e) => e.percent).filter((v): v is number => v != null);
+    return ps.length ? Math.round((ps.reduce((a, b) => a + b, 0) / ps.length) * 10) / 10 : null;
+  }, [active]);
+
   if (!entity) return null;
 
   const peerLevelLabel = t(`levels.${entity.level}`);
@@ -112,7 +118,7 @@ export default function Leaderboard() {
       <Card className="card-pad">
         <SectionLabel className="mb-3">{t("leaderboard.rank")}</SectionLabel>
         {active.length > 0 ? (
-          <LeaderboardList entries={active} lang={lang} onRowClick={canDrill ? open : undefined} youLabel={t("leaderboard.you")} />
+          <LeaderboardList entries={active} lang={lang} onRowClick={canDrill ? open : undefined} youLabel={t("leaderboard.you")} avg={peerAvg} />
         ) : (
           <p className="py-6 text-center text-sm text-neutral-400">{t("leaderboard.noPeers")}</p>
         )}

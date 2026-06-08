@@ -108,7 +108,9 @@ const browser = await chromium.launch();
   ok("principal: tamper→parent cluster clamps to school", (await tamperReload(page, "cluster-2401010005")) === "sch-24010100101");
   await tamperReload(page, "sch-24010100101");
   const body = await page.locator("body").innerText();
-  ok("principal: School vs State benchmark still shown (read-only)", /State/.test(body));
+  // 4A: principal sees the unified home — School Quality output + input cards (peer
+  // comparison is now vs the parent/cluster average per §4, not a fixed State baseline)
+  ok("principal: 4A home renders (School Quality output shown)", /School Quality/i.test(body));
   await shot(page, "ac-principal-scorecard");
   await ctx.close();
 }

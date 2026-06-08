@@ -5,42 +5,51 @@ import { VSK_KPIS } from "./kpiCatalog";
 const ALL_LEVELS = ["state", "district", "block", "cluster", "school", "grade", "section"] as const;
 
 /**
- * THE single Unified Portal framework — 5A (= GSQAC). A1–A5 only; SQAF and the
- * old A6/District domains are gone. Engine stays fully config-driven (adding a
- * domain/KPI/sub-domain is a config change, no code edit).
+ * Unified Portal · 4A Input-Output model (replaces the old 5A).
+ *  • Inputs (dynamic): Attendance 30% · Assessment 30% · Administration 40%
+ *    → the headline "Input Composite" the user can act on.
+ *  • Output (annual): School Quality (= GSQAC, displayed as-is, vs last cycle).
+ * Concept: improve the 3 inputs → School Quality rises. The engine is fully
+ * config-driven, so domains/sub-domains/indicators are data, not code.
  *
- * ⚠ Domain weightages are PLACEHOLDERS pending State sign-off; they sum to 100%.
+ * ⚠ Input weightages (30/30/40) are the CEO-agreed default; kept configurable.
  */
-const WEIGHTAGE_PLACEHOLDER = true; // domain weightages below await State approval
+const WEIGHTAGE_PLACEHOLDER = true;
 
-// A4 sub-domains: a configurable 3-tier seam (Domain > Sub-Domain > Indicator).
-// Placeholder grouping pending the full sub-domain/indicator breakdown (Chaitanya).
-const A4_SUBS: SubDomainDef[] = [
-  { id: "a4_schemes", name: "Schemes & Payments", name_gu: "યોજનાઓ અને ચુકવણી" },
-  { id: "a4_grievances", name: "Grievances & Issues", name_gu: "ફરિયાદો અને સમસ્યાઓ" },
-  { id: "a4_district", name: "District Tracking", name_gu: "જિલ્લા સ્તરનું ટ્રેકિંગ" },
+/** Administration's 7 sub-domains — the 3-tier seam (Domain > Sub-Domain > Indicator). */
+const ADMIN_SUBS: SubDomainDef[] = [
+  { id: "adm_teachers", name: "Teachers (TPD)", name_gu: "શિક્ષકો (TPD)" },
+  { id: "adm_schemes", name: "Scheme & Payment Delivery", name_gu: "યોજના અને ચુકવણી" },
+  { id: "adm_resources", name: "Resource Usage", name_gu: "સંસાધન ઉપયોગ" },
+  { id: "adm_programs", name: "Program Implementation", name_gu: "કાર્યક્રમ અમલીકરણ" },
+  { id: "adm_visits", name: "Visits & Observations", name_gu: "મુલાકાત અને નિરીક્ષણ" },
+  { id: "adm_issues", name: "Issue & Risk Resolution", name_gu: "સમસ્યા અને જોખમ નિવારણ" },
+  { id: "adm_retention", name: "Retention & SSA Fund Usage", name_gu: "જાળવણી અને SSA ભંડોળ" },
 ];
 
 const UNIFIED_DOMAINS: DomainDef[] = [
-  d("a1", "A1 · Attendance & Access", "A1 · હાજરી અને પહોંચ", 0.2, 0, "CalendarCheck", "blue"),
-  d("a2", "A2 · Assessment & Learning", "A2 · મૂલ્યાંકન અને અધ્યયન", 0.3, 1, "ClipboardCheck", "green"),
-  d("a3", "A3 · TPD for Teachers", "A3 · શિક્ષક વ્યાવસાયિક વિકાસ", 0.1, 2, "GraduationCap", "yellow"),
-  d("a4", "A4 · Administration & Service Delivery", "A4 · વહીવટ અને સેવા વિતરણ", 0.2, 3, "Building2", "orange", A4_SUBS),
-  d("a5", "A5 · School Quality (GSQAC)", "A5 · શાળા ગુણવત્તા (GSQAC)", 0.2, 4, "Award", "pink"),
+  d("attendance", "Attendance", "હાજરી", 0.3, 0, "CalendarCheck", "blue", "input"),
+  d("assessment", "Assessment", "મૂલ્યાંકન", 0.3, 1, "ClipboardCheck", "green", "input"),
+  d("administration", "Administration", "વહીવટ", 0.4, 2, "Building2", "orange", "input", ADMIN_SUBS),
+  d("school_quality", "School Quality", "શાળા ગુણવત્તા", 0, 3, "Award", "pink", "output"),
 ];
 
 export const UNIFIED_FRAMEWORK: FrameworkConfig = {
   id: "unified",
-  name: "Unified Portal · 5A",
-  name_gu: "Unified Portal · 5A",
+  name: "Unified Portal · 4A",
+  name_gu: "Unified Portal · 4A",
   levels: [...ALL_LEVELS],
   rating_bands: GSQAC_BANDS,
   domains: UNIFIED_DOMAINS,
   kpis: VSK_KPIS,
 };
 
-/** true when domain weightages are still placeholders (shown in the UI). */
+/** true when input weightages are still the agreed-default placeholders (shown in UI). */
 export const WEIGHTAGE_IS_PLACEHOLDER = WEIGHTAGE_PLACEHOLDER;
+
+/** the 3 input domains feed the headline composite; the output is standalone. */
+export const INPUT_DOMAIN_IDS = ["attendance", "assessment", "administration"] as const;
+export const OUTPUT_DOMAIN_ID = "school_quality";
 
 function d(
   id: string,
@@ -50,9 +59,10 @@ function d(
   sort_order: number,
   icon: string,
   accent: string,
+  kind: "input" | "output",
   sub_domains?: SubDomainDef[],
 ): DomainDef {
-  return { id, framework: "unified", name, name_gu, weightage, sort_order, icon, accent, sub_domains };
+  return { id, framework: "unified", name, name_gu, weightage, sort_order, icon, accent, kind, sub_domains };
 }
 
 export const DEFAULT_FRAMEWORK_ID = "unified";

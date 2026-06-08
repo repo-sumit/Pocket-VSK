@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Unified Portal — Vidya Samiksha Kendra (Gujarat) one-platform school-performance KPI dashboard (config-driven, cascading, bilingual).",
   "scripts": {
-    "seed": "python scripts/generateSeed.py",
+    "seed": "python scripts/generateSeed.py && node scripts/attachGsqac.mjs",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",

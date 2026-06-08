@@ -143,6 +143,19 @@ class MockProviderImpl implements DataProvider {
   getValueSeries(entity: Entity, kpi: KpiDef, periods: Period[]): RawSeries {
     const rep = kpi.level_representation[entity.level];
     if (rep === "NA") return { series: periods.map((p) => ({ period: p.id, value: null })), benchmark: null };
+    // School Quality (output) = REAL GSQAC from entity.meta — annual, so flat
+    // across periods (no weekly trend); "vs last cycle" is the sq_improvement KPI.
+    if (kpi.id.startsWith("sq_")) {
+      const g = entity.meta.gsqac;
+      const v = !g
+        ? null
+        : kpi.id === "sq_gsqac"
+          ? round1(g.total_percent * 100)
+          : kpi.id === "sq_improvement"
+            ? g.improvement ?? null
+            : null;
+      return { series: periods.map((p) => ({ period: p.id, value: v })), benchmark: this.benchmarkFor(kpi, entity.level) };
+    }
     const benchmark = this.benchmarkFor(kpi, entity.level);
     const series = periods.map((p) => ({ period: p.id, value: this.valueAt(entity, kpi, p.index) }));
     return { series, benchmark };

@@ -1,72 +1,61 @@
-# Unified Portal — QA Report
+# Unified Portal — QA Report (4A Input-Output reframe)
 
-End-to-end QA + code review + responsive/visual audit of the whole app, with fixes.
+Structural migration from the 5A model to the **4A Input-Output** model (per `Mini-App_Action_Plan_4A.md` + `OGM 3.0 - KPIs_6th June_draft 1.csv`), with real GSQAC data for School Quality. The engine stayed **config-driven** — most of this was config + data + a few screens.
 
-**Method.** Driven with the Playwright library (the Playwright MCP was not connected to the session; the library is functionally equivalent for navigation, multi-viewport screenshots, console capture, and `localStorage` tampering). All checks run against the **production build** (`npm run build` → `npm run preview`) to avoid dev-server/HMR staleness. Skills applied: `impeccable` + `design-taste-frontend` (visual/responsive craft), `e2e-testing-patterns` / `integration-testing` / `performance-testing` (coverage), `owasp-security` (access control). Infra/DB skills ignored (mock data, no Supabase/Docker).
-
-**Coverage.** 6 roles (Teacher, Principal, CRC, BRC/BEO, DEO, State) × 7 screens (Login, Scorecard/Home, Compare, Sections, Leaderboard, Export, KPI detail) × 6 breakpoints (320, 375, 390, 768, 1024, 1440) × 2 languages (EN, ગુજરાતી).
-
-**Result.** All Blockers/Majors and most Minors fixed. **0 horizontal-overflow and 0 console errors** across the full matrix; `tsc --noEmit` clean; `npm run build` passes. Automated suites: functional **21/21**, access-control + dropdowns **20/20**, 6-role login/scope **6/6**.
+**Method.** Read the reference files first (action plan, OGM Table 1/3, real `GSQAC/gsqac 2024-25.csv`) without modifying them. Verified with the **Playwright MCP** (now connected) plus the Node Playwright suites, against the **production build** (`npm run build` → `npm run preview`). Skills applied: `impeccable` + `design-taste-frontend` (6-second-rule, decision-first, no "rangoli"); `owasp-security` (access control); e2e/integration/performance patterns (coverage). Two data-integration forks were confirmed with the user before building (GSQAC source; vs-last-cycle).
 
 ---
 
-## Issues found & status
+## What changed
 
-Severity: **Blocker** (broken/unusable) · **Major** (wrong data, security, or breaks a screen) · **Minor** (visual/correctness, contained) · **Nit** (polish).
-
-| # | Screen / Area | Sev | Issue | Status |
-|---|---|---|---|---|
-| 1 | Scorecard ring/badge (all roles) | Major | Grade bands too lenient: **77/100 showed "A+"** (A+ was `min:75`); any score ≥70 was group-A → green. | **Fixed** — recalibrated `GSQAC_BANDS` (A+ ≥85, A ≥75, B ≥60, C ≥40). 77 → **A**; applied consistently to ring, badge, status table, leaderboard. |
-| 2 | Principal "School vs State", Home "you vs parent" | Major | RAG colour was absolute, so **"TPD 74%, behind State 87%" rendered green**. | **Fixed** — `DomainBar` colours by gap-vs-benchmark when a benchmark is present (at/ahead → green, slightly behind → amber, well behind → red); absolute grade RAG retained for the overall ring/grade. |
-| 3 | Home, Principal, Compare, Sections, Export, KPI (≤375px, both langs) | Major | Horizontal overflow / misalignment on iPhone SE & 320px. Root cause: column-less grids (`grid gap-x`) created an implicit **auto** track that grew to *max-content*, and a flex name span used `truncate` without `min-w-0`. | **Fixed** — added explicit `grid-cols-1` base to all column-less grids; `min-w-0` on hero grid items and the DomainBar name; Export table wrapped in contained `overflow-x-auto`; headers set to `flex-wrap`. |
-| 4 | Sections school dropdown (officer scope) | Major (perf) | The design-system `Select` mounted **every** option; at State scope that is **1000 school nodes**, with per-key `scrollIntoView`. | **Fixed** — render capped to 60 rows + "+N more · type to filter" hint; verified now mounts **60** nodes, not 1000. Search narrows the rest. |
-| 5 | Compliance Benchmarks (Principal, mobile) | Major→Minor | 5 cards in a 2-col grid left an orphan + uneven heights. | **Fixed** — `grid-cols-2 lg:grid-cols-5`, the 5th card spans both columns on mobile, `h-full` equalises heights. No orphan, no overflow. |
-| 6 | GSQAC scoreboard (Principal) | Minor | "Improvement compared to last cycle: **+71%**" — the `gsqac_improvement` *metric value* (~65-71) was shown as a cycle delta. | **Fixed** — now shows the GSQAC score's real month-over-month delta (e.g. **-2.5 pts**), signed + RAG-coloured. |
-| 7 | Greeting (Principal) | Minor | School id clipped as raw overflow ("2401010010…"). | **Fixed** — intentional `truncate` + `title` tooltip on the greeting line (and heading). |
-| 8 | `components/ui/atoms.tsx` | Major | `Card`'s `as?: any` — the only true `any` in the codebase; disabled prop type-checking. | **Fixed** — typed `as?: ElementType`. |
-| 9 | `lib/format.ts`, `engine/rag.ts`, `config/applicability.ts`, `ui/Tooltip.tsx`, `scripts/_smoke_entry.ts` | Major | Dead code: 4 unused exported fns (`scoreOutOf100`, `roleFromIdLength`, `achievementVsBenchmark`, `applicableKpis`), an unused `Tooltip` component, and an orphan smoke script (superseded by the Playwright suites, and it referenced the now-deleted `roleFromIdLength`). | **Fixed** — all removed. |
-| 10 | `components/role/PrincipalView.tsx` | Major (config) | Compliance thresholds (PTR/enrolment/class-capacity/training/chronic bands, defaults) hardcoded as magic numbers in the view — violates the config-driven mandate (brief flagged this for judgment). | **Fixed** — extracted to `config/complianceBands.ts` (`COMPLIANCE`) and imported. |
-| 11 | `role/TeacherView.tsx` | Minor (config) | TPD 50-hour target, 50/40 bands, and `baseline=60` hardcoded. | **Fixed** — sourced from `COMPLIANCE.tpdTargetHours` / `.training` / `.needsImprovementBelow`. |
-| 12 | `role/TeacherView.tsx` | Minor (token) | Stray hex `#8B5CF6` on the TPD sparkline bypassed theme tokens and could drift from the violet icon. | **Fixed** — uses `accent("purple").hex`. |
-| 13 | `screens/SectionComparison.tsx` | Minor (perf) | School list used the **uncached** `getDescendants(...,'school')` (re-walks ~21k entities on scope change) and ignored the PM-SHRI filter. | **Fixed** — switched to the cached, PM-SHRI-aware `getSchoolDescendants` (also retires a dead provider method). |
-| 14 | `index.css` + `RatingRing.tsx` | Minor (a11y) | No `prefers-reduced-motion` handling despite fade/scale/bar-grow/ring count-up. | **Fixed** — global reduced-motion reset + RatingRing jumps to final value when reduce is set. |
-| 15 | `components/ui/atoms.tsx` ProgressBar | Nit (a11y) | Kept `role=progressbar`+`aria-valuenow` even when decorative (`aria-hidden`), which is contradictory. | **Fixed** — progressbar semantics only when a label is supplied; otherwise `aria-hidden` decorative. |
-| 16 | Export.tsx / DomainView.tsx / PrincipalView.tsx | Minor | Redundant/unsafe `as number` casts over already-typed values. | **Fixed** — removed. |
-| 17 | `config/applicability.ts` | Nit | `keyof typeof` / `as number` casts on the `PUBLISHED` map. | **Fixed** — `PUBLISHED` already typed `Partial<Record<Level,number>>`, casts removed. |
-| 18 | Tooltip bubble (mobile) | Minor | `InfoTooltip` bubble (`opacity-0` but in layout) widened `scrollWidth` at 320px — an invisible scroll trap. | **Fixed** — toggled with `display:none` (`hidden`/`group-hover:block`) + viewport-clamped width. |
+| Area | Change |
+|---|---|
+| **Framework** ([frameworks.ts](app/src/config/frameworks.ts)) | 5 domains → **4**: Attendance (input 30%), Assessment (input 30%), Administration (input 40%), **School Quality** (output). Administration gets **7 sub-domains**. Renamed "Unified Portal · 4A". `kind: input/output` + `INPUT_DOMAIN_IDS`/`OUTPUT_DOMAIN_ID`. |
+| **Catalog** ([kpiCatalog.ts](app/src/config/kpiCatalog.ts)) | Rebuilt from §2 (~50 indicators) with `unit` (type), `direction`, `data_source`, `sub_domain`, sample numbers, "—"=NA markers, and `// TODO` notes on the CSV-flagged ambiguous metrics. Added `context` flag + per-KPI `rag`. `GSQAC_DOMAINS` (D1-D5). |
+| **Scoring** ([score.ts](app/src/engine/score.ts)) | Headline = **Input Composite** (30/30/40 over the 3 inputs, output excluded). **School Quality shown as-is** (the GSQAC `score`, not averaged). **Sub-domain rollups** (domain = mean of sub-domains = mean of indicators). lower-is-better inverted; **count + delta indicators are CONTEXT** (shown, not folded into the %). |
+| **School Quality** ([attachGsqac.mjs](app/scripts/attachGsqac.mjs), [mockProvider.ts](app/src/data/provider/mockProvider.ts)) | **Real GSQAC** joined by UDISE: **775/1000 schools real**, 225 synth from the real distribution, rolled up enrolment-weighted to cluster→state. Provider sources `sq_*` from `meta.gsqac` — **annual/flat** (no WoW); "vs last cycle" is a flagged synth delta. |
+| **Home** ([ScorecardHome.tsx](app/src/screens/ScorecardHome.tsx)) | **4A homepage for every role**: composite ring + 3 input cards (score, RAG, WoW, vs-parent peer gap) + **School Quality output card** (GSQAC + grade + D1-D5 + vs last cycle). Removed the score-breakdown table and bespoke `PrincipalView`/`TeacherView` ("rangoli" + duplication). |
+| **Drill (3-click)** ([DomainView.tsx](app/src/screens/DomainView.tsx), [SubDomainView.tsx](app/src/screens/SubDomainView.tsx)) | Administration → **sub-domain cards** → indicators (3 taps); Attendance/Assessment → indicators (2 taps); School Quality → GSQAC D1-D5 breakdown. New `domain/:domainId/:subId` route. **Geography drill** = the "Explore below" children + breadcrumb (both journeys). |
+| **Peer comparison** ([ui/Leaderboard.tsx](app/src/components/ui/Leaderboard.tsx)) | **Performance bands (A+/A/B) + "± vs benchmark"** (the peer-group/next-level-up average), **no integer ranks/medals/rank-movement**. Read-only for out-of-subtree peers. Input cards show the vs-parent-average gap. |
+| **Compliance boxes** | Folded into Administration indicators — **PTR survives as `vis_ptr`**; the standalone class-capacity/enrolment boxes are gone (not KPIs in the new catalog). |
+| **i18n** | All new domain/sub-domain/indicator labels carry `name_gu`; new UI strings (Input composite, School Quality, vs last cycle, sub-domains, ahead/behind, peer comparison) added to en + gu. |
 
 ---
 
-## Re-verification (after fixes, production build)
+## Verification (production build)
 
 | Check | Result |
 |---|---|
-| `tsc --noEmit` | clean |
-| `npm run build` | passes (main chunk 30 KB gz; 21k-entity seed lazy-loaded as a separate ~373 KB-gz chunk) |
-| Responsive sweep (roles × screens × {320,375,390,768,1024,1440} × {en,gu}) | **0 overflow, 0 console errors** |
-| Functional E2E (`verify.mjs`) | **21/21** (login validation 10-digit ID / 11-digit UDISE / 4-digit PIN, scorecard, compare, sections, KPI cascade, no "GSOAC" typo) |
+| `tsc --noEmit` · `npm run build` | clean / passes (main chunk 30 KB gz; 21k-entity+GSQAC seed lazy-loaded ~408 KB gz) |
+| Responsive sweep (roles × screens × {320,375,768,1440} × {en,gu}) | **0 overflow, 0 console errors** |
+| Functional (`verify.mjs`) | **21/21** (login validation 10-digit ID / 11-digit UDISE / 4-digit PIN, screens load, no console errors) |
 | Access control + dropdowns (`verify-access.mjs`) | **20/20** |
-| All-6-roles login + scope (`roles-smoke.mjs`) | **6/6** (teacher→section, principal→school, crc→cluster, brc→block, deo→district, state→state) |
-| Select render cap | 1000-school dropdown mounts **60** nodes + hint (was 1000) |
+| All-6-roles login + scope (`roles-smoke.mjs`) | **6/6** |
+| Playwright MCP visual | 4A home (desktop + iPhone SE), 3-click drill (Administration → Retention → indicators), geography drill (district cards), School Quality real GSQAC D1-D5, peer-bands leaderboard, 0 console errors |
 
-### Access control (OWASP lens) — re-verified holding
-- Block/Principal cannot reach an ancestor or peer dashboard via Compare, breadcrumb, leaderboard, or **hand-edited `localStorage` scope** — out-of-scope scope is clamped to home (`isInScope` guard on `setScope` write + `useScope` read + `AppShell` repair).
-- Peer comparison stays read-only and non-navigable (peer leaderboard rows + Compare "Peers" group render values only).
-- Header breadcrumb shows the user's own scope, never a switched ancestor.
-- No secrets/keys in client code. Comments at each guard note that **production must also enforce scope server-side (Postgres RLS)** — client checks are bypassable.
+**Scoring sanity (State):** composite **91 (A++)** = 0.3·94 + 0.3·87 + 0.4·90 ✓; Administration **89%** = mean of its 7 sub-domains ✓; School Quality **67% (B)** = real rolled-up GSQAC (Scholarships D5 = 47%, matching the CSV's low D5) ✓.
+
+### §5 carry-forward — re-verified, no regressions
+- **Access control:** Block/Principal cannot reach an ancestor/peer via Compare, breadcrumb, leaderboard, or hand-edited `localStorage` (clamped to home; `isInScope` guard intact). Peer comparison read-only/non-navigable. Production-RLS comments retained.
+- **Login:** 10-digit ID + 11-digit UDISE (teacher/principal) / ID + 4-digit PIN (officers), role by seed lookup, time-based greeting — all pass.
+- **"—" = hidden** (no NA clutter); role-appropriate sets; PM SHRI hidden for Teacher/Principal; **Select All** in dropdowns; custom on-brand dropdowns with search + a11y; responsive 320–1440; bilingual; real registry retained.
+
+### Bugs found & fixed during this round
+| Issue | Fix |
+|---|---|
+| Input-card WoW trend distorted by count deltas (chronic absentees / merit list) | domain trend averages only scored %/score indicators |
+| "Reduction in dropout 16%" rendered **red** and dragged the score (delta scored as 16/100) | delta indicators (dropout, student improvement, ORF/FLN) marked `context` + sensible per-KPI RAG → green, not folded into the score |
+| (Prior round) grade band 77→A+, behind-benchmark green, iPhone SE overflow, 1000-node dropdown, dead code | all still fixed (bands A+ ≥85, gap-aware RAG, `grid-cols-1` reflow, Select cap, config-driven compliance) |
 
 ---
 
-## Deferred (Nits — low risk, documented; not fixed)
+## Deferred / couldn't implement (and why)
 
-- **Chart hex literals** in `TrendChart.tsx` (grid/axis/benchmark/tooltip), the `RatingRing` track stroke, and the `Sparkline` default `#386AF6` mirror existing theme tokens. Recharts/SVG require JS values, so these are not class-token violations; centralising them into named `lib/colors` exports is a cleanup, not a correctness fix.
-- **Level-ordering array** is defined in ~3 places (`LEVELS`, `CASCADE_ORDER`, `childLevelOf`); could derive all from the single `LEVELS` constant.
-- **`perSchool` normalization** duplicated between `engine/rollup.ts` and `CascadeComparison.tsx` (`cmpVal`); extract a shared helper.
-- **`mockProvider` seed cast** `as unknown as Entity[]` is at the JSON-import boundary; kept (documented) — a dev-only runtime guard/zod parse would harden it.
-- **`KpiValueRow` type** and the provider's `resolveLogin`/`getUserByLogin` are part of the documented production (Supabase) seam; kept intentionally.
-- **`InfoTooltip`** exposes its text via the button `aria-label` (accessible; not truly double-spoken); an `aria-describedby` refactor is optional polish.
+- **Open metric definitions (pending Chaitanya / State)** — built with sample numbers + a `// TODO` label, logic deferred: *Performance of PM SHRI schools* (metric?), *Grant & expenditure* (what metric?), *Scheme delivery vs Payment completion* (flagged "very similar"), *ICT/Library usage* (may not apply to all schools), *Attendance reporting compliance* and *Reports downloaded* (exact definition). These render with real labels + data sources but their definitions are not final.
+- **"Improvement vs last cycle"** — synthesized per-entity delta, flagged `// TODO: real prior-cycle data`, because `gsqac 2024-25.csv` is a single round (no prior cycle).
+- **GSQAC coverage** — 775/1000 schools are real; 225 are synthesized from the real distribution (marked `synth`) to keep every level populated, per your decision. A re-seed to GSQAC-only schools would make it ~100% real but churn the registry/demo logins.
+- **Per-KPI aggregation definitions** (Devpal) — the app rolls each indicator section→…→state by anchoring to the published per-level numbers (cascade-consistent); the exact production aggregation per indicator is pending.
+- **Compliance class-capacity / enrolment boxes** — removed (folded per §3.11); only **PTR** survives as an indicator (`vis_ptr`), since the other two aren't indicators in the new catalog.
+- **Prior-round Nits** (chart-hex centralization, level-ordering dedup, `perSchool` dedup) remain deferred — documented previously; none affect correctness.
 
-## Not implemented / known limitations (unchanged from prior rounds)
-- Mock data only (no Supabase); the `supabase/` schema + seed are a documented migration seam.
-- Domain weightages are placeholders summing to 100% (`WEIGHTAGE_IS_PLACEHOLDER`), surfaced in the UI.
-- Per-level KPI values are anchored to the published figures with deterministic per-entity spread; at the single-entity State level the value can sit slightly off its own benchmark (illustrative, not a strict bottom-up rollup).
+All Blockers/Majors implemented and verified; the items above are data/definition dependencies on Chaitanya/Devpal/State, not build gaps.
