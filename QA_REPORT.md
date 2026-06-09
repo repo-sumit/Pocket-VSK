@@ -1,5 +1,17 @@
 # Unified Portal — QA Report
 
+## N+1 made consistent across ALL indicators
+
+The N+1 comparison was still being skipped for change-deltas (`displayStrategy: "delta_cycle"` — e.g. "Reduction in dropout %") and, on the older build, for counts/ratios/GSQAC — so the Key Indicators strip looked inconsistent (some tiles had "[parent] · score", some showed "vs last cycle" / "3% of enrolled" / nothing). Now **every** indicator shows the N+1 line, on both the Key Indicators strip ([HeroKpiStrip.tsx](app/src/components/ui/HeroKpiStrip.tsx)) and the KPI cards ([KpiCard.tsx](app/src/components/ui/KpiCard.tsx)).
+
+- **Universal N+1** — shown whenever a published parent figure exists; hidden only at State (no parent) and for NA. `peerAvg` carries a comparable per-level figure for every KPI (rates, counts, ratios, scores **and** change-deltas), so the comparison is sound everywhere.
+- **Formatted like the tile's own value** — change-deltas show a **signed** N+1 (e.g. "Reduction in dropout %" → value `+14.6%`, N+1 `Kachchh · +14%`); rates/counts/ratios/scores show the plain figure (`Kachchh · 74%`, `Kachchh · 790`, `Kachchh · 1.8`, `Kachchh · 74`).
+- **KpiCard now matches the strip for change-deltas** — those KPIs render a signed, direction-coloured value (`+11%` green) with the signed N+1, and the redundant inline "Δ this cycle" tag is suppressed (the value already is the delta). Rate KPIs keep value + inline direction-coloured delta + N+1.
+
+**Verified** (`tsc` + build clean) at a Block scope (parent = Kachchh), 375 + desktop, EN + ગુ: all 7 Key Indicators and every domain/sub-domain KPI card show "[parent] · score"; dropout reads `Kachchh · +14%` / `Kachchh · +૧૪%`; **0 horizontal overflow**; **0 console/page errors**; verify suite **21/21**. Screenshots at repo root: `keyind-consistent-desktop.png`, `keyind-assessment-375.png`.
+
+---
+
 ## KPI cards = domain-card family + N+1 on every KPI
 
 Screenshots at repo root: `kpicards-domain-375.png`, `kpicards-assessment-375.png`, `kpicards-assessment-desktop.png`, `kpicards-attendance-375-gu.png`.

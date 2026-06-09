@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 import type { KpiRecord, Level } from "@/types";
 import { rag, valueToneClass, deltaToneClass } from "@/lib/colors";
-import { formatValue, locNum, compactNum } from "@/lib/format";
+import { formatValue, formatDelta, locNum, compactNum } from "@/lib/format";
 import { peerAvg, peerLevelOf } from "@/lib/peer";
 import { buildTrend, periodLabelKey } from "@/lib/trend";
 import { useT, type Lang } from "@/i18n";
@@ -26,11 +26,16 @@ export function KpiCard({
   const trend = na ? null : buildTrend(rec, lang);
   const delta = trend?.delta ?? null;
 
-  // N+1: parent entity name + this KPI's score at the parent level (hidden at State /
-  // when unpublished / for change-deltas, where value & baseline aren't the same quantity)
+  // change-deltas (YoY/cycle improvement) display a SIGNED, direction-coloured value —
+  // same treatment as the Key Indicators strip, so a KPI reads the same on both surfaces.
   const isDelta = kpi.displayStrategy === "delta_cycle";
-  const peerScore = !isDelta && level && peerLevelOf(level) ? peerAvg(kpi.id, level) : null;
+
+  // N+1: parent entity name + this KPI's score at the parent level — shown for EVERY
+  // indicator with a published figure (hidden only at State / when NA), formatted like
+  // this card's own value (signed for change-deltas).
+  const peerScore = level && peerLevelOf(level) ? peerAvg(kpi.id, level) : null;
   const showPeer = !na && peerScore != null && !!parentName;
+  const peerStr = peerScore != null ? (isDelta ? formatDelta(peerScore, kpi.unit, lang) : formatValue(peerScore, kpi.unit, lang)) : "";
 
   const deltaMag =
     delta != null
@@ -53,10 +58,10 @@ export function KpiCard({
 
       {/* value (domain-card treatment) + inline direction-coloured frequency delta */}
       <div className="flex items-end justify-between gap-2">
-        <span className={cn("text-3xl font-extrabold tnum", na ? "text-rag-naText" : valueToneClass(rec.status))}>
-          {na ? "NA" : formatValue(rec.value, kpi.unit, lang)}
+        <span className={cn("text-3xl font-extrabold tnum", na ? "text-rag-naText" : isDelta ? deltaToneClass(rec.value, kpi.direction) : valueToneClass(rec.status))}>
+          {na ? "NA" : isDelta ? formatDelta(rec.value, kpi.unit, lang) : formatValue(rec.value, kpi.unit, lang)}
         </span>
-        {trend && delta != null && delta !== 0 && (
+        {trend && !isDelta && delta != null && delta !== 0 && (
           <span className={cn("inline-flex items-center gap-0.5 pb-1 text-2xs font-bold", deltaToneClass(delta, kpi.direction))}>
             {delta > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
             {deltaMag}
@@ -72,7 +77,7 @@ export function KpiCard({
 
       {/* N+1: parent entity name + this KPI's score at the parent level */}
       {showPeer ? (
-        <span className="truncate text-2xs text-neutral-400">{parentName} · {formatValue(peerScore, kpi.unit, lang)}</span>
+        <span className="truncate text-2xs text-neutral-400">{parentName} · {peerStr}</span>
       ) : na ? (
         <span className="text-2xs text-neutral-400">{t("common.notTracked")}</span>
       ) : null}

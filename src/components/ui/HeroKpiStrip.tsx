@@ -77,13 +77,11 @@ function HeroTile({
   const name = tn(kpi.name, kpi.name_gu);
   const isContextDelta = strat === "delta_cycle";
 
-  // N+1 comparison — the next-level-up entity's NAME + this KPI's score at that level
-  // (no ± delta), consistent with the domain cards and the KPI cards. Shown for every
-  // KPI with a published parent figure; skipped only at State (no parent) and for
-  // change-deltas (where the value isn't the same quantity as the baseline).
-  const showPeer = !isContextDelta;
+  // N+1 comparison — the next-level-up entity's NAME + this KPI's score at that level,
+  // shown for EVERY indicator (consistent with the domain cards and the KPI cards).
+  // Hidden only at State (no parent level) and where there is no published figure.
   const peerLevel = peerLevelOf(level);
-  const peerScore = showPeer && peerLevel ? peerAvg(kpi.id, level) : null;
+  const peerScore = peerLevel ? peerAvg(kpi.id, level) : null;
   const target = (kpi.target ?? "").replace(/[^0-9]/g, "") || "2";
   const chronicRate = kpi.unit === "count" && enrolment && enrolment > 0 ? (v / enrolment) * 100 : null;
 
@@ -104,7 +102,9 @@ function HeroTile({
   // ── ONE supporting line ──
   let supporting: ReactNode = null;
   if (peerScore != null && parentName) {
-    supporting = `${parentName} · ${formatValue(peerScore, kpi.unit, lang)}`; // parent name + score, no ± / ahead / behind / vs target
+    // parent name + score, formatted like this tile's own value (signed for change-deltas)
+    const peerStr = isContextDelta ? formatDelta(peerScore, kpi.unit, lang) : formatValue(peerScore, kpi.unit, lang);
+    supporting = `${parentName} · ${peerStr}`;
   } else if (isContextDelta) {
     supporting = t("scorecard.vsLastCycle");
   } else if (kpi.unit === "count") {
