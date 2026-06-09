@@ -1,11 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import type { DomainScore } from "@/types";
-import { useScope, useScorecard, useChildLeaderboard, useScopeStats } from "@/hooks";
+import { useScope, useScorecard, useScopeStats } from "@/hooks";
 import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { rag, accent } from "@/lib/colors";
 import { pct, locNum, greetingKey, formatDelta } from "@/lib/format";
-import { computeInsights } from "@/lib/insights";
 import { CURRENT_PERIOD, WEIGHTAGE_IS_PLACEHOLDER } from "@/config";
 import { OUTPUT_DOMAIN_ID } from "@/config/frameworks";
 import { GSQAC_DOMAINS } from "@/config/kpiCatalog";
@@ -13,8 +12,6 @@ import { Card, SectionLabel, Badge, ProgressBar, StatusDot } from "@/components/
 import { RatingRing } from "@/components/ui/RatingRing";
 import { RatingBadge } from "@/components/ui/RatingBadge";
 import { HeroKpiStrip } from "@/components/ui/HeroKpiStrip";
-import { SchoolRiskTable } from "@/components/ui/SchoolRiskTable";
-import { AttentionStrip } from "@/components/ui/AttentionStrip";
 import { VskBadge } from "@/components/ui/VskBadge";
 import { Icon, ChevronRight, ArrowUpRight, ArrowDownRight, Minus, Database } from "@/components/ui/Icon";
 
@@ -25,9 +22,8 @@ import { Icon, ChevronRight, ArrowUpRight, ArrowDownRight, Minus, Database } fro
  * 6-second scan: reality (scores + RAG) + next action (biggest opportunity).
  */
 export default function ScorecardHome() {
-  const { user, entity, currentId, setScope, childLevel } = useScope();
+  const { user, entity, currentId } = useScope();
   const sc = useScorecard(currentId);
-  const children = useChildLeaderboard(currentId);
   const stats = useScopeStats(currentId);
   const { t, tn, lang } = useT();
   const navigate = useNavigate();
@@ -40,7 +36,6 @@ export default function ScorecardHome() {
   const output = sc.domainScores.find((d) => d.domain.id === OUTPUT_DOMAIN_ID);
   const gsqac = entity.meta.gsqac;
   const allRecords = sc.domainScores.flatMap((d) => d.records);
-  const insights = computeInsights(sc, { stats });
   // GSQAC coverage (real vs estimated) — honesty so missing data ≠ low performance
   const gsqacCoverage = stats && stats.schools > 0 && stats.gsqacReal < stats.schools ? stats : null;
   const dWoW = sc.overallDeltaWoW;
@@ -98,9 +93,6 @@ export default function ScorecardHome() {
           </div>
         </div>
       </Card>
-
-      {/* WHAT NEEDS ATTENTION — auto-computed priority triage (the 6-second core) */}
-      <AttentionStrip insights={insights} onOpen={(ins) => navigate(ins.kpiId ? `/app/kpi/${ins.kpiId}` : ins.domainId ? `/app/domain/${ins.domainId}` : "/app")} />
 
       {/* WHAT TO ACT ON — the official hero/intervention levers; opens the indicator detail directly */}
       <HeroKpiStrip records={allRecords} level={entity.level} enrolment={stats?.enrolment} onOpen={(rec) => navigate(`/app/kpi/${rec.kpi.id}`)} />
@@ -199,16 +191,6 @@ export default function ScorecardHome() {
             </p>
           )}
         </button>
-      )}
-
-      {/* GEOGRAPHY drill — the units below you, worst-first (decision-first) */}
-      {childLevel && children.length > 0 && (
-        <SchoolRiskTable
-          entries={children}
-          childLevel={childLevel}
-          onOpen={(id) => { setScope(id); navigate("/app"); }}
-          onViewAll={() => navigate("/app/leaderboard")}
-        />
       )}
     </div>
   );

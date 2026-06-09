@@ -6,6 +6,7 @@ import { childLevelOf } from "@/engine";
 import { formatDelta } from "@/lib/format";
 import { Card, SectionLabel, Segmented } from "@/components/ui/atoms";
 import { Leaderboard as LeaderboardList } from "@/components/ui/Leaderboard";
+import { SchoolRiskTable } from "@/components/ui/SchoolRiskTable";
 import { RatingBadge } from "@/components/ui/RatingBadge";
 import { Sparkles, ArrowUpRight } from "@/components/ui/Icon";
 
@@ -123,6 +124,15 @@ export default function Leaderboard() {
           <p className="py-6 text-center text-sm text-neutral-400">{t("leaderboard.noPeers")}</p>
         )}
       </Card>
+
+      {/* WHERE TO FOCUS FIRST — units below you, worst composite first (moved from home) */}
+      {hasChildren && childLevel && (
+        <SchoolRiskTable
+          entries={children}
+          childLevel={childLevel}
+          onOpen={(id) => { setScope(id); navigate("/app"); }}
+        />
+      )}
     </div>
   );
 }

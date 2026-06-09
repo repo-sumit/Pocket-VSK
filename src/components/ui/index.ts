@@ -12,4 +12,3 @@ export { CalloutCard } from "./Callout";
 export { HeroKpiStrip } from "./HeroKpiStrip";
 export { SchoolRiskTable } from "./SchoolRiskTable";
 export { FrequencyBadge, FreshnessBadge, SourceBadge, KpiMetaRow, DataLagNote } from "./DataBadges";
-export { AttentionStrip } from "./AttentionStrip";
