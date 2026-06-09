@@ -1,0 +1,15 @@
+# GitHub Linguist overrides — keep the language bar focused on the React/TypeScript app.
+# Database/SQL/migration/seed files dominate the byte count (PLpgSQL ~93%), so mark
+# them as vendored; mark committed build artifacts as generated. These flags only
+# affect GitHub language stats — they do not delete, move, or change any files.
+
+*.sql linguist-vendored
+supabase/** linguist-vendored
+database/** linguist-vendored
+db/** linguist-vendored
+migrations/** linguist-vendored
+seed/** linguist-vendored
+seeds/** linguist-vendored
+dist/** linguist-generated
+build/** linguist-generated
+coverage/** linguist-generated
