@@ -13,7 +13,7 @@ import { ArrowDownRight, ArrowUpRight, Minus } from "./Icon";
  *    for the indicator (`direction`), BAD (red) otherwise — never coloured by the
  *    raw sign. So chronic-absentees falling, or dropout-reduction rising, read green.
  *  • Frequency-correct wording driven by the trend cadence:
- *    Daily → "this day" · Monthly → "this month" · Twice a Year → "this cycle" ·
+ *    Daily → "today" · Monthly → "this month" · Twice a Year → "this cycle" ·
  *    Half yearly → "this half-year" · Yearly → "this year".
  *  • `variant="inline"` — compact coloured text (cards). `variant="pill"` — soft
  *    chip (detail header). Both share identical logic, so a change here propagates

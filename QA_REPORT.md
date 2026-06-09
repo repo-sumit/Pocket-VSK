@@ -57,7 +57,7 @@ Final homepage card: title · OUTPUT · ANNUAL · score · grade badge · N+1 ·
 Re-parsed the latest sheet (re-uploaded over `GJ _ Unified App KPIs.xlsx`, modified today). It added a **Delta** column and shifted columns; only **Attendance / Assessment / Administration** were updated. **School Quality / GSQAC (sq_*, D1–D5, grade colours, GsqacSummaryCard) was not touched.**
 
 **Names + data sources + frequency (catalog [kpiCatalog.ts](app/src/config/kpiCatalog.ts), all per sheet):**
-- Attendance (src "Attendance bot", Daily): Students absent from past 7+ days (HP) · Teachers present today · Students present today · Students consuming Mid-day Meal (MDM) · Schools and Class Sections Submitting Attendance.
+- Attendance (src "Attendance bot", Daily): Students absent from past 7+ consecutive days (HP) · Teachers present today · Students present today · Students consuming Mid-day Meal (MDM) · Schools and Class Sections Submitting Attendance.
 - Assessment: SAT reports downloaded in classrooms (HP, src "Gyan Prabhav bot", **now Daily**) · Semester Assessment Test 1 (SAT1) · SAT2 (src "Xamta bot", **Yearly**) · **FLN - Oral Reading Fluency** (src "Oral Reading Fluency (ORF) Bot", Monthly) · **Common Entrance Test (CET)** (Yearly) · **Chief Minister Gyan Sadhna Merit Scholarship (CGMS)** (Yearly). The old ORF/CET/CGMS participation+improvement pairs were **collapsed to one each** (ids `asm_orf`/`asm_cet`/`asm_cgms`); `asm_below` ("Students below avg") and `Assessment result %` are **removed** (not in sheet).
 - Administration (sub-domains now School Observation · **Classroom Observation** (new) · Student Retention · CPD): renamed all to sheet wording — No of CRC/URC Visits per school (HP), School observations completed by CRC/URC, ICT Lab Usage in Schools, Library/Urinals & Toilets/Handwash/Drinking Water/SMC, Schools Visited for Classroom Observation, Classrooms following monthly lesson plans, Classrooms with Completed Teacher Diaries, **Identified Dropout Students**, Re-enrolment of Out-of-School Students, **Average CPD Time Per Teacher**, Teachers Achieving the 50-Hour CPD Target. Sources updated to SMA / CTS + EWS / PLC.
 
@@ -65,13 +65,13 @@ Re-parsed the latest sheet (re-uploaded over `GJ _ Unified App KPIs.xlsx`, modif
 
 **Score / value vs delta** — main value is the actual score (`%`, count, `score` for ORF CWPM, `hours` for avg CPD). No KPI uses `delta_cycle` any more (the improvement KPIs were collapsed), so no formula/delta text leaks into the value.
 
-**Delta + main-value colour now follow movement direction** (`ValueDisplay` gained an optional `toneClass`; cards derive it from `deltaToneClass(trend.delta, kpi.direction)`): up = green, down = red, **flat = neutral**, with the lower-is-better exception applied automatically by `kpi.direction` (so **Students absent from past 7+ days** and **Identified Dropout Students** show green when falling, red when rising). Applied consistently to KpiCard, DomainSummaryCard (home + page), KpiDetail summary, and the Top-Indicators strip. **GSQAC values keep their grade/status tone** (skipped via `sq_*` guard).
+**Delta + main-value colour now follow movement direction** (`ValueDisplay` gained an optional `toneClass`; cards derive it from `deltaToneClass(trend.delta, kpi.direction)`): up = green, down = red, **flat = neutral**, with the lower-is-better exception applied automatically by `kpi.direction` (so **Students absent from past 7+ consecutive days** and **Identified Dropout Students** show green when falling, red when rising). Applied consistently to KpiCard, DomainSummaryCard (home + page), KpiDetail summary, and the Top-Indicators strip. **GSQAC values keep their grade/status tone** (skipped via `sq_*` guard).
 
-**Frequency wording** stays sheet-driven: Daily → "this day", Monthly → "this month", Yearly → "this year", Half-yearly → "this half-year". No "this week"/"Weekly" on any KPI.
+**Frequency wording** stays sheet-driven: Daily → "today", Monthly → "this month", Yearly → "this year", Half-yearly → "this half-year". No "this week"/"Weekly" on any KPI.
 
 **SAT1/SAT2** — now annual (`Yearly`), `noTrend` removed → they show the trend graph + delta + N+1 + frequency badge like other cards, with a schedule note (**SAT1 "September", SAT2 "March"**, via new `KpiDef.scheduleNote`, rendered on KpiCard + KpiDetail).
 
-**Absentee KPI** unchanged in logic — `Students absent from past 7+ days` stays an absolute count (no per-school average), Daily → "this day", down = green.
+**Absentee KPI** unchanged in logic — `Students absent from past 7+ consecutive days` stays an absolute count (no per-school average), Daily → "today", down = green.
 
 **Mock data** ([kpiCatalog.ts] `PUBLISHED`): removed `asm_below`/improve rows; `asm_orf` set to CWPM-range scores (~44–53); `cpd_hours` → avg hours (~38–46); `ret_dropout` → growing absolute dropout count (school 6 → state 1400). Provider is catalog-driven, so the renamed/collapsed KPIs flow to Domain/KPI-detail/Compare/Leaderboard/Export automatically.
 
@@ -81,15 +81,15 @@ Re-parsed the latest sheet (re-uploaded over `GJ _ Unified App KPIs.xlsx`, modif
 
 ---
 
-## Frequency wording: Daily → "this day", Half-yearly → "this half-year"
+## Frequency wording: Daily → "today", Half-yearly → "this half-year"
 
 The per-KPI delta/context wording is i18n-driven through one path — `FrequencyDelta` → `periodLabelKey(cadence)` → `kpi.p*` — used by every card/detail (KpiCard, DomainSummaryCard, HeroKpiStrip, KpiDetail). Fixing the two off words there propagates everywhere:
 
-- `kpi.pWeek` (Daily) "this week" → **"this day"** (gu "આ દિવસે")
+- `kpi.pWeek` (Daily) "this week" → **"today"** (gu "આ દિવસે")
 - `kpi.pTime` (Half-yearly) "this time" → **"this half-year"** (gu "આ અર્ધવર્ષ")
 - unchanged (already correct): Monthly → "this month", Twice-a-year → "this cycle", Yearly → "this year".
 
-So every Daily KPI (Teacher/Student Attendance, MDM served %, Students absent from past 7+ days, Attendance reporting compliance %) now reads e.g. "Latest: 1 Jun" + "↗ +3.4% **this day**"; SAT-reports (Monthly) → "this month"; dropout/re-enrolment (Half-yearly) → "this half-year"; SAT1/SAT2 (Twice-a-year, snapshot) → "this cycle"; GSQAC (Yearly) → "this year". Date context for Daily details unchanged ("Latest: {date}"). Frequency badges already drive off the catalog `frequency` (no "Weekly" KPI exists, so no Weekly badge renders); the dead `Weekly` i18n key is unused. Doc comment in [FrequencyDelta.tsx](app/src/components/ui/FrequencyDelta.tsx) updated.
+So every Daily KPI (Teacher/Student Attendance, MDM served %, Students absent from past 7+ consecutive days, Attendance reporting compliance %) now reads e.g. "Latest: 1 Jun" + "↗ +3.4% **today**"; SAT-reports (Monthly) → "this month"; dropout/re-enrolment (Half-yearly) → "this half-year"; SAT1/SAT2 (Twice-a-year, snapshot) → "this cycle"; GSQAC (Yearly) → "this year". Date context for Daily details unchanged ("Latest: {date}"). Frequency badges already drive off the catalog `frequency` (no "Weekly" KPI exists, so no Weekly badge renders); the dead `Weekly` i18n key is unused. Doc comment in [FrequencyDelta.tsx](app/src/components/ui/FrequencyDelta.tsx) updated.
 
 **Assumption / out of scope:** the Leaderboard "Top movers this week" and the school-risk-table "this week" are composite **week-over-week** movements (the scorecard periods are weekly), not a single daily KPI's frequency — left as-is (correct for the weekly comparison; not a per-KPI frequency label). Legacy unused strings (`scorecard.whatChanged`, `kpi.deltaWeek`, `kpi.weeklyTrend`, `ogm.thisWeek`) are not rendered anywhere and were left untouched.
 
@@ -128,10 +128,10 @@ Per the latest `GJ _ Unified App KPIs.xlsx` (Assessment focus area), "Assessment
 
 ## Absentee KPI = absolute count · hierarchy bar chart removed from KPI detail
 
-1. **Rename** — `att_chronic` → **"Students absent from past 7+ days"** (en + gu) in [kpiCatalog.ts](app/src/config/kpiCatalog.ts); same id/direction (lower-is-better). Flows everywhere via `kpi.name`; the dead `principal.chronicAbs` legacy string updated too. No old variants remain (grep-clean).
+1. **Rename** — `att_chronic` → **"Students absent from past 7+ consecutive days"** (en + gu) in [kpiCatalog.ts](app/src/config/kpiCatalog.ts); same id/direction (lower-is-better). Flows everywhere via `kpi.name`; the dead `principal.chronicAbs` legacy string updated too. No old variants remain (grep-clean).
 2. **Absolute-count semantics** — the value is already anchored to the published per-level **count** (`PUBLISHED.att_chronic` = section 4 → school 18 → cluster 62 → block 215 → district 790 → state 4100), shown via `formatValue(count)` — never a percentage or per-school average.
 3. **N+1 = absolute parent count** — KPI-detail N+1 now uses `peerAvg(att_chronic, level)` (the published parent-level count, e.g. cluster scope → "Lakhapat · 215"), matching the cards. Compare (`cmpVal`) now **exempts `att_chronic`** from the `schoolsImplied` per-school normalization (deliberate exception); all other count KPIs unchanged.
-4. **"How it's calculated"** — updated to absolute-count prose: *"Counts unique students absent for 7 or more consecutive school days as of the selected/latest date. Higher hierarchy values are summed across all descendant schools."* Description no longer mentions "rate"/"average per school".
+4. **"How it's calculated"** — updated to absolute-count prose: *"Counts unique students absent for 7 or more consecutive school days as of the selected/latest date. ."* Description no longer mentions "rate"/"average per school".
 5. **Hierarchy comparison bar chart removed from ALL KPI detail pages** — deleted the "How {KPI} compares up the hierarchy" `ComparisonBars` card + the "Shown as average per school" subtitle from [KpiDetail.tsx](app/src/screens/KpiDetail.tsx) (cascade is still read only for the parent N+1 name). N+1 remains in the summary card + KPI cards only. `ComparisonBars` itself is untouched and still used by the Compare screen.
 6. **Trend charts kept** — the frequency-aware time-trend chart (30-day / monthly / half-yearly / yearly) is unchanged.
 
