@@ -102,5 +102,13 @@ html[lang="gu"] body {
       box-shadow: none;
       break-inside: avoid;
     }
+    /* keep export domain sections + summary cards from splitting across pages */
+    .print-avoid {
+      break-inside: avoid;
+    }
+    /* avoid the blue selection-highlight artifact on printed text */
+    ::selection {
+      background: transparent;
+    }
   }
 }

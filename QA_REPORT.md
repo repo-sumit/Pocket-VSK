@@ -1,5 +1,21 @@
 # Unified Portal — QA Report
 
+## Export scorecard redesign — date label + polished report
+
+[Export.tsx](app/src/screens/Export.tsx) reworked into a cleaner government report card; nothing else (KPI/provider/other screens) touched.
+
+- **Week → date.** Removed all `Week {n}` copy. Page subtitle and the report-card header now read **"Generated on 9 Jun 2026"** via new [`formatDate(new Date(), lang)`](app/src/lib/format.ts) (localised digits + short month, gu-aware). `CURRENT_PERIOD`/`periodNo` no longer used. `export.generatedOn` → "Generated on".
+- **Header** realigned: real logo chip vertically centred with a bold entity title, muted `Level · Unified Portal · 4A` line, and the generated-date line; a small school-filter chip (All Schools / PM SHRI) on the right; divider below.
+- **Domain summary** is now **four compact cards** (one per domain) with a domain-accent left border + tinted icon chip: domain name · homepage-indicator label · big value · `{Level} avg {x}` · right-aligned **`FrequencyDelta`** (frequency-correct, direction-aware colour). Replaces the plain summary table.
+- **Indicator sections** get a tinted **accent section band** (domain colour + icon + a `{score} · {grade}` chip on the right). Columns: Indicator (+ inline freq) · Value · `{Level} avg` · Δ · Source. Numeric columns are `whitespace-nowrap` (no awkward wrapping); the Δ column renders the shared `FrequencyDelta` (icon + colour, lower-is-better KPIs flip green/red); source is light/compact and may wrap.
+- **D1–D5** rendered as clean labelled cards (`D1 Teaching & Learning … 71%` + thin bar); the noisy **"GSQAC: x / y schools measured"** coverage line is **removed**.
+- **Footer** browser-print instruction removed — now just `★ Home-page indicators` (`export.homeIndicators`).
+- **Print CSS**: added `.print-avoid { break-inside: avoid }` (applied to summary cards, each domain section, D1–D5 block) and a transparent `::selection` in print to avoid highlight artifacts.
+
+**Files:** `Export.tsx`, `lib/format.ts`, `index.css`, `i18n/en.ts`, `i18n/gu.ts`, `QA_REPORT.md`. **Build:** `npm run build` passes clean. No KPI catalog/formula/provider/homepage/domain/detail/Compare/Leaderboard/login/access/PM-Shri changes.
+
+---
+
 ## Dynamic login flow (no tabs; ID length decides the surface)
 
 [Login.tsx](app/src/screens/Login.tsx) rebuilt: removed the Teacher/Principal | Officer tab toggle. The user enters **one User ID** first; the digit count reveals the right second field:

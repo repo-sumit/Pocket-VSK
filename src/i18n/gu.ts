@@ -89,7 +89,7 @@ export const gu: Dict = {
     rank: "સ્થિતિ", topMovers: "આ અઠવાડિયાના ટોચના સુધારકો", mostImproved: "સૌથી વધુ સુધારો", movement: "ફેરફાર",
     you: "તમે", noPeers: "આ સ્તરે ક્રમ આપવા કોઈ સાથી નથી.", peers: "સાથીઓ", below: "તમારા કાર્યક્ષેત્રમાં",
   },
-  export: { title: "સ્કોરકાર્ડ નિકાસ કરો", download: "ડાઉનલોડ / પ્રિન્ટ", generatedOn: "વર્તમાન સમયગાળા માટે બનાવેલ", note: "PDF તરીકે સાચવવા તમારા બ્રાઉઝરના પ્રિન્ટ ડાયલોગનો ઉપયોગ કરો.", domain: "ડોમેન", overall: "એકંદર" },
+  export: { title: "સ્કોરકાર્ડ નિકાસ કરો", download: "ડાઉનલોડ / પ્રિન્ટ", generatedOn: "બનાવ્યું", note: "PDF તરીકે સાચવવા તમારા બ્રાઉઝરના પ્રિન્ટ ડાયલોગનો ઉપયોગ કરો.", domain: "ડોમેન", overall: "એકંદર", homeIndicators: "હોમ-પેજ સૂચકાંકો", parentAvg: "સરેરાશ" },
   framework: { label: "ફ્રેમવર્ક", switch: "ફ્રેમવર્ક બદલો" },
   greeting: { morning: "સુપ્રભાત", afternoon: "નમસ્કાર", evening: "શુભ સાંજ" },
   pmShri: { label: "PM SHRI", all: "બધી શાળાઓ", pmshri: "PM SHRI શાળાઓ", non: "બિન-PM SHRI શાળાઓ", aspire: "આકાંક્ષી ટ્રેકર" },

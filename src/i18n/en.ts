@@ -87,7 +87,7 @@ export const en = {
     rank: "Standing", topMovers: "Top movers this week", mostImproved: "Most improved", movement: "Movement",
     you: "You", noPeers: "No peers to compare at this level.", peers: "Peers", below: "In your scope",
   },
-  export: { title: "Export scorecard", download: "Download / Print", generatedOn: "Generated for current period", note: "Use your browser's print dialog to save as PDF.", domain: "Domain", overall: "Overall" },
+  export: { title: "Export scorecard", download: "Download / Print", generatedOn: "Generated on", note: "Use your browser's print dialog to save as PDF.", domain: "Domain", overall: "Overall", homeIndicators: "Home-page indicators", parentAvg: "avg" },
   framework: { label: "Framework", switch: "Switch framework" },
   greeting: { morning: "Good morning", afternoon: "Good afternoon", evening: "Good evening" },
   pmShri: { label: "PM SHRI", all: "All Schools", pmshri: "PM SHRI Schools", non: "Non-PM SHRI Schools", aspire: "Aspirational tracker" },

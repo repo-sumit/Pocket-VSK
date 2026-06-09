@@ -10,6 +10,17 @@ export function locNum(n: number | string, lang: Lang): string {
   return s.replace(/[0-9]/g, (d) => GU_DIGITS[Number(d)]);
 }
 
+const MONTHS_SHORT = {
+  en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  gu: ["જાન્યુ", "ફેબ્રુ", "માર્ચ", "એપ્રિલ", "મે", "જૂન", "જુલાઈ", "ઑગસ્ટ", "સપ્ટે", "ઑક્ટો", "નવે", "ડિસે"],
+} as const;
+
+/** Short, localised report date — e.g. "9 Jun 2026" / "૯ જૂન ૨૦૨૬". */
+export function formatDate(d: Date, lang: Lang = "en"): string {
+  const months = lang === "gu" ? MONTHS_SHORT.gu : MONTHS_SHORT.en;
+  return `${locNum(d.getDate(), lang)} ${months[d.getMonth()]} ${locNum(d.getFullYear(), lang)}`;
+}
+
 /** Format a KPI value with its unit, or an explicit em-dash for NA. */
 export function formatValue(value: number | null, unit: Unit, lang: Lang = "en"): string {
   if (value == null) return "—";
