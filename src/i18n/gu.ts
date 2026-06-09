@@ -73,6 +73,7 @@ export const gu: Dict = {
     comparingHint: "વિગત ખોલવા KPI પર ટેપ કરો",
     perSchool: "શાળા દીઠ સરેરાશ તરીકે (કુલ સંખ્યા સ્તર સાથે વધે)",
     slot: "એકમ {n}", pickEntity: "એકમ પસંદ કરો", sameLevel: "તમારું સ્તર", oneBelow: "એક સ્તર નીચે",
+    selectAnother: "KPI સરખાવવા માટે બીજું એકમ પસંદ કરો.",
   },
   section: {
     title: "વિભાગ સરખામણી", subtitle: "કોઈપણ KPI પર વર્ગના વિભાગો સરખાવો", choose: "KPI પસંદ કરો",

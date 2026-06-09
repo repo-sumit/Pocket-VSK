@@ -16,15 +16,14 @@ import { Icon } from "@/components/ui/Icon";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 
-const SLOTS = [0, 1, 2, 3] as const;
+const CLEAR = "__clear__";
 
 /**
- * Compare — exactly four single-select slots. Each slot's options are scoped to
- * the user's OWN level (read-only peers) or ONE LEVEL BELOW (own subtree): e.g. a
- * Block user can pick other Blocks or Clusters, never Districts/State and never
- * deeper than one level. Reads every applicable indicator side by side. All
- * selections are read-only comparison context (the access-control whitelist is
- * the option pool itself); they are not navigable into another dashboard.
+ * Compare — Unit 1 is fixed to the user's own scope; Units 2–4 are added one by
+ * one from the access-scoped pool (own level = read-only peers, or one level below
+ * = own subtree). A unit can't be picked twice (selected ids are removed from the
+ * other dropdowns) and can be cleared to free it again. Comparison bars render
+ * only for the selected units; with just Unit 1, a prompt invites adding another.
  */
 export default function CompareView() {
   const { entity, homeId } = useScope();
@@ -34,30 +33,43 @@ export default function CompareView() {
   const { t, tn, lang } = useT();
   const navigate = useNavigate();
 
-  // option pool + the level whose indicator set we render (the user's own level)
-  const { pool, options, homeLevel } = useMemo(() => {
-    const home = homeId ? dataProvider.getEntity(homeId) : undefined;
-    if (!home) return { pool: [] as Entity[], options: [] as SelectOption[], homeLevel: "state" as Entity["level"] };
-    const sameLevel = [home, ...dataProvider.getSiblings(home.id)]; // peers (read-only)
-    const below = dataProvider.getChildren(home.id); // one level down (own subtree)
-    const seen = new Set<string>();
+  const home = useMemo(() => (homeId ? dataProvider.getEntity(homeId) : undefined), [homeId]);
+
+  // comparison pool (excludes home): same-level peers + one level below (own subtree)
+  const { pool, homeLevel } = useMemo(() => {
+    if (!home) return { pool: [] as Entity[], homeLevel: "state" as Entity["level"] };
+    const sameLevel = dataProvider.getSiblings(home.id);
+    const below = dataProvider.getChildren(home.id);
+    const seen = new Set<string>([home.id]);
     const p: Entity[] = [];
     for (const e of [...sameLevel, ...below]) if (!seen.has(e.id)) { seen.add(e.id); p.push(e); }
-    const opts: SelectOption[] = p.map((e) => ({
-      value: e.id,
-      label: `${tn(e.name, e.name_gu)} · ${t(`levels.${e.level}`)}`,
-    }));
-    return { pool: p, options: opts, homeLevel: home.level };
-  }, [homeId, lang]);
+    return { pool: p, homeLevel: home.level };
+  }, [home]);
 
-  // four slots; default to the first distinct units in the pool ("" = empty slot)
-  const [sel, setSel] = useState<string[]>(() => SLOTS.map((i) => pool[i]?.id ?? ""));
-  const setSlot = (i: number, v: string) => setSel((s) => s.map((x, j) => (j === i ? v : x)));
+  // three comparison slots (Unit 2/3/4); Unit 1 is fixed = the user's own scope
+  const [sel, setSel] = useState<string[]>(["", "", ""]);
+  const setSlot = (i: number, v: string) => setSel((s) => s.map((x, j) => (j === i ? (v === CLEAR ? "" : v) : x)));
 
+  // per-slot options: drop ids already chosen in other slots; offer a clear row
+  const optionsFor = (slotIdx: number): SelectOption[] => {
+    const usedElsewhere = new Set(sel.filter((v, j) => j !== slotIdx && v));
+    const opts: SelectOption[] = pool
+      .filter((e) => !usedElsewhere.has(e.id))
+      .map((e) => ({ value: e.id, label: `${tn(e.name, e.name_gu)} · ${t(`levels.${e.level}`)}` }));
+    if (sel[slotIdx]) opts.unshift({ value: CLEAR, label: t("common.clear") });
+    return opts;
+  };
+
+  // chosen units = own scope first, then the selected comparison units (deduped)
   const chosen = useMemo(() => {
-    const ids = Array.from(new Set(sel.filter(Boolean)));
-    return ids.map((id) => dataProvider.getEntity(id)).filter((e): e is Entity => !!e && pool.some((p) => p.id === e.id));
-  }, [sel, pool]);
+    const out: Entity[] = home ? [home] : [];
+    for (const id of sel) {
+      if (!id) continue;
+      const e = pool.find((p) => p.id === id);
+      if (e && !out.some((o) => o.id === e.id)) out.push(e);
+    }
+    return out;
+  }, [home, sel, pool]);
 
   const data = useMemo(() => {
     dataProvider.setSchoolFilter(pmShri);
@@ -80,64 +92,71 @@ export default function CompareView() {
     <ScreenContainer>
       <PageHeader icon={<VskBadge size={40} />} title={t("compare.title")} subtitle={t("compare.subtitle")} />
 
-      {/* four single-select slots */}
-      {options.length > 0 ? (
-        <Card className="card-pad">
-          <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-            {SLOTS.map((i) => (
-              <div key={i} className="min-w-0">
-                <label className="mb-1 block text-2xs font-semibold uppercase tracking-wide text-neutral-400">{t("compare.slot", { n: i + 1 })}</label>
-                <Select
-                  value={sel[i] || null}
-                  onChange={(v) => setSlot(i, v)}
-                  options={options}
-                  placeholder={t("compare.pickEntity")}
-                  ariaLabel={t("compare.slot", { n: i + 1 })}
-                  searchable
-                  className="w-full"
-                  triggerClassName="w-full !justify-between"
-                />
-              </div>
-            ))}
+      {/* Unit 1 fixed (own scope) + Units 2-4 added one by one */}
+      <Card className="card-pad">
+        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+          <div className="min-w-0">
+            <label className="mb-1 block text-2xs font-semibold uppercase tracking-wide text-neutral-400">{t("compare.slot", { n: 1 })}</label>
+            <div className="flex w-full items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700" title={home ? tn(home.name, home.name_gu) : undefined}>
+              <span className="min-w-0 flex-1 truncate text-left">{home ? `${tn(home.name, home.name_gu)} · ${t(`levels.${home.level}`)}` : "—"}</span>
+            </div>
           </div>
-        </Card>
-      ) : (
-        <Card className="card-pad text-sm text-neutral-400">{t("compare.noOptions")}</Card>
-      )}
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="min-w-0">
+              <label className="mb-1 block text-2xs font-semibold uppercase tracking-wide text-neutral-400">{t("compare.slot", { n: i + 2 })}</label>
+              <Select
+                value={sel[i] || null}
+                onChange={(v) => setSlot(i, v)}
+                options={optionsFor(i)}
+                placeholder={t("compare.pickEntity")}
+                ariaLabel={t("compare.slot", { n: i + 2 })}
+                searchable
+                className="w-full"
+                triggerClassName="w-full !justify-between"
+              />
+            </div>
+          ))}
+        </div>
+        {pool.length === 0 && <p className="mt-2 text-2xs text-neutral-400">{t("compare.noOptions")}</p>}
+      </Card>
 
-      {/* every applicable indicator, side by side across the chosen units */}
-      {chosen.length > 0 && data.map(({ dom, rows }) => {
-        const a = accent(dom.accent);
-        return (
-          <Card key={dom.id} className="card-pad">
-            <div className="mb-3 flex items-center gap-2">
-              <span className={`grid h-8 w-8 place-items-center rounded-xl ${a.bg}`}><Icon name={dom.icon} className={a.icon} size={18} /></span>
-              <SectionLabel>{tn(dom.name, dom.name_gu)}</SectionLabel>
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {rows.map(({ kpi, recs }) => {
-                const bars: CompareBar[] = recs.map(({ e, rec }) => ({
-                  key: e.id,
-                  label: shortName(e),
-                  value: cmpVal(kpi, e, rec?.value),
-                  status: rec?.status ?? "na",
-                  isCurrent: e.id === homeId,
-                }));
-                return (
-                  <button key={kpi.id} onClick={() => navigate(`/app/kpi/${kpi.id}`)} className="rounded-xl border border-line/70 p-3 text-left hover:bg-neutral-50">
-                    <div className="mb-1 line-clamp-2 text-xs font-semibold text-neutral-700">{tn(kpi.name, kpi.name_gu)}</div>
-                    {bars.some((b) => b.value != null) ? (
-                      <ComparisonBars bars={bars} unit={kpi.unit} lang={lang} height={120} />
-                    ) : (
-                      <p className="py-6 text-center text-xs text-rag-naText">{t("common.na")}</p>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </Card>
-        );
-      })}
+      {/* render comparison bars only for the selected units */}
+      {chosen.length < 2 ? (
+        <Card className="card-pad text-center text-sm text-neutral-500">{t("compare.selectAnother")}</Card>
+      ) : (
+        data.map(({ dom, rows }) => {
+          const a = accent(dom.accent);
+          return (
+            <Card key={dom.id} className="card-pad">
+              <div className="mb-3 flex items-center gap-2">
+                <span className={`grid h-8 w-8 place-items-center rounded-xl ${a.bg}`}><Icon name={dom.icon} className={a.icon} size={18} /></span>
+                <SectionLabel>{tn(dom.name, dom.name_gu)}</SectionLabel>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {rows.map(({ kpi, recs }) => {
+                  const bars: CompareBar[] = recs.map(({ e, rec }) => ({
+                    key: e.id,
+                    label: shortName(e),
+                    value: cmpVal(kpi, e, rec?.value),
+                    status: rec?.status ?? "na",
+                    isCurrent: e.id === homeId,
+                  }));
+                  return (
+                    <button key={kpi.id} onClick={() => navigate(`/app/kpi/${kpi.id}`)} className="rounded-xl border border-line/70 p-3 text-left hover:bg-neutral-50">
+                      <div className="mb-1 line-clamp-2 text-xs font-semibold text-neutral-700">{tn(kpi.name, kpi.name_gu)}</div>
+                      {bars.some((b) => b.value != null) ? (
+                        <ComparisonBars bars={bars} unit={kpi.unit} lang={lang} height={120} />
+                      ) : (
+                        <p className="py-6 text-center text-xs text-rag-naText">{t("common.na")}</p>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+          );
+        })
+      )}
     </ScreenContainer>
   );
 }

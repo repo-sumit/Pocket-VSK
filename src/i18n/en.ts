@@ -71,6 +71,7 @@ export const en = {
     comparingHint: "Tap a KPI to open its detail",
     perSchool: "Shown as average per school (totals grow with scope)",
     slot: "Unit {n}", pickEntity: "Select a unit", sameLevel: "Your level", oneBelow: "One level below",
+    selectAnother: "Select another unit to compare KPIs.",
   },
   section: {
     title: "Section comparison", subtitle: "Compare sections of a class on any KPI", choose: "Choose a KPI",

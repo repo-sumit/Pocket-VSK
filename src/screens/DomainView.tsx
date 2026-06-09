@@ -1,27 +1,30 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useScope, useScorecard } from "@/hooks";
+import type { DomainScore } from "@/types";
+import { useScope, useScorecard, useScopeStats } from "@/hooks";
 import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
-import { accent, valueToneClass } from "@/lib/colors";
+import { valueToneClass } from "@/lib/colors";
 import { pct } from "@/lib/format";
-import { Card, ProgressBar, StatusDot } from "@/components/ui/atoms";
-import { ValueDisplay } from "@/components/ui/ValueDisplay";
+import { Card, StatusDot } from "@/components/ui/atoms";
 import { KpiCard } from "@/components/ui/KpiCard";
-import { Icon, ChevronRight } from "@/components/ui/Icon";
+import { DomainSummaryCard } from "@/components/ui/DomainSummaryCard";
+import { GsqacSummaryCard } from "@/components/ui/GsqacSummaryCard";
+import { ChevronRight } from "@/components/ui/Icon";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { BackLink } from "@/components/layout/PageHeader";
 import { PageSection, PageGrid } from "@/components/layout/PageSection";
 
 /**
- * Domain view — tier 2 of the 3-click drill.
- *  • Administration (has sub-domains) → sub-domain cards → SubDomainView → indicators.
- *  • Attendance / Assessment (no sub-domains) → indicators directly (2 taps).
- *  • School Quality (output) → GSQAC score + D1-D5 breakdown + indicators.
+ * Domain view — tier 2 of the 3-click drill. The top card uses the same grammar
+ * as the homepage domain cards (expanded "page" variant), so the two are one
+ * family. School Quality uses the GSQAC output card; its D1–D5 breakdown shows as
+ * the indicator cards below (only after drilling in).
  */
 export default function DomainView() {
   const { domainId } = useParams();
   const { entity, currentId } = useScope();
   const sc = useScorecard(currentId);
+  const stats = useScopeStats(currentId);
   const { t, tn, lang } = useT();
   const navigate = useNavigate();
 
@@ -36,30 +39,42 @@ export default function DomainView() {
     );
   }
 
-  const a = accent(ds.domain.accent);
+  const isOutput = ds.domain.kind === "output";
   const parentName = sc.parent ? tn(sc.parent.entity.name, sc.parent.entity.name_gu) : undefined;
+  const parentPercent = sc.parent?.domainPercents[ds.domain.id] ?? null;
+  const gsqacCoverage = stats && stats.schools > 0 && stats.gsqacReal < stats.schools ? stats : null;
+  // GSQAC overall is the top card; D1–D5 are the breakdown cards below (no duplicate sq_gsqac tile)
+  const records = isOutput ? ds.records.filter((r) => r.kpi.id !== "sq_gsqac") : ds.records;
+
+  const domainWoW = (d: DomainScore) => {
+    const xs = d.records.filter((r) => r.kpi.unit === "%" || r.kpi.unit === "score").map((r) => r.deltaWoW).filter((v): v is number => v != null);
+    return xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : null;
+  };
 
   return (
     <ScreenContainer>
       <BackLink label={t("nav.home")} onClick={() => navigate("/app")} />
 
-      {/* domain header */}
-      <Card className="card-pad">
-        <div className="flex items-center gap-4">
-          <span className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-2xl", a.bg)}>
-            <Icon name={ds.domain.icon} className={a.icon} size={26} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-lg font-extrabold text-neutral-900">{tn(ds.domain.name, ds.domain.name_gu)}</h1>
-            <p className="truncate text-xs text-neutral-400">
-              {tn(entity.name, entity.name_gu)}
-              {ds.domain.kind === "output" ? ` · ${t("scorecard.output")} · ${t("scorecard.annual")}` : ""}
-            </p>
-          </div>
-          <ValueDisplay value={ds.percent} unit="%" status={ds.status} lang={lang} size="lg" naLabel={t("common.na")} className="shrink-0" />
-        </div>
-        {ds.percent != null && <ProgressBar value={ds.percent} status={ds.status} className="mt-4" height={10} />}
-      </Card>
+      {/* domain header — same card grammar as the homepage */}
+      {isOutput ? (
+        <GsqacSummaryCard
+          output={ds}
+          gsqac={entity.meta.gsqac}
+          coverage={gsqacCoverage ? { real: gsqacCoverage.gsqacReal, total: gsqacCoverage.schools } : null}
+          parentName={parentName}
+          parentPercent={parentPercent}
+        />
+      ) : (
+        <DomainSummaryCard
+          ds={ds}
+          variant="page"
+          name={tn(ds.domain.name, ds.domain.name_gu)}
+          scopeName={tn(entity.name, entity.name_gu)}
+          delta={domainWoW(ds)}
+          parentName={parentName}
+          parentPercent={parentPercent}
+        />
+      )}
 
       {/* sub-domains (Administration) → tier-3 drill */}
       {ds.subScores.length > 0 ? (
@@ -83,10 +98,9 @@ export default function DomainView() {
           </PageGrid>
         </PageSection>
       ) : (
-        // no sub-domains (Attendance / Assessment / School Quality) → indicators directly
         <PageSection title={t("domain.kpisIn", { name: tn(ds.domain.name, ds.domain.name_gu) })}>
           <PageGrid cols="kpi">
-            {ds.records.map((r) => (
+            {records.map((r) => (
               <KpiCard
                 key={r.kpi.id}
                 rec={r}

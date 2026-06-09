@@ -1,5 +1,29 @@
 # Unified Portal — QA Report
 
+## Overall-score removal · domain/GSQAC card parity · Export reframe · Compare selection
+
+Five focused product/UI fixes, all composing the existing shared components (no new product features, no formula/provider/access changes).
+
+**1. Overall Score / Input Composite hero removed everywhere.** Deleted the circular ring + grade badge + 30-day trend hero from [ScorecardHome](app/src/screens/ScorecardHome.tsx) and the ring/grade block from [Export](app/src/screens/Export.tsx). No screen references `RatingRing`/`overallPercent`/`inputComposite` any more (grep-clean). The homepage now opens straight on Domain cards → School Quality → Key indicators. (The "Key indicators" `HeroKpiStrip` is actionable KPI content and stays.)
+
+**2. Domain page top = homepage domain-card grammar.** [DomainSummaryCard](app/src/components/ui/DomainSummaryCard.tsx) gained a `variant: 'home' | 'page'`. [DomainView](app/src/screens/DomainView.tsx) replaced the banner/long-progress header with the expanded `page` variant (icon chip + name + scope name + value + N+1 + frequency delta + compact progress). School Quality pages use the `GsqacSummaryCard` instead, and the D1–D5 indicator cards render below (the `sq_gsqac` overall tile is filtered out to avoid duplication).
+
+**3. School Quality homepage card fixed.** [GsqacSummaryCard](app/src/components/ui/GsqacSummaryCard.tsx) is now compact and in the domain-card rhythm (white card + subtle pink accent chip): title · `OUTPUT · ANNUAL` · GSQAC score · official grade badge · **N+1 line** (`Kachchh · 64%`) · `vs last cycle: +1.4%` · coverage · chevron. **The 5 GSQAC domain bars were removed from the homepage** — they live on the School Quality detail page (as the D1–D5 indicator cards). No daily trend; grade uses official colours via `RatingBadge`/`GRADE_GROUP`.
+
+**4. Export reframed.** Removed the Input-Composite ring, grade hero, weightage/contribution columns and the "Input composite" total row. Domain summary is now **Domain · Value · {parent} avg (N+1) · Δ** across the 4A inputs + School Quality (output shows score · grade · vs-last-cycle). Header shows entity · level · framework · period · PM-Shri (if active). GSQAC D1–D5 bars kept under a dedicated "School Quality · D1–D5" detail section. Tables use the shared `ResponsiveDataTable`.
+
+**5. Compare selection fixed.** [CascadeComparison](app/src/screens/CascadeComparison.tsx): **Unit 1 is fixed to the user's own scope** (primary chip); Units 2–4 start empty with `Select a unit` placeholders. Selecting a unit **removes it from the other dropdowns** (no duplicates); a `Clear` row frees it again. Comparison bars render **only for selected units**; with just Unit 1 an empty state shows *"Select another unit to compare KPIs."* Access rules unchanged (pool = same-level peers + one-level-below subtree only; comparison units non-navigable).
+
+**Files touched** — components: `DomainSummaryCard`, `GsqacSummaryCard`; screens: `ScorecardHome`, `DomainView`, `Export`, `CascadeComparison`; i18n: `en.ts` + `gu.ts` (`compare.selectAnother`). `RatingRing` is now unused (left in place, tree-shaken).
+
+**Build** — `npm run build` (tsc + vite) passes clean.
+
+**Manual checks** (code-level; Playwright not run per instructions): overall-score hero gone from all screens (grep-verified); homepage School Quality card has no 5 bars and shows N+1 + vs-last-cycle; Domain page top uses the shared card; Export has no Input-Composite ring/columns and follows the 4A + School Quality structure; Compare defaults to Unit 1 only, blocks duplicates, renders only selected units, shows the empty state at 1 unit; EN + ગુ keys present (parity maintained); cards reuse existing responsive grids (no new fixed widths) so 320px behaviour is unchanged.
+
+**Known risks** — School Quality N+1 uses the parent's School-Quality domain percent (consistent with other domain N+1); the `page`-variant domain header and homepage card share one component so future tweaks propagate. Access control remains client-side (`isInScope`) as before.
+
+---
+
 ## Design-system consistency refactor (one coherent product)
 
 Centralised the visual language so a change in one shared component now propagates across every view (the previous problem: each screen grew its own card/header/table markup).
