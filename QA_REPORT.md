@@ -1,5 +1,25 @@
 # Unified Portal — QA Report
 
+## Assessment: SAT1/SAT2 replace "Assessment result %" (snapshot, no trend)
+
+Per the latest `GJ _ Unified App KPIs.xlsx` (Assessment focus area), "Assessment result %" is gone; the sheet defines two SAT result indicators.
+
+- **Removed** `asm_result` ("Assessment result %") from the catalog (`PUBLISHED` + KPI def). It was only referenced in the catalog (provider is config-driven), so it disappears from Domain/KPI-detail/Compare/Leaderboard/Export automatically.
+- **Added** [kpiCatalog.ts](app/src/config/kpiCatalog.ts):
+  - `asm_sat1` — **"Semester Assessment Test 1 (SAT1)"** (gu "સેમેસ્ટર મૂલ્યાંકન કસોટી 1 (SAT1)")
+  - `asm_sat2` — **"Semester Assessment Test 2 (SAT2)"** (gu "સેમેસ્ટર મૂલ્યાંકન કસોટી 2 (SAT2)")
+  - Sheet metadata: domain Assessment, data source **Xamta Bot**, DL yes, PM-Shri yes, **visible to teacher** (no `roleVisibility`), direction higher, unit %, `frequency: "Twice a Year"`, `displayStrategy: "snapshot_latest"`. `PUBLISHED` result-% values added per level (SAT1 72→83, SAT2 74→84) so all hierarchy levels resolve.
+- **No graph for SAT1/SAT2** — new `KpiDef.noTrend` flag. [KpiCard](app/src/components/ui/KpiCard.tsx) skips the sparkline and shows a cycle context line ("Current cycle") instead; [KpiDetail](app/src/screens/KpiDetail.tsx) renders no trend chart (and no EmptyNA), keeping the snapshot summary (value + N+1 + cycle label + formula/source/frequency). The KPI-detail summary label already reads "Current cycle" (cadence = twice). New `snapshotContextKey` helper in [trend.ts](app/src/lib/trend.ts).
+- **Domain page order** (Assessment): SAT1 · SAT2 · Students below `<hierarchy>` avg · ORF participation/improvement · CET participation/improvement · CGMS participation/improvement · SAT reports downloaded in classrooms — matches the sheet/task order (asm_result replaced in-place, so SAT1/SAT2 lead).
+- **Homepage Assessment card** unchanged — still "SAT reports downloaded in classrooms" (the sheet's Home-Page indicator); SAT1/SAT2 are normal indicators (`hero:false`).
+- **Compare/Export/Leaderboard** inherit the catalog: SAT1/SAT2 appear as separate rows/cards, no "Assessment result %", and (being `noTrend`) no sparkline.
+
+**Assumptions** (documented): SAT date isn't in the mock, so the context line shows the cycle ("Current cycle") rather than a literal date; frequency set to "Twice a Year" (the sheet's free-text "SAT1 to SAT1 …" describes a per-cycle YoY comparison); value shown as the SAT result % snapshot (no fabricated previous-cycle delta). Gujarati labels translated (not English fallback).
+
+**Files:** `types/index.ts` (`noTrend`), `kpiCatalog.ts`, `trend.ts`, `KpiCard.tsx`, `KpiDetail.tsx`, `QA_REPORT.md`. **Build:** `npm run build` passes clean.
+
+---
+
 ## Absentee KPI = absolute count · hierarchy bar chart removed from KPI detail
 
 1. **Rename** — `att_chronic` → **"Students absent from past 7+ days"** (en + gu) in [kpiCatalog.ts](app/src/config/kpiCatalog.ts); same id/direction (lower-is-better). Flows everywhere via `kpi.name`; the dead `principal.chronicAbs` legacy string updated too. No old variants remain (grep-clean).

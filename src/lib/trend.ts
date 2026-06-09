@@ -69,6 +69,15 @@ export function periodLabelKey(c: Cadence): string {
   return PERIOD_KEY[c];
 }
 
+/** i18n key for a snapshot/cycle context line (for indicators with no time trend). */
+export function snapshotContextKey(c: Cadence): string {
+  return c === "monthly" ? "kpi.currentMonth"
+    : c === "twice" ? "kpi.currentCycle"
+      : c === "half" ? "kpi.currentHalf"
+        : c === "yearly" ? "kpi.currentYear"
+          : "kpi.latestAvailable";
+}
+
 const TITLE_KEY: Record<Cadence, string> = {
   daily: "kpi.trendDaily",
   monthly: "kpi.trendMonthly",

@@ -160,6 +160,9 @@ export interface KpiDef {
   /** a top intervention indicator surfaced in the homepage "Top Indicators" strip
    *  (distinct from `hero`, so it never duplicates a domain-card indicator). */
   topIndicator?: boolean;
+  /** snapshot/cycle indicator — suppress the time-trend chart + sparkline; show a
+   *  date/cycle context line instead (e.g. SAT1/SAT2 assessment-cycle results). */
+  noTrend?: boolean;
   /** plain-language formula + numerator/denominator (shown in Indicator Detail). */
   formula?: string;
   numerator?: string;

@@ -1,7 +1,7 @@
 import type { KpiRecord, Level } from "@/types";
 import { rag } from "@/lib/colors";
 import { peerAvg, peerLevelOf } from "@/lib/peer";
-import { buildTrend } from "@/lib/trend";
+import { buildTrend, cadenceOf, snapshotContextKey } from "@/lib/trend";
 import { useT, type Lang } from "@/i18n";
 import { Card } from "./atoms";
 import { Sparkline } from "./Sparkline";
@@ -25,7 +25,8 @@ export function KpiCard({
   const kpi = rec.kpi;
   const na = rec.value == null;
   const c = rag(rec.status);
-  const trend = na ? null : buildTrend(rec, lang);
+  // snapshot/cycle indicators (e.g. SAT1/SAT2) get no time-trend graph — a cycle context line instead
+  const trend = na || kpi.noTrend ? null : buildTrend(rec, lang);
   const isDelta = kpi.displayStrategy === "delta_cycle";
   const peerScore = level && peerLevelOf(level) ? peerAvg(kpi.id, level) : null;
 
@@ -52,10 +53,12 @@ export function KpiCard({
         )}
       </div>
 
-      {/* frequency-appropriate trend graph */}
-      {trend && trend.points.length > 1 && (
+      {/* frequency-appropriate trend graph (snapshot indicators show a cycle context line instead) */}
+      {trend && trend.points.length > 1 ? (
         <Sparkline data={trend.points.map((p) => p.value)} color={c.hex} height={30} responsive />
-      )}
+      ) : !na && kpi.noTrend ? (
+        <span className="text-2xs text-neutral-400">{t(snapshotContextKey(cadenceOf(kpi.frequency)))}</span>
+      ) : null}
 
       {/* N+1: parent entity name + this KPI's score at the parent level */}
       {na ? (

@@ -30,7 +30,8 @@ export const PUBLISHED: Record<string, Pub> = {
   att_chronic: { section: 4, school: 18, cluster: 62, block: 215, district: 790, state: 4100 },
   att_report: { school: 92, cluster: 91, block: 93, district: 94, state: 95 },
   // Assessment — all classroom-level (down to section); CET/CGMS hidden from teacher via roleVisibility.
-  asm_result: { section: 3, school: 4, cluster: 4, block: 5, district: 5, state: 6 },
+  asm_sat1: { section: 72, school: 74, cluster: 76, block: 79, district: 81, state: 83 },
+  asm_sat2: { section: 74, school: 76, cluster: 78, block: 80, district: 82, state: 84 },
   asm_below: { section: 32, school: 29, cluster: 27, block: 24, district: 21, state: 18 },
   asm_orf_part: { section: 78, school: 80, cluster: 79, block: 81, district: 82, state: 84 },
   asm_orf_improve: { section: 8, school: 10, cluster: 9, block: 11, district: 12, state: 13 },
@@ -100,7 +101,8 @@ const RAW: Array<Partial<CatItem> & Pick<CatItem, "id" | "domain_id" | "name" | 
   { id: "att_report", domain_id: "attendance", name: "Attendance reporting compliance %", name_gu: "હાજરી રિપોર્ટિંગ અનુપાલન %", unit: "%", direction: "higher", data_source: ATT, frequency: "Daily", displayStrategy: "trend_30d", lowestLevel: "school", formula: "Units That Filled Attendance / Total Units × 100" },
 
   // ── Assessment — classroom-level (down to section) ──
-  { id: "asm_result", domain_id: "assessment", name: "Assessment result %", name_gu: "મૂલ્યાંકન પરિણામ %", unit: "%", direction: "higher", data_source: GP, frequency: "Twice a Year", displayStrategy: "delta_cycle", context: true, rag: { green: 3, amber: 0 }, formula: "SAT Result % (Year N) − SAT Result % (Year N−1)", description: "Year-on-year change in SAT result." },
+  { id: "asm_sat1", domain_id: "assessment", name: "Semester Assessment Test 1 (SAT1)", name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 1 (SAT1)", unit: "%", direction: "higher", data_source: "Xamta Bot", frequency: "Twice a Year", displayStrategy: "snapshot_latest", noTrend: true, formula: "SAT1 result % for the current academic year (year-on-year change vs the previous SAT1).", description: "Semester Assessment Test 1 result — a per-cycle snapshot (no daily trend)." },
+  { id: "asm_sat2", domain_id: "assessment", name: "Semester Assessment Test 2 (SAT2)", name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 2 (SAT2)", unit: "%", direction: "higher", data_source: "Xamta Bot", frequency: "Twice a Year", displayStrategy: "snapshot_latest", noTrend: true, formula: "SAT2 result % for the current academic year (year-on-year change vs the previous SAT2).", description: "Semester Assessment Test 2 result — a per-cycle snapshot (no daily trend)." },
   { id: "asm_below", domain_id: "assessment", name: "Students below hierarchy avg", name_gu: "સ્તર સરેરાશથી નીચે વિદ્યાર્થીઓ", unit: "%", direction: "lower", data_source: GP, frequency: "Twice a Year", displayStrategy: "snapshot_latest", formula: "Share of students below the hierarchy SAT average." },
   { id: "asm_orf_part", domain_id: "assessment", name: "Participation rate in ORF Reading (ORF)", name_gu: "ORF વાચનમાં સહભાગિતા દર", unit: "%", direction: "higher", data_source: "Oral Reading Fluency (ORF) Bot", availableInDataLake: false, frequency: "Yearly", displayStrategy: "snapshot_latest", formula: "Students Assessed on ORF Bot / Total Enrolled × 100" },
   { id: "asm_orf_improve", domain_id: "assessment", name: "Improvement in ORF Reading (ORF) %", name_gu: "ORF વાચન (ORF) માં સુધારો %", unit: "%", direction: "higher", data_source: "Oral Reading Fluency (ORF) Bot", availableInDataLake: false, frequency: "Yearly", displayStrategy: "delta_cycle", context: true, rag: { green: 8, amber: 4 }, formula: "Latest ORF Score (Year N) − (Year N−1)" },

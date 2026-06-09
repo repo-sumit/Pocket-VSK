@@ -42,8 +42,9 @@ export default function KpiDetail() {
     name = lang === "gu" ? name.replace("સ્તર", parentLevelLabel) : name.replace(/\bhierarchy\b/i, parentLevelLabel.toLowerCase());
   }
 
-  // frequency-aware trend (history + cadence + delta-vs-one-period-back)
-  const trend = na ? null : buildTrend(rec, lang);
+  // frequency-aware trend (history + cadence + delta-vs-one-period-back).
+  // snapshot/cycle indicators (kpi.noTrend, e.g. SAT1/SAT2) get no trend chart — a cycle context only.
+  const trend = na || kpi.noTrend ? null : buildTrend(rec, lang);
 
   // the "current value" label, derived from the indicator's frequency/cadence:
   // Daily → latest available date · Monthly → current month · Twice → current cycle ·
@@ -102,11 +103,10 @@ export default function KpiDetail() {
         </div>
       </Card>
 
-      {/* TREND — frequency-correct: cadence-appropriate x-axis (daily 30d / months /
-          cycles / half-years / years), never a fabricated weekly line for annual data */}
-      {na || !trend ? (
+      {/* TREND — frequency-correct cadence x-axis; suppressed for snapshot/cycle indicators (no graph) */}
+      {na ? (
         <EmptyNA hint={t("kpi.noData")} />
-      ) : (
+      ) : !kpi.noTrend && trend ? (
         <Card className="card-pad">
           <SectionLabel>{t(trendTitleKey(trend.cadence))}</SectionLabel>
           <div className="mt-2">
@@ -120,7 +120,7 @@ export default function KpiDetail() {
             />
           </div>
         </Card>
-      )}
+      ) : null}
 
       {/* HOW IT'S CALCULATED */}
       {kpi.formula && (
