@@ -53,20 +53,26 @@ export default function ScorecardHome() {
         badge={<Badge className="bg-neutral-100 text-neutral-500">{t(`levels.${entity.level}`)}</Badge>}
       />
 
-      {/* DOMAIN cards */}
+      {/* DOMAIN cards — primary value = each domain's homepage (hero) indicator */}
       <PageSection title={t("scorecard.domainsHeader")}>
         <PageGrid cols="domain">
-          {inputs.map((d) => (
-            <DomainSummaryCard
-              key={d.domain.id}
-              ds={d}
-              name={tn(d.domain.name, d.domain.name_gu)}
-              delta={domainWoW(d)}
-              parentName={parentName}
-              parentPercent={parent?.domainPercents[d.domain.id] ?? null}
-              onClick={() => navigate(`/app/domain/${d.domain.id}`)}
-            />
-          ))}
+          {inputs.map((d) => {
+            const hero = d.records.find((r) => r.kpi.hero) ?? null;
+            return (
+              <DomainSummaryCard
+                key={d.domain.id}
+                ds={d}
+                name={tn(d.domain.name, d.domain.name_gu)}
+                heroRec={hero}
+                heroName={hero ? tn(hero.kpi.name, hero.kpi.name_gu) : undefined}
+                level={entity.level}
+                delta={domainWoW(d)}
+                parentName={parentName}
+                parentPercent={parent?.domainPercents[d.domain.id] ?? null}
+                onClick={() => navigate(`/app/domain/${d.domain.id}`)}
+              />
+            );
+          })}
         </PageGrid>
       </PageSection>
 

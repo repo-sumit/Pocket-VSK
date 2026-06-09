@@ -19,8 +19,8 @@ const WEIGHTAGE_PLACEHOLDER = true;
 /** Administration's 3 sub-domains (OGM 3.0) — the 3-tier seam (Domain > Sub-Domain > Indicator). */
 const ADMIN_SUBS: SubDomainDef[] = [
   { id: "adm_cpd", name: "Continuous Professional Development", name_gu: "સતત વ્યાવસાયિક વિકાસ (CPD)" },
-  { id: "adm_visits", name: "Visits & Observations", name_gu: "મુલાકાત અને નિરીક્ષણ" },
-  { id: "adm_retention", name: "Retention", name_gu: "જાળવણી" },
+  { id: "adm_visits", name: "School Observation", name_gu: "શાળા નિરીક્ષણ" },
+  { id: "adm_retention", name: "Student Retention", name_gu: "વિદ્યાર્થી જાળવણી" },
 ];
 
 const UNIFIED_DOMAINS: DomainDef[] = [

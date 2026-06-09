@@ -6,6 +6,7 @@ import { cn } from "@/lib/cn";
 import { rag } from "@/lib/colors";
 import { pct, locNum, formatValue, formatDelta } from "@/lib/format";
 import { peerAvg, peerGapOf, peerLevelOf } from "@/lib/peer";
+import { buildTrend } from "@/lib/trend";
 import { gradeFor, GSQAC_BANDS } from "@/config/ratingBands";
 import { OUTPUT_DOMAIN_ID } from "@/config/frameworks";
 import { CURRENT_PERIOD } from "@/config";
@@ -30,18 +31,28 @@ export default function Export() {
   const gsqacCoverage = stats && stats.schools > 0 && stats.gsqacReal < stats.schools ? stats : null;
   const improvement = entity.meta.gsqac?.improvement;
 
-  const domainWoW = (d: DomainScore) => {
-    const xs = d.records.filter((r) => r.kpi.unit === "%" || r.kpi.unit === "score").map((r) => r.deltaWoW).filter((v): v is number => v != null);
-    return xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : null;
+  // domain summary headline = the domain's homepage (hero) indicator
+  const heroOf = (d: DomainScore): KpiRecord | null => d.records.find((r) => r.kpi.hero) ?? null;
+  const isGsqacHero = (h: KpiRecord) => h.kpi.id.startsWith("sq_");
+  const heroValue = (d: DomainScore): string => {
+    const h = heroOf(d);
+    if (!h || h.value == null) return d.percent == null ? "NA" : pct(d.percent, lang);
+    return isGsqacHero(h) ? `${locNum(Math.round(h.value), lang)} · ${gradeFor(h.value, GSQAC_BANDS).grade}` : formatValue(h.value, h.kpi.unit, lang);
   };
-  const domainPeer = (d: DomainScore): string => {
-    const p = sc.parent?.domainPercents[d.domain.id];
-    return p == null ? "—" : pct(p, lang);
+  const heroStatus = (d: DomainScore) => heroOf(d)?.status ?? d.status;
+  const heroPeer = (d: DomainScore): string => {
+    const h = heroOf(d);
+    if (!h) return sc.parent?.domainPercents[d.domain.id] == null ? "—" : pct(sc.parent!.domainPercents[d.domain.id], lang);
+    const p = peerAvg(h.kpi.id, entity.level);
+    if (p == null) return "—";
+    return isGsqacHero(h) ? locNum(Math.round(p), lang) : formatValue(p, h.kpi.unit, lang);
   };
-  const domainDelta = (d: DomainScore): string => {
-    if (d.domain.id === OUTPUT_DOMAIN_ID) return improvement != null ? formatDelta(improvement, "%", lang) : "—";
-    const w = domainWoW(d);
-    return w != null ? formatDelta(w, "%", lang) : "—";
+  const heroDelta = (d: DomainScore): string => {
+    const h = heroOf(d);
+    if (!h || h.value == null) return "—";
+    if (isGsqacHero(h)) return improvement != null ? formatDelta(improvement, "%", lang) : "—";
+    const tr = buildTrend(h, lang);
+    return tr.delta != null ? formatDelta(tr.delta, h.kpi.unit, lang) : "—";
   };
 
   // ── per-indicator helpers (detail tables) ──
@@ -69,13 +80,20 @@ export default function Export() {
 
   // ── shared table columns (one grammar) ──
   const summaryCols: DataColumn<DomainScore>[] = [
-    { key: "domain", header: t("export.domain"), render: (d) => <span className="font-semibold text-neutral-800">{tn(d.domain.name, d.domain.name_gu)}</span> },
     {
-      key: "value", header: t("kpi.current"), align: "right",
-      render: (d) => <span className={cn("font-bold tabular-nums", d.percent == null ? "text-rag-naText" : rag(d.status).text)}>{d.percent == null ? "NA" : d.domain.id === OUTPUT_DOMAIN_ID && d.grade ? `${pct(d.percent, lang)} · ${d.grade}` : pct(d.percent, lang)}</span>,
+      key: "domain", header: t("export.domain"), render: (d) => {
+        const h = heroOf(d);
+        return (
+          <>
+            <span className="font-semibold text-neutral-800">{tn(d.domain.name, d.domain.name_gu)}</span>
+            {h && <span className="block text-2xs font-normal text-neutral-400">{tn(h.kpi.name, h.kpi.name_gu)}</span>}
+          </>
+        );
+      },
     },
-    { key: "n1", header: peerLevel ? `${t(`levels.${peerLevel}`)} ${t("common.average")}` : t("common.average"), align: "right", className: "tabular-nums text-neutral-500", render: (d) => domainPeer(d) },
-    { key: "delta", header: "Δ", align: "right", className: "tabular-nums text-neutral-500", render: (d) => domainDelta(d) },
+    { key: "value", header: t("kpi.current"), align: "right", render: (d) => <span className={cn("font-bold tabular-nums", rag(heroStatus(d)).text)}>{heroValue(d)}</span> },
+    { key: "n1", header: peerLevel ? `${t(`levels.${peerLevel}`)} ${t("common.average")}` : t("common.average"), align: "right", className: "tabular-nums text-neutral-500", render: (d) => heroPeer(d) },
+    { key: "delta", header: "Δ", align: "right", className: "tabular-nums text-neutral-500", render: (d) => heroDelta(d) },
   ];
   const indicatorCols: DataColumn<KpiRecord>[] = [
     {

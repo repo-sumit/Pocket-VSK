@@ -1,5 +1,64 @@
 # Unified Portal — QA Report
 
+## Latest KPI sheet re-audit (now has explicit "Home Page Indicator" column)
+
+Re-parsed the **latest** `GJ _ Unified App KPIs.xlsx` from scratch (treated as source of truth). New structure vs the version the prior pass saw:
+- New columns: **Focus Area** (col A) = app *domain*; **Home Page Indicator for any hierarchy** (col B) = the explicit homepage/hero indicator per focus area; **Domain** (col C) = app *sub-domain*.
+- The "Home Page Indicator" cells are green-filled and list exactly one per focus area.
+
+**Home Page Indicator column (authoritative homepage + hero mapping):**
+Attendance → Students absent from 7+ days · Assessment → SAT reports downloaded in classrooms · Administration → No of CRC/URC Visits per school · School Quality → GSQAC score.
+
+**Reconciliation result — the previous pass's 4-hero mapping is confirmed correct by the new explicit column.** (The green fills in the *Indicator* column on Reduction-in-dropout / Re-enrolment / Teacher%-50h are NOT in the Home-Page-Indicator column, so they stay non-hero per the column's authority.)
+
+**Mismatches found & fixed:**
+- `att_teacher` name **"Teacher attendance %" → "Teacher Attendance"** (sheet drops the %); `name_gu` "શિક્ષક હાજરી %" → "શિક્ષક હાજરી".
+- `att_student` name **"Student attendance %" → "Student Attendance"**; `name_gu` → "વિદ્યાર્થી હાજરી".
+- Administration sub-domain labels aligned to the sheet's *Domain* column: `adm_visits` **"Visits & Observations" → "School Observation"** (gu "શાળા નિરીક્ષણ"); `adm_retention` **"Retention" → "Student Retention"** (gu "વિદ્યાર્થી જાળવણી"). (`adm_cpd` kept the correctly-spelled "Continuous Professional Development".)
+
+**Already correct (verified against the latest sheet, no change):**
+- Hero/homepage indicators (4, one per domain) — `hero: true` only on att_chronic, asm_remediation, vis_crc_count, sq_gsqac; homepage domain-card value = that hero indicator (config-driven via `kpi.hero`, no hardcoded domain→id map).
+- All other indicator display names (Students absent from 7+ days, SAT reports downloaded in classrooms, Assessment result %, Students below <hierarchy> avg, ORF/CET/CGMS participation+improvement, all School-Observation indicators, Reduction in dropout %, Re-enrolment of OoSC…, CPD hours, Teacher% completing 50 hours, GSQAC score).
+- GSQAC D1–D5 labels (Teaching & Learning · School Management · Co-curricular activities · Use of Resources · Exam Participation) — match the sheet's School-Quality *Domain* rows; en + gu.
+- Teacher visibility — every row's "Visible to teacher" matches current `roleVisibility` (Teacher Attendance, CET/CGMS, all School-Observation rows, GSQAC = hidden; rest visible). No change.
+- Frequency (Daily / Twice-a-Year / Yearly / Monthly / Half-yearly), direction (Students-absent = lower-is-better; rest higher), domain mapping, PM-Shri applicability — all consistent.
+
+**Hero indicators before → after:** unchanged (Students absent from 7+ days · SAT reports downloaded in classrooms · No of CRC/URC Visits per school · GSQAC score). Teacher% completing 50 hours stays non-hero (normal Administration · CPD indicator, teacher-visible).
+
+**Export / Compare** read names from the catalog, so the two renamed attendance indicators flow through automatically; export's domain summary still headlines each focus area's home-page indicator.
+
+**Files changed:** `kpiCatalog.ts` (att_teacher/att_student names), `frameworks.ts` (adm_visits/adm_retention sub-domain labels), `QA_REPORT.md`. **Build:** `npm run build` passes clean. **KPI sheet:** latest `GJ _ Unified App KPIs.xlsx` (with Focus Area + Home Page Indicator columns). **Remaining assumptions:** CRC/URC Visits is the Administration home-page indicator (no sub-domain in the sheet) but is kept inside the School-Observation sub-domain for the drill-down so it isn't an orphan; "Continous Professional Development (CPD)" kept as the correctly-spelled "Continuous Professional Development".
+
+---
+
+## KPI sheet re-alignment · homepage hero = sheet's Home-Page indicator (one per domain)
+
+Re-parsed `GJ _ Unified App KPIs.xlsx` (now source of truth). The sheet has no "Home Page Indicator" column — the note *"Green coloured are Hero KPIs"* marks heroes by green Indicator-cell fill. Per the task this is narrowed to exactly one homepage/hero indicator per domain (the green cells also flag dropout/re-enrolment/Teacher%-50h, which the task explicitly demotes to normal).
+
+**Hero indicators are now exactly four** (config-driven via `kpi.hero`, never a hardcoded list — [kpiCatalog.ts](app/src/config/kpiCatalog.ts) `HERO_KPIS = VSK_KPIS.filter(k => k.hero)`):
+- Attendance → **Students absent from 7+ days** (`att_chronic`)
+- Assessment → **SAT reports downloaded in classrooms** (`asm_remediation`)
+- Administration → **No of CRC/URC Visits per school** (`vis_crc_count`)
+- School Quality → **GSQAC score** (`sq_gsqac`)
+
+`hero` removed from `cpd_50` (Teacher% completing 50 hours), `ret_dropout`, `ret_reenroll` — they stay as normal Administration indicators (verified: only 4 `hero: true` remain). `Teacher% completing 50 hours` keeps `visibleToTeacher` (no `roleVisibility`).
+
+**Indicator renames (catalog `name`/`name_gu`):** `att_chronic` "Chronic absentee students…" → **"Students absent from 7+ days"**; `asm_remediation` → **"SAT reports downloaded in classrooms"**; `cpd_50` → **"Teacher% completing 50 hours"**; GSQAC D1–D5 → **Teaching & Learning · School Management · Co-curricular activities · Use of Resources · Exam Participation** (both `sq_d*` KPIs and `GSQAC_DOMAINS`). All other names already matched the sheet. Gujarati names updated alongside.
+
+**Homepage domain card value = the domain's hero indicator** (not the weighted aggregate). [DomainSummaryCard](app/src/components/ui/DomainSummaryCard.tsx) `home` variant now takes a `heroRec` and renders that indicator's value (unit-aware), frequency-aware delta and N+1, with the indicator label under the domain name; [ScorecardHome](app/src/screens/ScorecardHome.tsx) passes `d.records.find(r => r.kpi.hero)` per input domain. School Quality keeps `GsqacSummaryCard` (score + grade + N+1 + vs-last-cycle). Falls back to the aggregate where a domain's hero is role-hidden (e.g. CRC visits for a teacher).
+
+**Export** domain summary now headlines each domain's hero indicator (name + value + N+1 + Δ; School Quality shows score · grade · vs-last-cycle) instead of the aggregate — [Export.tsx](app/src/screens/Export.tsx). Per-indicator detail tables + GSQAC D1–D5 detail unchanged.
+
+**Role visibility** confirmed against the sheet's "Visible to teacher" column — current `roleVisibility` already matches exactly (Teacher Attendance, CET/CGMS, all visits/observations, GSQAC = NON_TEACHER; the rest visible). No changes needed; access logic untouched.
+
+**Direction-aware colours** preserved: `att_chronic` is `direction: "lower"` so a rising count is red and a falling count green (via `ValueDisplay`/`FrequencyDelta`); all rate heroes higher-is-better. Names flow automatically into Domain/Sub-domain/KPI-detail/Compare/Leaderboard/Export since those read `kpi.name`/`name_gu`. (Legacy `principal.*`/`teacher.*` i18n strings are unused/unrendered — left as-is.)
+
+**Build** — `npm run build` (tsc + vite) passes clean. Playwright not run (per instructions).
+
+**Manual checks (code-level):** 4 `hero: true` in catalog (one per domain); homepage domain cards driven by hero record; hero strip shows the 4; `Teacher% completing 50 hours` not a hero, still present in Administration; renamed labels match sheet; Export uses hero-indicator summary; Compare/Export pull names from the catalog. **Known risks:** count-hero N+1 shows the parent's raw count (naturally larger); domain-card value is now an indicator (not the aggregate %) by design — the aggregate still drives the domain *page* header and Export detail.
+
+---
+
 ## Overall-score removal · domain/GSQAC card parity · Export reframe · Compare selection
 
 Five focused product/UI fixes, all composing the existing shared components (no new product features, no formula/provider/access changes).
