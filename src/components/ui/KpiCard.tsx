@@ -2,13 +2,14 @@ import { cn } from "@/lib/cn";
 import type { KpiRecord } from "@/types";
 import { rag } from "@/lib/colors";
 import { formatValue, pct } from "@/lib/format";
+import { buildTrend, deltaLabelKey } from "@/lib/trend";
 import { isImproving } from "@/engine";
 import { useT, type Lang } from "@/i18n";
 import { Card, DeltaPill, StatusDot } from "./atoms";
 import { Sparkline } from "./Sparkline";
 import { ChevronRight } from "./Icon";
 
-/** The per-KPI tile (OGM shape): value · Δ WoW · trend sparkline · RAG · vs benchmark. */
+/** The per-KPI tile: value · frequency-aware mini trend · cadence delta tag · RAG. */
 export function KpiCard({
   rec, name, onClick, lang = "en",
 }: { rec: KpiRecord; name: string; onClick?: () => void; lang?: Lang }) {
@@ -16,6 +17,7 @@ export function KpiCard({
   const c = rag(rec.status);
   const na = rec.value == null;
   const improving = isImproving(rec.trend, rec.kpi.direction);
+  const trend = na ? null : buildTrend(rec, lang);
 
   return (
     <Card
@@ -42,16 +44,16 @@ export function KpiCard({
             <span className={cn("text-2xl font-extrabold tnum", c.text)}>{formatValue(rec.value, rec.kpi.unit, lang)}</span>
           )}
         </div>
-        {!na && rec.series.length > 1 && (
-          <Sparkline data={rec.series.map((s) => s.value)} color={c.hex} />
+        {trend && trend.points.length > 1 && (
+          <Sparkline data={trend.points.map((p) => p.value)} color={c.hex} />
         )}
       </div>
 
-      {na ? (
+      {na || !trend ? (
         <p className="text-2xs text-neutral-400">{t("common.notTracked")}</p>
       ) : (
         <div className="flex items-center justify-between gap-2">
-          <DeltaPill delta={rec.deltaWoW} unit={rec.kpi.unit} direction={rec.kpi.direction} lang={lang} />
+          <DeltaPill delta={trend.delta} unit={rec.kpi.unit} direction={rec.kpi.direction} lang={lang} label={t(deltaLabelKey(trend.cadence))} />
           {rec.achievement != null && (
             <span className="text-2xs font-medium text-neutral-400">
               {improving ? "↑" : rec.trend === "down" ? "↓" : "→"} {pct(rec.achievement, lang)} {t("common.score")}

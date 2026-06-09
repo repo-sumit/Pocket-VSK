@@ -1,5 +1,27 @@
 # Unified Portal — QA Report
 
+## Frequency-aware trend graphs + delta tags
+
+Every indicator now carries a **frequency-appropriate trend graph** (on the cards and the detail) plus a **delta tag whose wording is derived from `frequency`** — never a weekly axis or a "Δ this week" tag for non-daily data. All driven from one engine ([lib/trend.ts](app/src/lib/trend.ts)), so cadence + tag are config, not per-card.
+
+| Frequency | Graph x-axis (verified) | Delta tag (verified) |
+|---|---|---|
+| **Daily** (Student attendance, Chronic absentees) | last 30 days — daily line (3 May…1 Jun) | **Δ this week** |
+| **Monthly** (CRC/URC visits, School observation, Data-Driven Remediation) | Jan…Jun (months); CRC plotted on a 0–2 axis | **Δ this month** |
+| **Twice a Year** (Assessment result/SAT, Students-below) | SAT1'23 · SAT2'23 · SAT1'24 · SAT2'24 · SAT1'25 · SAT2'25 | **Δ this cycle** |
+| **Half yearly** (Reduction in dropout, Re-enrolment) | Sept'23 · Mar'24 · Sept'24 · Mar'25 · Sept'25 · Mar'26 | **Δ this time** |
+| **Yearly** (GSQAC, CET, CGMS, ORF, CPD) | 2021 · 2022 · 2023 · 2024 · 2025 (+ GSQAC grade) | **Δ this year** |
+
+- **History** is believable dummy data (gently trends, can dip), deterministic (seeded by kpi + entity), and **pinned to the real current value** at the latest point, so the headline number and the graph agree. The delta = current minus one tag-period back (≈7 days for daily, 1 point otherwise).
+- **Clarification applied:** annual / half-yearly indicators **now get a graph** (with yearly / half-year x-points) — consistent with the earlier "no fake weekly line for annual data" rule; GSQAC also keeps its **snapshot + grade**.
+- **Specific cases fixed:** CRC/URC visits + School observation → monthly graphs with month labels & "Δ this month"; dropout → half-year graph & "Δ this time"; GSQAC/annual → yearly graph & "Δ this year".
+- **Charts** ([TrendChart.tsx](app/src/components/ui/TrendChart.tsx)): nice ascending Y-ticks fitted to data (e.g. 63–68 for GSQAC, 1.2–2 for CRC, 80–100 for a 90% series), "Avg N" reference, last x-label no longer clipped, entry animation disabled (snappy + clean).
+- **Cards** ([HeroKpiStrip](app/src/components/ui/HeroKpiStrip.tsx), [KpiCard](app/src/components/ui/KpiCard.tsx)): every hero tile and every indicator tile now shows a frequency-appropriate mini trend (sparkline) + the cadence delta tag. Confirmed **no "Δ this week" appears on any non-daily indicator**. Fixed a colour glitch: a positive context delta (e.g. "+16.2% reduction") now reads green to match its On-track status.
+
+**Verified** (production build · Playwright): each frequency renders the correct x-axis + delta tag at **desktop and 320, EN + ગુ** (Gujarati cadence labels e.g. "સપ્ટે '૨૩" + "Δ આ વખતે"); `tsc` + build clean; **roles 6/6 · access 20/20 · functional 21/21 · 0 console errors**. Screenshots: `audit-kpi-yearly-gsqac.png`, `audit-kpi-halfyearly.png`, `audit-kpi-twiceayear.png`, `audit-kpi-monthly-desktop.png`, `audit-home-*.png` (repo root).
+
+---
+
 ## Design audit + fix (impeccable / taste lens)
 
 Goal: every page readable in ~6 seconds, low cognitive load, consistent system. Verified with the production build + Playwright at **desktop · 375 · 320, EN + ગુ**. Screenshots: `audit-home-desktop.png`, `audit-home-375.png`, `audit-home-320.png`, `audit-home-375-gu.png`, `audit-kpi-monthly-desktop.png` (repo root).

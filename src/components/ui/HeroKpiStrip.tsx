@@ -4,10 +4,11 @@ import { cn } from "@/lib/cn";
 import { rag } from "@/lib/colors";
 import { formatValue, formatDelta, locNum, pct } from "@/lib/format";
 import { peerAvg, peerGapOf, peerLevelOf } from "@/lib/peer";
+import { buildTrend } from "@/lib/trend";
 import { gradeFor, GSQAC_BANDS } from "@/config/ratingBands";
 import { useT } from "@/i18n";
 import { isImproving, statusFromGrade } from "@/engine";
-import { Card, StatusDot, ProgressBar } from "./atoms";
+import { Card, StatusDot } from "./atoms";
 import { Sparkline } from "./Sparkline";
 import { RatingBadge } from "./RatingBadge";
 import { FrequencyBadge } from "./DataBadges";
@@ -137,13 +138,9 @@ function HeroTile({
     supporting = t("ogm.perMonthMax2");
   }
 
-  // ── micro-viz pinned to the base (consistent slot) ──
-  const microViz =
-    strat === "trend_30d" && rec.series.length > 1 ? (
-      <Sparkline data={rec.series.map((s) => s.value)} color={c.hex} width={120} height={24} />
-    ) : strat === "compliance" ? (
-      <ProgressBar value={v} status={ds} height={5} />
-    ) : null;
+  // ── micro-viz: a frequency-appropriate mini trend for every hero ──
+  const trendPts = buildTrend(rec, lang).points.map((p) => p.value);
+  const microViz = trendPts.length > 1 ? <Sparkline data={trendPts} color={c.hex} width={120} height={24} /> : null;
 
   return (
     <Card

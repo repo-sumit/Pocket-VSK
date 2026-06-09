@@ -1,53 +1,34 @@
 import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import type { KpiRecord, Unit } from "@/types";
-import { rag } from "@/lib/colors";
+import type { Unit } from "@/types";
+import type { Cadence } from "@/lib/trend";
 import { formatValue } from "@/lib/format";
-import { CURRENT_PERIOD } from "@/config";
 import type { Lang } from "@/i18n";
 
 /**
- * Frequency-correct trend (KPI detail). The x-axis and point cadence are driven
- * by the indicator's Frequency — NEVER fabricated week numbers:
- *  • Daily   → a ~30-day daily line (the 8 anchor points are densified to 30
- *    days with a tiny deterministic wobble) labelled by date.
- *  • Monthly → one point per month, labelled with MONTH names (Jan, Feb, …).
- * Annual / half-yearly / twice-a-year indicators are NOT charted here — the KPI
- * detail shows a snapshot + cycle delta for those (no fabricated trend line).
- * The Y-axis uses nice, ascending, evenly-spaced rounded ticks with a domain
- * that fits the data (so a flat 88–92% line doesn't float on a 0–100 scale).
+ * Frequency-correct trend (KPI detail). Renders the cadence-appropriate point
+ * series from `buildTrend` — daily 30-day line, or 5–6 month/cycle/half-year/
+ * year points — with month/cycle/year x-labels (never fabricated weeks). The
+ * Y-axis uses nice, ascending, evenly-spaced rounded ticks fitted to the data.
  */
-
-const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const MONTHS_GU = ["જાન્યુ", "ફેબ્રુ", "માર્ચ", "એપ્રિલ", "મે", "જૂન", "જુલાઈ", "ઑગસ્ટ", "સપ્ટે", "ઑક્ટો", "નવે", "ડિસે"];
-
-export function TrendChart({ record, lang = "en", height = 220 }: { record: KpiRecord; lang?: Lang; height?: number }) {
-  const color = rag(record.status).hex;
-  const unit: Unit = record.kpi.unit;
-  const months = lang === "gu" ? MONTHS_GU : MONTHS_EN;
-  const freq = record.kpi.frequency ?? "Daily";
-  const isMonthly = freq === "Monthly";
-  const anchor = new Date(CURRENT_PERIOD().weekStart);
+export function TrendChart({
+  points, unit, benchmark = null, color, cadence, lang = "en", height = 220,
+}: {
+  points: { x: string; value: number }[];
+  unit: Unit;
+  benchmark?: number | null;
+  color: string;
+  cadence: Cadence;
+  lang?: Lang;
+  height?: number;
+}) {
+  const isDaily = cadence === "daily";
   const avgLabel = lang === "gu" ? "સરેરાશ" : "Avg";
-
-  const values = record.series.map((s) => s.value);
-  const data = isMonthly
-    ? values.map((value, i) => {
-        const d = new Date(anchor);
-        d.setMonth(anchor.getMonth() - (values.length - 1 - i));
-        return { x: months[(d.getMonth() + 12) % 12], value };
-      })
-    : densifyDaily(values, 30).map((value, i, arr) => {
-        const d = new Date(anchor);
-        d.setDate(anchor.getDate() - (arr.length - 1 - i));
-        return { x: `${d.getDate()} ${months[d.getMonth()]}`, value };
-      });
-
-  const axisVals = [...values, ...(record.benchmark != null ? [record.benchmark] : [])];
+  const axisVals = [...points.map((p) => p.value), ...(benchmark != null ? [benchmark] : [])];
   const { domain, ticks } = niceAxis(axisVals, unit);
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -12 }}>
+      <AreaChart data={points} margin={{ top: 8, right: 26, bottom: 0, left: -12 }}>
         <defs>
           <linearGradient id="tc-fill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity={0.24} />
@@ -60,8 +41,9 @@ export function TrendChart({ record, lang = "en", height = 220 }: { record: KpiR
           tickLine={false}
           axisLine={false}
           tick={{ fontSize: 11, fill: "#828996" }}
-          interval={isMonthly ? 0 : "preserveStartEnd"}
-          minTickGap={isMonthly ? 0 : 28}
+          interval={isDaily ? "preserveStartEnd" : 0}
+          minTickGap={isDaily ? 28 : 0}
+          padding={isDaily ? undefined : { right: 8 }}
         />
         <YAxis
           tickLine={false}
@@ -72,12 +54,12 @@ export function TrendChart({ record, lang = "en", height = 220 }: { record: KpiR
           ticks={ticks}
           tickFormatter={(v: number) => trimNum(v)}
         />
-        {record.benchmark != null && (
+        {benchmark != null && (
           <ReferenceLine
-            y={record.benchmark}
+            y={benchmark}
             stroke="#7383A5"
             strokeDasharray="4 4"
-            label={{ value: `${avgLabel} ${formatValue(record.benchmark, unit, lang)}`, position: "insideTopLeft", fontSize: 10, fill: "#7383A5" }}
+            label={{ value: `${avgLabel} ${formatValue(benchmark, unit, lang)}`, position: "insideTopLeft", fontSize: 10, fill: "#7383A5" }}
           />
         )}
         <Tooltip
@@ -85,30 +67,10 @@ export function TrendChart({ record, lang = "en", height = 220 }: { record: KpiR
           labelFormatter={(l) => String(l)}
           contentStyle={{ borderRadius: 12, border: "1px solid #E2E6EE", fontSize: 12, boxShadow: "0 8px 28px rgba(16,37,74,.12)" }}
         />
-        <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2.5} fill="url(#tc-fill)" dot={isMonthly ? { r: 3, fill: color } : false} activeDot={{ r: 5 }} />
+        <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2.5} fill="url(#tc-fill)" dot={isDaily ? false : { r: 3, fill: color }} activeDot={{ r: 5 }} isAnimationActive={false} />
       </AreaChart>
     </ResponsiveContainer>
   );
-}
-
-/** Linear-interpolate the anchor points to `target` daily samples with a tiny
- *  deterministic wobble, so a daily metric reads as daily (not a smooth ramp). */
-function densifyDaily(values: number[], target: number): number[] {
-  const nums = values.filter((v): v is number => v != null);
-  if (nums.length === 0) return [];
-  if (nums.length >= target) return nums.slice(-target);
-  if (nums.length === 1) return Array.from({ length: target }, () => nums[0]);
-  const out: number[] = [];
-  const n = nums.length;
-  for (let i = 0; i < target; i++) {
-    const t = (i / (target - 1)) * (n - 1);
-    const lo = Math.floor(t), hi = Math.ceil(t), f = t - lo;
-    const base = nums[lo] + (nums[hi] - nums[lo]) * f;
-    const seed = Math.sin((i + 1) * 12.9898) * 43758.5453;
-    const wobble = (seed - Math.floor(seed) - 0.5) * (Math.abs(base) * 0.012 + 0.25);
-    out.push(Math.round(Math.max(0, base + wobble) * 100) / 100);
-  }
-  return out;
 }
 
 function niceStep(raw: number): number {
@@ -128,7 +90,7 @@ function niceAxis(values: number[], unit: Unit): { domain: [number, number]; tic
   if (lo === hi) { const pad = Math.max(unit === "%" ? 2 : Math.abs(hi) * 0.1, 1); lo -= pad; hi += pad; }
   const pad = (hi - lo) * 0.15;
   lo -= pad; hi += pad;
-  lo = Math.max(0, lo);
+  if (lo > 0) lo = Math.max(0, lo);
   if (unit === "%") hi = Math.min(100, hi);
   const step = niceStep((hi - lo) / 4);
   const min = Math.floor(lo / step) * step;

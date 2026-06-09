@@ -6,6 +6,7 @@ import { cn } from "@/lib/cn";
 import { rag } from "@/lib/colors";
 import { formatValue, formatDelta, locNum } from "@/lib/format";
 import { peerAvg, peerGapOf, peerLevelOf } from "@/lib/peer";
+import { buildTrend, deltaLabelKey, trendTitleKey } from "@/lib/trend";
 import { gradeFor, GSQAC_BANDS } from "@/config/ratingBands";
 import { Card, SectionLabel, Badge, DeltaPill, TrendArrow, EmptyNA } from "@/components/ui/atoms";
 import { TrendChart } from "@/components/ui/TrendChart";
@@ -13,8 +14,6 @@ import { ComparisonBars, type CompareBar } from "@/components/ui/ComparisonBars"
 import { RatingBadge } from "@/components/ui/RatingBadge";
 import { FrequencyBadge } from "@/components/ui/DataBadges";
 import { ArrowLeft, Database } from "@/components/ui/Icon";
-
-const PERIODIC = new Set(["Daily", "Weekly", "Monthly"]);
 
 export default function KpiDetail() {
   const { kpiId } = useParams();
@@ -30,24 +29,21 @@ export default function KpiDetail() {
   const c = rag(rec.status);
   const na = rec.value == null;
   const improving = isImproving(rec.trend, kpi.direction);
+  // a context delta (e.g. "+16.2% reduction") is GOOD by its sign + direction, not by the weekly trend
+  const ctxGood = kpi.direction === "higher" ? (rec.value ?? 0) >= 0 : (rec.value ?? 0) <= 0;
   const domain = fw.domains.find((d) => d.id === kpi.domain_id);
   const name = tn(kpi.name, kpi.name_gu);
   const isGsqac = kpi.id.startsWith("sq_");
   const isContextDelta = kpi.displayStrategy === "delta_cycle";
-  const periodic = PERIODIC.has(kpi.frequency ?? "");
+
+  // frequency-aware trend (history + cadence + delta-vs-one-period-back)
+  const trend = na ? null : buildTrend(rec, lang);
 
   // N+1 peer comparison (own vs next level up). Skipped for State, counts/ratios,
   // cycle deltas, and GSQAC (real value has no real next-level-up baseline in mock).
   const peerLevel = peerLevelOf(entity.level);
   const canPeer = !na && (kpi.unit === "%" || kpi.unit === "score") && !isContextDelta && !isGsqac;
   const peer = canPeer && peerLevel ? peerGapOf(rec.value, peerAvg(kpi.id, entity.level), kpi.direction) : null;
-
-  // cycle-over-cycle delta for annual/half/twice cadences (no fabricated weekly line)
-  const cycleDelta = isGsqac
-    ? entity.meta.gsqac?.improvement ?? null
-    : isContextDelta
-      ? rec.value
-      : null;
 
   const bars: CompareBar[] = cascade.map((row) => ({
     key: row.level,
@@ -93,7 +89,7 @@ export default function KpiDetail() {
               </div>
             ) : (
               <div className="mt-1 flex items-end gap-2">
-                <span className={cn("text-4xl font-extrabold tnum", isContextDelta ? (improving ? "text-rag-greenText" : "text-rag-redText") : c.text)}>
+                <span className={cn("text-4xl font-extrabold tnum", isContextDelta ? (ctxGood ? "text-rag-greenText" : "text-rag-redText") : c.text)}>
                   {isContextDelta ? formatDelta(rec.value, "%", lang) : formatValue(rec.value, kpi.unit, lang)}
                 </span>
                 <TrendArrow trend={rec.trend} improving={improving} size={22} />
@@ -108,13 +104,10 @@ export default function KpiDetail() {
                 </span>
               </p>
             )}
-            {(isContextDelta || isGsqac) && <p className="mt-1.5 text-xs text-neutral-500">{t("scorecard.vsLastCycle")}</p>}
           </div>
-          {!na && periodic && (
-            <div className="flex gap-2">
-              <DeltaPill delta={rec.deltaWoW} unit={kpi.unit} direction={kpi.direction} lang={lang} label={t("kpi.deltaWoW")} />
-              <DeltaPill delta={rec.deltaMoM} unit={kpi.unit} direction={kpi.direction} lang={lang} label={t("kpi.deltaMoM")} />
-            </div>
+          {/* single delta tag, wording derived from the indicator's frequency */}
+          {trend && (
+            <DeltaPill delta={trend.delta} unit={kpi.unit} direction={kpi.direction} lang={lang} label={t(deltaLabelKey(trend.cadence))} />
           )}
         </div>
 
@@ -124,32 +117,23 @@ export default function KpiDetail() {
         </div>
       </Card>
 
-      {/* TREND — frequency-aware (B): periodic → trend line; annual/half/twice → cycle view */}
-      {na ? (
+      {/* TREND — frequency-correct: cadence-appropriate x-axis (daily 30d / months /
+          cycles / half-years / years), never a fabricated weekly line for annual data */}
+      {na || !trend ? (
         <EmptyNA hint={t("kpi.noData")} />
-      ) : periodic && rec.series.length > 1 ? (
-        <Card className="card-pad">
-          <SectionLabel>{kpi.frequency === "Daily" ? t("kpi.trend30d") : kpi.frequency === "Monthly" ? t("kpi.trendMonthly") : t("kpi.recentTrend")}</SectionLabel>
-          <div className="mt-2"><TrendChart record={rec} lang={lang} /></div>
-        </Card>
       ) : (
         <Card className="card-pad">
-          <SectionLabel>{t("kpi.cycleTitle")}</SectionLabel>
-          <div className="mt-2 flex flex-wrap items-end gap-x-8 gap-y-3">
-            <div>
-              <p className="text-2xs uppercase tracking-wide text-neutral-400">{t("kpi.thisCycle")}</p>
-              <p className={cn("text-2xl font-extrabold tnum", c.text)}>
-                {isContextDelta ? formatDelta(rec.value, "%", lang) : isGsqac ? locNum(Math.round(rec.value as number), lang) : formatValue(rec.value, kpi.unit, lang)}
-              </p>
-            </div>
-            {cycleDelta != null && (
-              <div>
-                <p className="text-2xs uppercase tracking-wide text-neutral-400">{t("scorecard.vsLastCycle")}</p>
-                <p className={cn("text-2xl font-extrabold tnum", cycleDelta >= 0 ? "text-rag-greenText" : "text-rag-redText")}>{formatDelta(cycleDelta, "%", lang)}</p>
-              </div>
-            )}
+          <SectionLabel>{t(trendTitleKey(trend.cadence))}</SectionLabel>
+          <div className="mt-2">
+            <TrendChart
+              points={trend.points}
+              unit={kpi.unit}
+              benchmark={isGsqac ? null : rec.benchmark}
+              color={c.hex}
+              cadence={trend.cadence}
+              lang={lang}
+            />
           </div>
-          <p className="mt-3 text-2xs text-neutral-400">{t("kpi.annualSnapshot")}</p>
         </Card>
       )}
 
