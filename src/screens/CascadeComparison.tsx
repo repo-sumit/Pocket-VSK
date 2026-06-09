@@ -13,6 +13,8 @@ import { ComparisonBars, type CompareBar } from "@/components/ui/ComparisonBars"
 import { Select, type SelectOption } from "@/components/ui/Select";
 import { VskBadge } from "@/components/ui/VskBadge";
 import { Icon } from "@/components/ui/Icon";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const SLOTS = [0, 1, 2, 3] as const;
 
@@ -75,14 +77,8 @@ export default function CompareView() {
     v == null ? null : kpi.unit === "count" ? Math.round((v / schoolsImplied(kpi.id, ent.level)) * 10) / 10 : v;
 
   return (
-    <div className="space-y-5 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <VskBadge size={40} />
-        <div className="min-w-0">
-          <h1 className="text-xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">{t("compare.title")}</h1>
-          <p className="mt-0.5 text-sm text-neutral-500">{t("compare.subtitle")}</p>
-        </div>
-      </div>
+    <ScreenContainer>
+      <PageHeader icon={<VskBadge size={40} />} title={t("compare.title")} subtitle={t("compare.subtitle")} />
 
       {/* four single-select slots */}
       {options.length > 0 ? (
@@ -142,6 +138,6 @@ export default function CompareView() {
           </Card>
         );
       })}
-    </div>
+    </ScreenContainer>
   );
 }

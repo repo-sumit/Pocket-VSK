@@ -1,5 +1,39 @@
 # Unified Portal — QA Report
 
+## Design-system consistency refactor (one coherent product)
+
+Centralised the visual language so a change in one shared component now propagates across every view (the previous problem: each screen grew its own card/header/table markup).
+
+**New shared primitives**
+- Layout: [ScreenContainer](app/src/components/layout/ScreenContainer.tsx) (one page wrapper + entry animation), [PageHeader + BackLink](app/src/components/layout/PageHeader.tsx), [PageSection + PageGrid](app/src/components/layout/PageSection.tsx).
+- Metric grammar: [ValueDisplay](app/src/components/ui/ValueDisplay.tsx) (the one big-number treatment + colour discipline), [FrequencyDelta](app/src/components/ui/FrequencyDelta.tsx) (the one direction-aware, frequency-worded delta — inline + pill variants), [NPlusOneLine](app/src/components/ui/NPlusOneLine.tsx) (the one "{parent} · {score}" line), [EmptyState](app/src/components/ui/EmptyState.tsx).
+- Composite cards: [DomainSummaryCard](app/src/components/ui/DomainSummaryCard.tsx), [GsqacSummaryCard](app/src/components/ui/GsqacSummaryCard.tsx) (distinctive pink output surface + D1–D5 + grade badge, annual — no daily trend), [ResponsiveDataTable](app/src/components/ui/ResponsiveDataTable.tsx) (one table grammar).
+
+**Screens refactored to compose, not redefine**
+- [ScorecardHome](app/src/screens/ScorecardHome.tsx): domain cards → `DomainSummaryCard`; School Quality → `GsqacSummaryCard`; header → `PageHeader`; sections → `PageSection/PageGrid`. (Overall-score hero kept as the one allowed bespoke surface.)
+- [DomainView](app/src/screens/DomainView.tsx), [SubDomainView](app/src/screens/SubDomainView.tsx), [KpiDetail](app/src/screens/KpiDetail.tsx), [CascadeComparison](app/src/screens/CascadeComparison.tsx), [Leaderboard](app/src/screens/Leaderboard.tsx), [Export](app/src/screens/Export.tsx): all now use `ScreenContainer` + `BackLink`/`PageHeader` + `PageSection`; `KpiCard` (domain/sub-domain) and `KpiDetail` value/delta/N+1 go through the shared atoms; Export's two tables → `ResponsiveDataTable`.
+
+**Consistency outcomes**
+- **One metric card family** — `KpiCard`, `DomainSummaryCard`, hero tiles and the KPI-detail header all compose `ValueDisplay` + `FrequencyDelta` + `NPlusOneLine`; a change to any atom reflects on home, domain, sub-domain and detail at once.
+- **N+1 grammar** is a single component everywhere (`{parent} · {score}`, no "ahead/behind %"); hidden at State. Removed the dead `DomainBar` (the last "−X% behind" pattern).
+- **Direction-aware delta** everywhere (`FrequencyDelta`): a decline of a lower-is-better metric (chronic absentees ↘) is green; with frequency-correct wording (this week / month / cycle / time / year). Annual/half/twice-yearly KPIs keep their non-daily trend; GSQAC stays annual (no fake daily line).
+- **Status text tags removed** from normal cards (`SubDomainView`, `KpiDetail` no longer render "On track" etc.); status now lives in value colour + dot + grade + delta. Export keeps a status column (explicitly allowed admin/export context).
+- **GSQAC grade colours** remain centralised (`GRADE_GROUP` + `RatingBadge`); no new raw hex added.
+- Docs: [README](app/README.md) reframed from the stale "5A / 29 KPIs" to the current **4A Input–Output** model; `package-lock.json` already in sync (no changes on `npm install`).
+
+**Verification** — `npm run build` clean (tsc + vite). QA scripts all green against the production build:
+- `roles-smoke` **6/6** (teacher · principal · crc · brc · deo · state — each scoped correctly, 0 errors)
+- `verify` **21/21** · `verify-access` **20/20** (tamper→clamp, compare scoped to same/one-below, peers non-navigable, PM-Shri rules intact)
+- `qa-sweep` **0 problems** — no horizontal overflow, no console errors across roles × screens × {320, 375, 768, 1440} × {EN, ગુ}.
+- Visual pass (desktop + 320 ગુ): Scorecard, Domain, KPI detail, Leaderboard, Export read as one family. Screenshots at repo root: `ds-kpidetail-desktop.png`, `ds-domain-desktop.png`, `ds-leaderboard-desktop.png`, `ds-export-desktop.png`, `ds-home-320-gu.png`.
+
+**Known risks / TODOs**
+- For **count** KPIs the N+1 shows the parent's raw count (e.g. chronic absentees "Kachchh · 790"), which is naturally larger because the parent aggregates more schools — faithful to "that KPI's score at the parent level" but worth a product decision (suppress for counts, or show a rate) — needs Sumit's call.
+- `MetricCard` was intentionally **not** collapsed into a single monolith: `KpiCard` (vertical) and the `HeroKpiStrip` tile (horizontal, full-name) are deliberately different layouts that now share the same atoms — propagation is achieved without a risky rewrite.
+- Access control remains **client-side only** (`isInScope`); production still needs server-side RLS (unchanged by this pass).
+
+---
+
 ## N+1 made consistent across ALL indicators
 
 The N+1 comparison was still being skipped for change-deltas (`displayStrategy: "delta_cycle"` — e.g. "Reduction in dropout %") and, on the older build, for counts/ratios/GSQAC — so the Key Indicators strip looked inconsistent (some tiles had "[parent] · score", some showed "vs last cycle" / "3% of enrolled" / nothing). Now **every** indicator shows the N+1 line, on both the Key Indicators strip ([HeroKpiStrip.tsx](app/src/components/ui/HeroKpiStrip.tsx)) and the KPI cards ([KpiCard.tsx](app/src/components/ui/KpiCard.tsx)).

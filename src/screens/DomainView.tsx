@@ -4,9 +4,13 @@ import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { accent, valueToneClass } from "@/lib/colors";
 import { pct } from "@/lib/format";
-import { Card, SectionLabel, ProgressBar, StatusDot } from "@/components/ui/atoms";
+import { Card, ProgressBar, StatusDot } from "@/components/ui/atoms";
+import { ValueDisplay } from "@/components/ui/ValueDisplay";
 import { KpiCard } from "@/components/ui/KpiCard";
-import { Icon, ArrowLeft, ChevronRight } from "@/components/ui/Icon";
+import { Icon, ChevronRight } from "@/components/ui/Icon";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import { BackLink } from "@/components/layout/PageHeader";
+import { PageSection, PageGrid } from "@/components/layout/PageSection";
 
 /**
  * Domain view — tier 2 of the 3-click drill.
@@ -25,18 +29,19 @@ export default function DomainView() {
   const ds = sc.domainScores.find((d) => d.domain.id === domainId);
   if (!ds || ds.records.length === 0) {
     return (
-      <div className="space-y-4 animate-fade-in">
-        <BackBtn label={t("nav.home")} onClick={() => navigate("/app")} />
+      <ScreenContainer>
+        <BackLink label={t("nav.home")} onClick={() => navigate("/app")} />
         <Card className="card-pad text-center text-sm text-neutral-500">{t("domain.noKpis")}</Card>
-      </div>
+      </ScreenContainer>
     );
   }
 
   const a = accent(ds.domain.accent);
+  const parentName = sc.parent ? tn(sc.parent.entity.name, sc.parent.entity.name_gu) : undefined;
 
   return (
-    <div className="space-y-5 animate-fade-in">
-      <BackBtn label={t("nav.home")} onClick={() => navigate("/app")} />
+    <ScreenContainer>
+      <BackLink label={t("nav.home")} onClick={() => navigate("/app")} />
 
       {/* domain header */}
       <Card className="card-pad">
@@ -51,16 +56,15 @@ export default function DomainView() {
               {ds.domain.kind === "output" ? ` · ${t("scorecard.output")} · ${t("scorecard.annual")}` : ""}
             </p>
           </div>
-          <span className={cn("shrink-0 text-3xl font-extrabold tnum", ds.percent == null ? "text-rag-naText" : valueToneClass(ds.status))}>{ds.percent == null ? t("common.na") : pct(ds.percent, lang)}</span>
+          <ValueDisplay value={ds.percent} unit="%" status={ds.status} lang={lang} size="lg" naLabel={t("common.na")} className="shrink-0" />
         </div>
         {ds.percent != null && <ProgressBar value={ds.percent} status={ds.status} className="mt-4" height={10} />}
       </Card>
 
       {/* sub-domains (Administration) → tier-3 drill */}
       {ds.subScores.length > 0 ? (
-        <div>
-          <SectionLabel className="mb-2">{t("scorecard.subDomains")}</SectionLabel>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <PageSection title={t("scorecard.subDomains")}>
+          <PageGrid cols="two" className="gap-2">
             {ds.subScores.map((ss) => (
               <button
                 key={ss.sub.id}
@@ -76,13 +80,12 @@ export default function DomainView() {
                 <ChevronRight size={16} className="shrink-0 text-neutral-300 transition-transform group-hover:translate-x-0.5" />
               </button>
             ))}
-          </div>
-        </div>
+          </PageGrid>
+        </PageSection>
       ) : (
         // no sub-domains (Attendance / Assessment / School Quality) → indicators directly
-        <div>
-          <SectionLabel className="mb-2">{t("domain.kpisIn", { name: tn(ds.domain.name, ds.domain.name_gu) })}</SectionLabel>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <PageSection title={t("domain.kpisIn", { name: tn(ds.domain.name, ds.domain.name_gu) })}>
+          <PageGrid cols="kpi">
             {ds.records.map((r) => (
               <KpiCard
                 key={r.kpi.id}
@@ -90,21 +93,13 @@ export default function DomainView() {
                 name={tn(r.kpi.name, r.kpi.name_gu)}
                 lang={lang}
                 level={entity.level}
-                parentName={sc.parent ? tn(sc.parent.entity.name, sc.parent.entity.name_gu) : undefined}
+                parentName={parentName}
                 onClick={() => navigate(`/app/kpi/${r.kpi.id}`)}
               />
             ))}
-          </div>
-        </div>
+          </PageGrid>
+        </PageSection>
       )}
-    </div>
-  );
-}
-
-function BackBtn({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button onClick={onClick} className="inline-flex items-center gap-1 text-sm font-semibold text-neutral-500 hover:text-primary-600">
-      <ArrowLeft size={16} /> {label}
-    </button>
+    </ScreenContainer>
   );
 }

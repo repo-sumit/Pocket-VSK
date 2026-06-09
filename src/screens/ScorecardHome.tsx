@@ -3,24 +3,28 @@ import type { DomainScore } from "@/types";
 import { useScope, useScorecard, useScopeStats } from "@/hooks";
 import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
-import { accent, valueToneClass, deltaToneClass, GRADE_GROUP, gradeGroupOf } from "@/lib/colors";
-import { pct, locNum, greetingKey } from "@/lib/format";
+import { GRADE_GROUP, gradeGroupOf } from "@/lib/colors";
+import { locNum, greetingKey } from "@/lib/format";
 import { overallTrendData } from "@/lib/trend";
 import { OUTPUT_DOMAIN_ID } from "@/config/frameworks";
-import { GSQAC_DOMAINS } from "@/config/kpiCatalog";
-import { SectionLabel, Badge, ProgressBar } from "@/components/ui/atoms";
+import { Badge } from "@/components/ui/atoms";
 import { RatingRing } from "@/components/ui/RatingRing";
 import { RatingBadge } from "@/components/ui/RatingBadge";
 import { HeroKpiStrip } from "@/components/ui/HeroKpiStrip";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { VskBadge } from "@/components/ui/VskBadge";
-import { Icon, ChevronRight, ArrowUpRight, ArrowDownRight, Database } from "@/components/ui/Icon";
+import { DomainSummaryCard } from "@/components/ui/DomainSummaryCard";
+import { GsqacSummaryCard } from "@/components/ui/GsqacSummaryCard";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { PageSection, PageGrid } from "@/components/layout/PageSection";
 
 /**
  * Homepage (mobile-first, same for every role). Order: Overall score → Domain
- * cards → School Quality → Key indicators. The overall score is the headline
- * with its grade badge + a small 30-day trend; domain cards show the next-level-
- * up entity's name + score (not a ± delta); status lives in colour, not chrome.
+ * cards → School Quality → Key indicators. Composed from shared components
+ * (PageHeader, DomainSummaryCard, GsqacSummaryCard, HeroKpiStrip) so the visual
+ * language stays in lockstep with the rest of the app. The overall score is the
+ * only bespoke surface (the hero) — an allowed exception.
  */
 export default function ScorecardHome() {
   const { user, entity, currentId } = useScope();
@@ -40,6 +44,7 @@ export default function ScorecardHome() {
   const overallTrend = overallTrendData(sc.overallPercent, entity.id);
   const gradeHex = sc.grade ? GRADE_GROUP[gradeGroupOf(sc.grade)].hex : "#9CA3AF";
   const parent = sc.parent;
+  const parentName = parent ? tn(parent.entity.name, parent.entity.name_gu) : undefined;
 
   // net movement of the overall score across the trend window (the "which way am I going")
   const overallNet = overallTrend.length > 1 ? Math.round(overallTrend[overallTrend.length - 1]) - Math.round(overallTrend[0]) : 0;
@@ -53,24 +58,18 @@ export default function ScorecardHome() {
       .filter((v): v is number => v != null);
     return ds.length ? Math.round((ds.reduce((a, b) => a + b, 0) / ds.length) * 10) / 10 : null;
   };
-  const parentPct = (id: string) => parent?.domainPercents[id] ?? null;
 
   return (
-    <div className="space-y-5 animate-fade-in">
-      {/* scope header */}
-      <div className="flex items-center gap-3">
-        <VskBadge size={40} />
-        <div className="min-w-0">
-          {user && <p className="text-sm font-medium text-neutral-500">{greeting}, {tn(user.name, user.name_gu).split(" ")[0]}</p>}
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="truncate text-xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl" title={tn(entity.name, entity.name_gu)}>{tn(entity.name, entity.name_gu)}</h1>
-            <Badge className="bg-neutral-100 text-neutral-500">{t(`levels.${entity.level}`)}</Badge>
-          </div>
-        </div>
-      </div>
+    <ScreenContainer>
+      <PageHeader
+        icon={<VskBadge size={40} />}
+        eyebrow={user ? `${greeting}, ${tn(user.name, user.name_gu).split(" ")[0]}` : undefined}
+        title={tn(entity.name, entity.name_gu)}
+        badge={<Badge className="bg-neutral-100 text-neutral-500">{t(`levels.${entity.level}`)}</Badge>}
+      />
 
-      {/* OVERALL SCORE — the hero: ring + grade + contextual 30-day trend read as one unit.
-          Subtle green-tinted surface + raised elevation sets it apart from the domain cards. */}
+      {/* OVERALL SCORE — the hero: ring + grade + contextual 30-day trend as one unit.
+          A bespoke green-tinted surface (allowed exception) that sets it apart. */}
       <div className="rounded-2xl border border-rag-green/20 bg-gradient-to-br from-tint-mintBg via-white to-tint-greenBg/40 p-4 shadow-raised sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
           <div className="flex items-center gap-4 sm:shrink-0">
@@ -92,85 +91,30 @@ export default function ScorecardHome() {
       </div>
 
       {/* DOMAIN cards */}
-      <div>
-        <SectionLabel className="mb-2">{t("scorecard.domainsHeader")}</SectionLabel>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {inputs.map((d) => {
-            const a = accent(d.domain.accent);
-            const wow = domainWoW(d);
-            const pp = parentPct(d.domain.id);
-            return (
-              <button key={d.domain.id} onClick={() => navigate(`/app/domain/${d.domain.id}`)} className="group card card-pad flex flex-col gap-2 text-left transition-shadow hover:shadow-raised">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-xl", a.bg)}><Icon name={d.domain.icon} className={a.icon} size={18} /></span>
-                    <span className="block truncate text-sm font-bold text-neutral-900">{tn(d.domain.name, d.domain.name_gu)}</span>
-                  </span>
-                  <ChevronRight size={16} className="shrink-0 text-neutral-300 transition-transform group-hover:translate-x-0.5" />
-                </div>
-                <div className="flex items-end justify-between gap-2">
-                  <span className={cn("text-3xl font-extrabold tnum", d.percent == null ? "text-rag-naText" : valueToneClass(d.status))}>{d.percent == null ? t("common.na") : pct(d.percent, lang)}</span>
-                  {wow != null && wow !== 0 && (
-                    <span className={cn("inline-flex items-center pb-1 text-2xs font-bold", deltaToneClass(wow, "higher"))}>
-                      {wow > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}{locNum(Math.abs(wow), lang)}
-                    </span>
-                  )}
-                </div>
-                {parent && pp != null && (
-                  <span className="truncate text-2xs text-neutral-400">{tn(parent.entity.name, parent.entity.name_gu)} · {pct(pp, lang)}</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <PageSection title={t("scorecard.domainsHeader")}>
+        <PageGrid cols="domain">
+          {inputs.map((d) => (
+            <DomainSummaryCard
+              key={d.domain.id}
+              ds={d}
+              name={tn(d.domain.name, d.domain.name_gu)}
+              delta={domainWoW(d)}
+              parentName={parentName}
+              parentPercent={parent?.domainPercents[d.domain.id] ?? null}
+              onClick={() => navigate(`/app/domain/${d.domain.id}`)}
+            />
+          ))}
+        </PageGrid>
+      </PageSection>
 
       {/* SCHOOL QUALITY — GSQAC output, annual */}
-      {output && output.percent != null && (
-        <button onClick={() => navigate(`/app/domain/${OUTPUT_DOMAIN_ID}`)} className="group block w-full rounded-2xl border border-tint-pinkRing/80 bg-gradient-to-br from-tint-pinkBg to-white p-4 text-left shadow-card transition-shadow hover:shadow-raised sm:p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="flex items-center gap-2">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-tint-pinkRing"><Icon name="Award" className="text-pink-700" size={18} /></span>
-              <span>
-                <span className="block text-sm font-bold text-neutral-900">{tn(output.domain.name, output.domain.name_gu)}</span>
-                <span className="block text-2xs font-semibold uppercase tracking-wide text-pink-700">{t("scorecard.output")} · {t("scorecard.annual")}</span>
-              </span>
-            </span>
-            <span className="flex items-center gap-2">
-              <span className={cn("text-3xl font-extrabold tnum", valueToneClass(output.status))}>{pct(output.percent, lang)}</span>
-              {output.grade && <RatingBadge grade={output.grade} size="md" />}
-              <ChevronRight size={16} className="text-neutral-300 transition-transform group-hover:translate-x-0.5" />
-            </span>
-          </div>
-          {gsqacCoverage && gsqacCoverage.schools >= 2 && (
-            <p
-              className="mt-2 inline-flex items-center gap-1 text-2xs text-neutral-500"
-              title={t("ogm.coverageHint")}
-              aria-label={`${t("ogm.coverage", { real: locNum(gsqacCoverage.gsqacReal, lang), total: locNum(gsqacCoverage.schools, lang) })}. ${t("ogm.coverageHint")}`}
-            >
-              <Database size={11} /> {t("ogm.coverage", { real: locNum(gsqacCoverage.gsqacReal, lang), total: locNum(gsqacCoverage.schools, lang) })}
-            </p>
-          )}
-          {gsqac && (
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 sm:grid-cols-5">
-              {GSQAC_DOMAINS.map((g) => {
-                const v = gsqac.domains[g.key];
-                return (
-                  <div key={g.key} className="min-w-0">
-                    <div className="flex items-center justify-between gap-1 text-2xs text-neutral-500"><span className="truncate" title={tn(g.name, g.name_gu)}>{tn(g.name, g.name_gu)}</span><span className="tnum font-semibold">{v == null ? t("common.na") : pct(v * 100, lang)}</span></div>
-                    {v != null && <ProgressBar value={v * 100} status={v * 100 >= 75 ? "green" : v * 100 >= 50 ? "amber" : "red"} className="mt-0.5" height={5} />}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          {gsqac?.improvement != null && (
-            <p className="mt-3 text-xs text-neutral-500">
-              {t("scorecard.vsLastCycle")}: <b className={deltaToneClass(gsqac.improvement, "higher")}>{gsqac.improvement >= 0 ? "+" : ""}{locNum(gsqac.improvement, lang)}%</b>
-              {gsqac.synth && <span className="ml-1 text-2xs text-neutral-300">({t("common.sample")})</span>}
-            </p>
-          )}
-        </button>
+      {output && (
+        <GsqacSummaryCard
+          output={output}
+          gsqac={gsqac}
+          coverage={gsqacCoverage ? { real: gsqacCoverage.gsqacReal, total: gsqacCoverage.schools } : null}
+          onClick={() => navigate(`/app/domain/${OUTPUT_DOMAIN_ID}`)}
+        />
       )}
 
       {/* KEY INDICATORS — full-width tiles, full names; opens the indicator detail */}
@@ -178,9 +122,9 @@ export default function ScorecardHome() {
         records={allRecords}
         level={entity.level}
         enrolment={stats?.enrolment}
-        parentName={parent ? tn(parent.entity.name, parent.entity.name_gu) : undefined}
+        parentName={parentName}
         onOpen={(rec) => navigate(`/app/kpi/${rec.kpi.id}`)}
       />
-    </div>
+    </ScreenContainer>
   );
 }

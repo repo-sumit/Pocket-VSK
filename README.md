@@ -2,7 +2,7 @@
 
 One platform for school-performance KPIs across every level of the Gujarat education system, designed **insight-first**: lead with the one or two things that matter, glanceable in 3 seconds, uncluttered. Audience runs from the Principal Secretary down to every teacher.
 
-Config-driven and **KPI-agnostic** — the whole dashboard renders from `domains` / `kpi_definitions` / `kpi_values`. Built on the **5A framework (= GSQAC)**: A1 Attendance & Access · A2 Assessment & Learning · A3 TPD for Teachers · A4 Administration & Service Delivery · A5 School Quality (GSQAC). **29 KPIs** with the published per-level numbers from `Docs/VSK_KPI_Sample_Numbers.pdf` as the source of truth. Bilingual (English + ગુજરાતી), mobile-first, anonymised demo data.
+Config-driven and **KPI-agnostic** — the whole dashboard renders from `domains` / `kpi_definitions` / `kpi_values`. Built on the **4A Input–Output model**: **Attendance** (30%) · **Assessment** (30%) · **Administration** (40%) compose the **Input Composite**, with **School Quality (GSQAC)** as the standalone **output** domain. A config-driven KPI catalog (the 4A indicators + GSQAC D1–D5) with the published per-level numbers from `Docs/` as the source of truth. Bilingual (English + ગુજરાતી), mobile-first, anonymised demo data.
 
 ---
 
@@ -53,7 +53,7 @@ There is **no SSO consent step** — after confirming details you land on the da
 ## Architecture & key modelling notes
 
 ```
-src/config/    the single 5A framework · 29-KPI catalog + PUBLISHED per-level numbers · sub-domain seam · rating bands
+src/config/    the 4A framework · KPI catalog + PUBLISHED per-level numbers · sub-domain seam · rating bands
 src/data/      seed JSON (real names + GSQAC scores; nested codes) · MockProvider (per-level anchoring, PM-SHRI-aware) · Supabase stub
 src/engine/    RAG · Δ WoW/MoM · trend · domain & overall score · grade · leaderboard · story · cascade
 src/components/ ui primitives + layout (AppShell, PM SHRI filter, MultiSelect) + role/ (TeacherView, PrincipalView)
@@ -61,15 +61,15 @@ src/screens/   Login · ScorecardHome (role-routed) · DomainView (3-tier) · Kp
 ```
 
 - **Source-of-truth & per-level anchoring.** The published Teacher/School/Cluster/Block/District/State numbers are illustrative per-level figures, **not a single mathematical chain** (e.g. Attendance is 89/95/98/86/86/85). So the provider **anchors each level to its published number** (with per-entity spread, so a level's *average* matches the published figure while individual entities vary for RAG/leaderboards). Section→Grade roll up (grade = mean of its sections) so the teacher/section comparison stays internally consistent.
-- **3-tier Domain > Sub-Domain > Indicator** is a configurable seam: `kpi.sub_domain` + `domain.sub_domains`. A4 ships a placeholder split (Schemes & Payments / Grievances & Issues / District Tracking); the full breakdown is pending (Chaitanya).
+- **3-tier Domain > Sub-Domain > Indicator** is a configurable seam: `kpi.sub_domain` + `domain.sub_domains`. Administration ships a placeholder split (Schemes & Payments / Grievances & Issues / District Tracking); the full breakdown is pending (Chaitanya).
 - **Domain weightages are placeholders** pending State sign-off (`WEIGHTAGE_IS_PLACEHOLDER`, flagged in the UI); they sum to 100%.
 - Swap mock → live: run `supabase/schema.sql` + the generated `supabase/seed.sql`, load config rows, set `VITE_DATA_PROVIDER=supabase`, flesh out `supabaseProvider.ts`. Deploy via Vercel (`vercel.json`, root `app/`).
 
 ---
 
 ## Known gaps / decisions
-- **Sub-domain/indicator detail** is a built seam but only A4 has a placeholder grouping — the full breakdown is pending from Chaitanya.
+- **Sub-domain/indicator detail** is a built seam but only Administration has a placeholder grouping — the full breakdown is pending from Chaitanya.
 - **Per-level anchoring** (above) is a deliberate choice to match the published numbers, since they aren't a strict rollup; consequently school↑ levels each show their own published figure rather than a literal mean of children.
-- **GSQAC score** is published as an aggregate that scales by level (school 84 → state 84000); it displays the published figure and is treated as on-target for A5 scoring.
+- **GSQAC score** is published as an aggregate that scales by level (school 84 → state 84000); it displays the published figure and is the standalone School Quality (output) domain.
 - "Schools below benchmark" / "Low-performing" KPIs are kept (data) but **labelled supportively** per the empathetic-copy principle.
 - 2003 historical-progression infographic (FCR-3.7) not built (low priority).

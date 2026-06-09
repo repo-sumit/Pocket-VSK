@@ -1,4 +1,4 @@
-import type { KpiRecord } from "@/types";
+import type { DomainScore, KpiRecord } from "@/types";
 import { useScope, useScorecard, useScopeStats } from "@/hooks";
 import { statusFromScore } from "@/engine";
 import { useT } from "@/i18n";
@@ -11,7 +11,10 @@ import { CURRENT_PERIOD } from "@/config";
 import { Card, SectionLabel, Badge, Button, ProgressBar } from "@/components/ui/atoms";
 import { RatingRing } from "@/components/ui/RatingRing";
 import { RatingBadge } from "@/components/ui/RatingBadge";
+import { ResponsiveDataTable, type DataColumn } from "@/components/ui/ResponsiveDataTable";
 import { Download, Sparkles } from "@/components/ui/Icon";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const PERIODIC = new Set(["Daily", "Weekly", "Monthly"]);
 
@@ -51,15 +54,40 @@ export default function Export() {
     return formatValue(rec.value, rec.kpi.unit, lang);
   };
 
+  // ── shared table columns (one grammar) ──
+  const summaryCols: DataColumn<DomainScore>[] = [
+    { key: "domain", header: t("export.domain"), render: (d) => <span className="font-semibold text-neutral-800">{tn(d.domain.name, d.domain.name_gu)}</span> },
+    { key: "weight", header: t("common.weightage"), align: "right", className: "tabular-nums text-neutral-500", render: (d) => `${Math.round(d.domain.weightage * 100)}%` },
+    { key: "pct", header: "%", align: "right", render: (d) => <span className={cn("font-bold tabular-nums", d.percent == null ? "text-rag-naText" : rag(d.status).text)}>{d.percent == null ? "NA" : pct(d.percent, lang)}</span> },
+    { key: "contrib", header: t("scorecard.contribution"), align: "right", className: "tabular-nums text-neutral-600", render: (d) => d.contribution.toFixed(1) },
+    { key: "status", header: t("kpi.statusLabel"), align: "right", render: (d) => <Badge status={d.status} className="!text-2xs">{t(`status.${d.status}`)}</Badge> },
+  ];
+  const indicatorCols: DataColumn<KpiRecord>[] = [
+    {
+      key: "name", header: t("scorecard.indicators"), render: (rec) => (
+        <>
+          <span className="inline-flex items-center gap-1 font-medium text-neutral-800">
+            {rec.kpi.hero && <Sparkles size={11} className="shrink-0 text-amber-500" />}
+            {tn(rec.kpi.name, rec.kpi.name_gu)}
+          </span>
+          <span className="block text-2xs font-normal text-neutral-400">{t(`ogm.freq.${rec.kpi.frequency ?? "Latest"}`)}</span>
+        </>
+      ),
+    },
+    { key: "current", header: t("kpi.current"), align: "right", render: (rec) => <span className={cn("font-bold tnum", rec.value == null ? "text-rag-naText" : rag(rec.status).text)}>{valueCol(rec)}</span> },
+    { key: "n1", header: peerLevel ? `${t(`levels.${peerLevel}`)} ${t("common.average")}` : t("common.average"), align: "right", className: "tabular-nums text-neutral-500", render: (rec) => n1(rec) },
+    { key: "delta", header: "Δ", align: "right", className: "tabular-nums text-neutral-500", render: (rec) => deltaCol(rec) },
+    { key: "source", header: t("common.source"), className: "text-2xs text-neutral-400", render: (rec) => rec.kpi.data_source },
+  ];
+
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-2 no-print">
-        <div>
-          <h1 className="text-xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">{t("export.title")}</h1>
-          <p className="mt-0.5 text-sm text-neutral-500">{t("export.generatedOn")} · {t("common.week")} {locNum(periodNo, lang)}</p>
-        </div>
-        <Button onClick={() => window.print()}><Download size={16} /> {t("export.download")}</Button>
-      </div>
+    <ScreenContainer animate={false}>
+      <PageHeader
+        className="no-print"
+        title={t("export.title")}
+        subtitle={`${t("export.generatedOn")} · ${t("common.week")} ${locNum(periodNo, lang)}`}
+        actions={<Button onClick={() => window.print()}><Download size={16} /> {t("export.download")}</Button>}
+      />
 
       <Card className="card-pad sm:p-6">
         {/* report header */}
@@ -80,37 +108,21 @@ export default function Export() {
         </div>
 
         {/* 4A domain summary */}
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-2xs uppercase tracking-wider text-neutral-400">
-                <th className="py-2">{t("export.domain")}</th>
-                <th className="py-2 text-right">{t("common.weightage")}</th>
-                <th className="py-2 text-right">%</th>
-                <th className="py-2 text-right">{t("scorecard.contribution")}</th>
-                <th className="py-2 text-right">{t("kpi.statusLabel")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line/60">
-              {scored.map((d) => (
-                <tr key={d.domain.id}>
-                  <td className="py-2.5 font-semibold text-neutral-800">{tn(d.domain.name, d.domain.name_gu)}</td>
-                  <td className="py-2.5 text-right tabular-nums text-neutral-500">{Math.round(d.domain.weightage * 100)}%</td>
-                  <td className={cn("py-2.5 text-right font-bold tabular-nums", d.percent == null ? "text-rag-naText" : rag(d.status).text)}>{d.percent == null ? "NA" : pct(d.percent, lang)}</td>
-                  <td className="py-2.5 text-right tabular-nums text-neutral-600">{d.contribution.toFixed(1)}</td>
-                  <td className="py-2.5 text-right"><Badge status={d.status} className="!text-2xs">{t(`status.${d.status}`)}</Badge></td>
-                </tr>
-              ))}
-              <tr className="border-t-2 border-line">
-                <td className="py-3 font-extrabold text-neutral-900">{t("scorecard.inputComposite")}</td>
-                <td className="py-3 text-right tabular-nums text-neutral-500">100%</td>
-                <td className={cn("py-3 text-right font-extrabold tabular-nums", rag(sc.status).text)}>{pct(sc.overallPercent, lang)}</td>
-                <td className="py-3 text-right font-bold tabular-nums">{sc.overallPercent != null ? sc.overallPercent.toFixed(1) : "—"}</td>
-                <td className="py-3 text-right">{sc.grade ? <RatingBadge grade={sc.grade} size="sm" celebrate={false} /> : "NA"}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <ResponsiveDataTable
+          className="mt-4"
+          columns={summaryCols}
+          rows={scored}
+          getRowKey={(d) => d.domain.id}
+          footer={
+            <tr className="border-t-2 border-line">
+              <td className="py-3 font-extrabold text-neutral-900">{t("scorecard.inputComposite")}</td>
+              <td className="py-3 text-right tabular-nums text-neutral-500">100%</td>
+              <td className={cn("py-3 text-right font-extrabold tabular-nums", rag(sc.status).text)}>{pct(sc.overallPercent, lang)}</td>
+              <td className="py-3 text-right font-bold tabular-nums">{sc.overallPercent != null ? sc.overallPercent.toFixed(1) : "—"}</td>
+              <td className="py-3 text-right">{sc.grade ? <RatingBadge grade={sc.grade} size="sm" celebrate={false} /> : "NA"}</td>
+            </tr>
+          }
+        />
 
         {/* full indicator detail per domain — every applicable indicator at this level */}
         {sc.domainScores.filter((d) => d.records.length > 0).map((d) => (
@@ -119,36 +131,14 @@ export default function Export() {
               <SectionLabel className="!mb-0">{tn(d.domain.name, d.domain.name_gu)}</SectionLabel>
               {d.percent != null && <span className={cn("text-sm font-extrabold tnum", rag(d.status).text)}>{pct(d.percent, lang)}{d.grade ? ` · ${d.grade}` : ""}</span>}
             </div>
-            <div className="mt-2 overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-left text-2xs uppercase tracking-wider text-neutral-400">
-                    <th className="py-1.5 pr-2">{t("scorecard.indicators")}</th>
-                    <th className="py-1.5 px-2 text-right">{t("kpi.current")}</th>
-                    <th className="py-1.5 px-2 text-right">{peerLevel ? `${t(`levels.${peerLevel}`)} ${t("common.average")}` : t("common.average")}</th>
-                    <th className="py-1.5 px-2 text-right">Δ</th>
-                    <th className="py-1.5 pl-2">{t("common.source")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line/60">
-                  {d.records.map((rec) => (
-                    <tr key={rec.kpi.id} className={cn(rec.kpi.hero && "bg-amber-50/40")}>
-                      <td className="py-2 pr-2 font-medium text-neutral-800">
-                        <span className="inline-flex items-center gap-1">
-                          {rec.kpi.hero && <Sparkles size={11} className="shrink-0 text-amber-500" />}
-                          {tn(rec.kpi.name, rec.kpi.name_gu)}
-                        </span>
-                        <span className="block text-2xs font-normal text-neutral-400">{t(`ogm.freq.${rec.kpi.frequency ?? "Latest"}`)}</span>
-                      </td>
-                      <td className={cn("py-2 px-2 text-right font-bold tnum", rec.value == null ? "text-rag-naText" : rag(rec.status).text)}>{valueCol(rec)}</td>
-                      <td className="py-2 px-2 text-right tabular-nums text-neutral-500">{n1(rec)}</td>
-                      <td className="py-2 px-2 text-right tabular-nums text-neutral-500">{deltaCol(rec)}</td>
-                      <td className="py-2 pl-2 text-2xs text-neutral-400">{rec.kpi.data_source}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveDataTable
+              className="mt-2"
+              size="xs"
+              columns={indicatorCols}
+              rows={d.records}
+              getRowKey={(rec) => rec.kpi.id}
+              rowClassName={(rec) => (rec.kpi.hero ? "bg-amber-50/40" : undefined)}
+            />
           </div>
         ))}
 
@@ -173,6 +163,6 @@ export default function Export() {
 
         <p className="mt-4 text-2xs text-neutral-400">★ = {t("ogm.heroKpis")}. {t("export.note")}</p>
       </Card>
-    </div>
+    </ScreenContainer>
   );
 }

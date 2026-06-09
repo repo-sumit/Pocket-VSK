@@ -11,6 +11,7 @@ import { statusFromGrade } from "@/engine";
 import { Card, StatusDot } from "./atoms";
 import { Sparkline } from "./Sparkline";
 import { RatingBadge } from "./RatingBadge";
+import { NPlusOneLine } from "./NPlusOneLine";
 import { FrequencyBadge } from "./DataBadges";
 
 /**
@@ -99,18 +100,13 @@ function HeroTile({
     <span className="text-2xl font-extrabold tnum text-neutral-900">{formatValue(v, kpi.unit, lang)}</span>
   );
 
-  // ── ONE supporting line ──
-  let supporting: ReactNode = null;
-  if (peerScore != null && parentName) {
-    // parent name + score, formatted like this tile's own value (signed for change-deltas)
-    const peerStr = isContextDelta ? formatDelta(peerScore, kpi.unit, lang) : formatValue(peerScore, kpi.unit, lang);
-    supporting = `${parentName} · ${peerStr}`;
-  } else if (isContextDelta) {
-    supporting = t("scorecard.vsLastCycle");
-  } else if (kpi.unit === "count") {
-    supporting = chronicRate != null ? `${pct(chronicRate, lang)} ${t("ogm.ofEnrolled")}` : t("ogm.studentsCount");
-  } else if (kpi.unit === "ratio") {
-    supporting = t("ogm.perMonthMax2");
+  // ── ONE supporting line: the shared N+1 parent comparison, else a contextual fallback ──
+  const hasPeer = peerScore != null && !!parentName;
+  let fallback: ReactNode = null;
+  if (!hasPeer) {
+    if (isContextDelta) fallback = t("scorecard.vsLastCycle");
+    else if (kpi.unit === "count") fallback = chronicRate != null ? `${pct(chronicRate, lang)} ${t("ogm.ofEnrolled")}` : t("ogm.studentsCount");
+    else if (kpi.unit === "ratio") fallback = t("ogm.perMonthMax2");
   }
 
   // ── micro-viz: a frequency-appropriate mini trend for every hero ──
@@ -129,7 +125,11 @@ function HeroTile({
           <span className="text-sm font-semibold leading-snug text-neutral-800">{name}</span>
           <FrequencyBadge frequency={kpi.frequency} className="shrink-0" />
         </div>
-        {supporting != null && <span className="mt-0.5 block text-2xs text-neutral-400">{supporting}</span>}
+        {hasPeer ? (
+          <NPlusOneLine parentName={parentName} value={peerScore} unit={kpi.unit} lang={lang} signed={isContextDelta} className="mt-0.5" />
+        ) : fallback != null ? (
+          <span className="mt-0.5 block text-2xs text-neutral-400">{fallback}</span>
+        ) : null}
       </div>
       {microViz && <div className="hidden shrink-0 items-end sm:flex">{microViz}</div>}
       <div className="shrink-0 text-right">{valueEl}</div>

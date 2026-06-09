@@ -9,6 +9,9 @@ import { Leaderboard as LeaderboardList } from "@/components/ui/Leaderboard";
 import { SchoolRiskTable } from "@/components/ui/SchoolRiskTable";
 import { RatingBadge } from "@/components/ui/RatingBadge";
 import { Sparkles, ArrowUpRight } from "@/components/ui/Icon";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { PageSection } from "@/components/layout/PageSection";
 
 type Tab = "peers" | "scope";
 
@@ -53,22 +56,18 @@ export default function Leaderboard() {
   const childLevelLabel = childLevel ? t(`levels.${childLevel}`) : "";
 
   return (
-    <div className="space-y-5 animate-fade-in">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">{t("leaderboard.title")}</h1>
-          <p className="mt-0.5 text-sm text-neutral-500">
-            {tab === "scope" ? t("leaderboard.subtitleChildren", { level: childLevelLabel }) : t("leaderboard.subtitlePeers", { level: peerLevelLabel })}
-          </p>
-        </div>
-        {hasChildren && hasPeers && (
+    <ScreenContainer>
+      <PageHeader
+        title={t("leaderboard.title")}
+        subtitle={tab === "scope" ? t("leaderboard.subtitleChildren", { level: childLevelLabel }) : t("leaderboard.subtitlePeers", { level: peerLevelLabel })}
+        actions={hasChildren && hasPeers ? (
           <Segmented<Tab>
             value={tab}
             onChange={setTab}
             options={[{ value: "scope", label: t("leaderboard.below") }, { value: "peers", label: t("leaderboard.peers") }]}
           />
-        )}
-      </div>
+        ) : undefined}
+      />
 
       {/* most-improved spotlight */}
       {topMover && (
@@ -91,8 +90,7 @@ export default function Leaderboard() {
 
       {/* top movers row */}
       {movers.length > 1 && (
-        <div>
-          <SectionLabel className="mb-2">{t("leaderboard.topMovers")}</SectionLabel>
+        <PageSection title={t("leaderboard.topMovers")}>
           <div className="grid grid-cols-3 gap-2">
             {movers.map((m) =>
               canDrill ? (
@@ -112,7 +110,7 @@ export default function Leaderboard() {
               ),
             )}
           </div>
-        </div>
+        </PageSection>
       )}
 
       {/* the ranked list */}
@@ -133,6 +131,6 @@ export default function Leaderboard() {
           onOpen={(id) => { setScope(id); navigate("/app"); }}
         />
       )}
-    </div>
+    </ScreenContainer>
   );
 }

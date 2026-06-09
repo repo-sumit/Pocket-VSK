@@ -1,20 +1,21 @@
-import { cn } from "@/lib/cn";
 import type { KpiRecord, Level } from "@/types";
-import { rag, valueToneClass, deltaToneClass } from "@/lib/colors";
-import { formatValue, formatDelta, locNum, compactNum } from "@/lib/format";
+import { rag } from "@/lib/colors";
 import { peerAvg, peerLevelOf } from "@/lib/peer";
-import { buildTrend, periodLabelKey } from "@/lib/trend";
+import { buildTrend } from "@/lib/trend";
 import { useT, type Lang } from "@/i18n";
 import { Card } from "./atoms";
 import { Sparkline } from "./Sparkline";
-import { ChevronRight, ArrowUpRight, ArrowDownRight } from "./Icon";
+import { FrequencyDelta } from "./FrequencyDelta";
+import { NPlusOneLine } from "./NPlusOneLine";
+import { ValueDisplay } from "./ValueDisplay";
+import { ChevronRight } from "./Icon";
 
 /**
- * Per-KPI tile — same visual family as the homepage DOMAIN cards: the big-number
- * value treatment + an inline, direction-coloured frequency delta (arrow + value
- * + frequency-correct word) + the chevron affordance, on the same card anatomy.
- * The KPI-only additions: its own frequency-appropriate trend graph, and the N+1
- * line (parent entity name + this KPI's score at the parent level).
+ * Per-KPI tile — composed entirely from the shared metric atoms (ValueDisplay,
+ * FrequencyDelta, NPlusOneLine) so it stays in the same visual family as the
+ * domain cards and any change here propagates everywhere. KPI-only additions: a
+ * frequency-appropriate trend graph and the N+1 parent line. Change-delta KPIs
+ * (YoY/cycle improvement) show a signed value and skip the redundant inline delta.
  */
 export function KpiCard({
   rec, name, onClick, lang = "en", level, parentName,
@@ -24,25 +25,8 @@ export function KpiCard({
   const na = rec.value == null;
   const c = rag(rec.status);
   const trend = na ? null : buildTrend(rec, lang);
-  const delta = trend?.delta ?? null;
-
-  // change-deltas (YoY/cycle improvement) display a SIGNED, direction-coloured value —
-  // same treatment as the Key Indicators strip, so a KPI reads the same on both surfaces.
   const isDelta = kpi.displayStrategy === "delta_cycle";
-
-  // N+1: parent entity name + this KPI's score at the parent level — shown for EVERY
-  // indicator with a published figure (hidden only at State / when NA), formatted like
-  // this card's own value (signed for change-deltas).
   const peerScore = level && peerLevelOf(level) ? peerAvg(kpi.id, level) : null;
-  const showPeer = !na && peerScore != null && !!parentName;
-  const peerStr = peerScore != null ? (isDelta ? formatDelta(peerScore, kpi.unit, lang) : formatValue(peerScore, kpi.unit, lang)) : "";
-
-  const deltaMag =
-    delta != null
-      ? kpi.unit === "count"
-        ? compactNum(Math.abs(delta), lang)
-        : locNum(Math.round(Math.abs(delta) * 10) / 10, lang)
-      : null;
 
   return (
     <Card
@@ -56,31 +40,25 @@ export function KpiCard({
         <ChevronRight size={16} className="mt-0.5 shrink-0 text-neutral-300 transition-transform group-hover:translate-x-0.5" />
       </div>
 
-      {/* value (domain-card treatment) + inline direction-coloured frequency delta */}
+      {/* value + inline direction-aware frequency delta */}
       <div className="flex items-end justify-between gap-2">
-        <span className={cn("text-3xl font-extrabold tnum", na ? "text-rag-naText" : isDelta ? deltaToneClass(rec.value, kpi.direction) : valueToneClass(rec.status))}>
-          {na ? "NA" : isDelta ? formatDelta(rec.value, kpi.unit, lang) : formatValue(rec.value, kpi.unit, lang)}
-        </span>
-        {trend && !isDelta && delta != null && delta !== 0 && (
-          <span className={cn("inline-flex items-center gap-0.5 pb-1 text-2xs font-bold", deltaToneClass(delta, kpi.direction))}>
-            {delta > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-            {deltaMag}
-            <span className="ml-0.5 font-semibold text-neutral-400">{t(periodLabelKey(trend.cadence))}</span>
-          </span>
+        <ValueDisplay value={rec.value} unit={kpi.unit} status={rec.status} direction={kpi.direction} isDelta={isDelta} lang={lang} size="lg" />
+        {trend && !isDelta && trend.delta != null && trend.delta !== 0 && (
+          <FrequencyDelta delta={trend.delta} unit={kpi.unit} direction={kpi.direction} cadence={trend.cadence} lang={lang} className="pb-1" />
         )}
       </div>
 
-      {/* the KPI's frequency-appropriate trend graph (kept) */}
+      {/* frequency-appropriate trend graph */}
       {trend && trend.points.length > 1 && (
         <Sparkline data={trend.points.map((p) => p.value)} color={c.hex} height={30} responsive />
       )}
 
       {/* N+1: parent entity name + this KPI's score at the parent level */}
-      {showPeer ? (
-        <span className="truncate text-2xs text-neutral-400">{parentName} · {peerStr}</span>
-      ) : na ? (
+      {na ? (
         <span className="text-2xs text-neutral-400">{t("common.notTracked")}</span>
-      ) : null}
+      ) : (
+        <NPlusOneLine parentName={parentName} value={peerScore} unit={kpi.unit} lang={lang} signed={isDelta} />
+      )}
     </Card>
   );
 }
