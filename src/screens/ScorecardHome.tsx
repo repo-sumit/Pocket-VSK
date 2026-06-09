@@ -32,7 +32,6 @@ export default function ScorecardHome() {
   const output = sc.domainScores.find((d) => d.domain.id === OUTPUT_DOMAIN_ID);
   const gsqac = entity.meta.gsqac;
   const allRecords = sc.domainScores.flatMap((d) => d.records);
-  const gsqacCoverage = stats && stats.schools > 0 && stats.gsqacReal < stats.schools ? stats : null;
   const parent = sc.parent;
   const parentName = parent ? tn(parent.entity.name, parent.entity.name_gu) : undefined;
 
@@ -81,7 +80,6 @@ export default function ScorecardHome() {
         <GsqacSummaryCard
           output={output}
           gsqac={gsqac}
-          coverage={gsqacCoverage ? { real: gsqacCoverage.gsqacReal, total: gsqacCoverage.schools } : null}
           parentName={parentName}
           parentPercent={parent?.domainPercents[OUTPUT_DOMAIN_ID] ?? null}
           onClick={() => navigate(`/app/domain/${OUTPUT_DOMAIN_ID}`)}

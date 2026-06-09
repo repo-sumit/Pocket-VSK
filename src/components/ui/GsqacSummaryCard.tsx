@@ -1,13 +1,12 @@
 import { cn } from "@/lib/cn";
 import type { DomainScore } from "@/types";
-import { deltaToneClass } from "@/lib/colors";
-import { locNum } from "@/lib/format";
 import { useT } from "@/i18n";
 import { Card } from "./atoms";
 import { RatingBadge } from "./RatingBadge";
 import { ValueDisplay } from "./ValueDisplay";
+import { FrequencyDelta } from "./FrequencyDelta";
 import { NPlusOneLine } from "./NPlusOneLine";
-import { Icon, ChevronRight, Database } from "./Icon";
+import { Icon, ChevronRight } from "./Icon";
 
 interface GsqacMeta {
   total_percent: number;
@@ -18,17 +17,16 @@ interface GsqacMeta {
 }
 
 /**
- * School Quality / GSQAC — the compact output card, in the same card rhythm as
- * the domain cards: title + OUTPUT·ANNUAL eyebrow + GSQAC score + official grade
- * badge + N+1 + vs-last-cycle + coverage. The 5 GSQAC domain breakdowns are NOT
- * shown here — they live on the School Quality detail page. Annual: no daily trend.
+ * School Quality / GSQAC — the compact output card, in the same card rhythm as the
+ * domain cards: title + OUTPUT·ANNUAL eyebrow + GSQAC score + official grade badge,
+ * with the year-on-year change shown as the shared right-side FrequencyDelta ("this
+ * year") and the N+1 line. The 5 GSQAC domain breakdowns live on the detail page.
  */
 export function GsqacSummaryCard({
-  output, gsqac, coverage, parentName, parentPercent, onClick,
+  output, gsqac, parentName, parentPercent, onClick,
 }: {
   output: DomainScore;
   gsqac?: GsqacMeta | null;
-  coverage?: { real: number; total: number } | null;
   parentName?: string;
   parentPercent?: number | null;
   onClick?: () => void;
@@ -36,6 +34,7 @@ export function GsqacSummaryCard({
   const { t, tn, lang } = useT();
   if (output.percent == null) return null;
   const clickable = !!onClick;
+  const improvement = gsqac?.improvement ?? null;
 
   return (
     <Card
@@ -54,25 +53,18 @@ export function GsqacSummaryCard({
         {clickable && <ChevronRight size={16} className="shrink-0 text-neutral-300 transition-transform group-hover:translate-x-0.5" />}
       </div>
 
-      <div className="flex items-end gap-2">
-        <ValueDisplay value={output.percent} unit="%" status={output.status} lang={lang} size="lg" />
-        {output.grade && <RatingBadge grade={output.grade} size="sm" className="mb-0.5" />}
+      {/* score + grade · year-on-year delta on the right (same treatment as the domain cards) */}
+      <div className="flex items-end justify-between gap-2">
+        <span className="flex items-end gap-2">
+          <ValueDisplay value={output.percent} unit="%" status={output.status} lang={lang} size="lg" />
+          {output.grade && <RatingBadge grade={output.grade} size="sm" className="mb-0.5" />}
+        </span>
+        {improvement != null && improvement !== 0 && (
+          <FrequencyDelta delta={improvement} unit="%" direction="higher" cadence="yearly" lang={lang} className="pb-1" />
+        )}
       </div>
 
       <NPlusOneLine parentName={parentName} value={parentPercent ?? null} unit="%" lang={lang} />
-
-      {gsqac?.improvement != null && (
-        <p className="text-2xs text-neutral-400">
-          {t("scorecard.vsLastCycle")}: <b className={deltaToneClass(gsqac.improvement, "higher")}>{gsqac.improvement >= 0 ? "+" : ""}{locNum(gsqac.improvement, lang)}%</b>
-          {gsqac.synth && <span className="ml-1 text-neutral-300">({t("common.sample")})</span>}
-        </p>
-      )}
-
-      {coverage && coverage.total >= 2 && (
-        <p className="inline-flex items-center gap-1 text-2xs text-neutral-400" title={t("ogm.coverageHint")}>
-          <Database size={11} /> {t("ogm.coverage", { real: locNum(coverage.real, lang), total: locNum(coverage.total, lang) })}
-        </p>
-      )}
     </Card>
   );
 }

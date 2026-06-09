@@ -1,5 +1,18 @@
 # Unified Portal — QA Report
 
+## Homepage School Quality card → domain-card delta style
+
+[GsqacSummaryCard](app/src/components/ui/GsqacSummaryCard.tsx) (homepage School Quality / GSQAC card) now matches the regular domain cards:
+- **Removed the coverage line** ("GSQAC: x / y schools measured") — the `coverage` prop was dropped from the component and the `gsqacCoverage` derivation removed from [ScorecardHome](app/src/screens/ScorecardHome.tsx). (The coverage data/helper is untouched and still used in the Export GSQAC detail section.)
+- **Replaced "vs last cycle: +1.4%"** with the shared right-side **`FrequencyDelta`** on the score row — same icon/size/weight/colour as Attendance/Assessment/Administration cards. GSQAC is annual, so it reads **"↗ 1.4 this year"** (cadence `yearly`); positive = green, negative = red.
+- Score, official grade badge, and the N+1 line (`{parent} · {score}`, hidden at State) are unchanged. GSQAC score/grade/colour/D1–D5/detail-page/route logic untouched.
+
+Final homepage card: title · OUTPUT · ANNUAL · score · grade badge · N+1 · "↗ 1.4 this year" — no coverage line, no "vs last cycle".
+
+**Files:** `GsqacSummaryCard.tsx`, `ScorecardHome.tsx`, `QA_REPORT.md`. **Build:** `npm run build` passes clean. No KPI catalog / formula / grade-colour / access / routing / PM-Shri / Export-structure changes.
+
+---
+
 ## 3A re-audit vs latest sheet (`GJ _ Unified App KPIs(8).xlsx`) — GSQAC untouched
 
 Re-parsed the latest sheet (re-uploaded over `GJ _ Unified App KPIs.xlsx`, modified today). It added a **Delta** column and shifted columns; only **Attendance / Assessment / Administration** were updated. **School Quality / GSQAC (sq_*, D1–D5, grade colours, GsqacSummaryCard) was not touched.**
