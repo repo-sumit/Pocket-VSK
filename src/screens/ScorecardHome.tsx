@@ -3,7 +3,7 @@ import type { DomainScore } from "@/types";
 import { useScope, useScorecard, useScopeStats } from "@/hooks";
 import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
-import { rag, accent } from "@/lib/colors";
+import { accent, valueToneClass, deltaToneClass } from "@/lib/colors";
 import { pct, locNum, greetingKey, formatDelta } from "@/lib/format";
 import { CURRENT_PERIOD, WEIGHTAGE_IS_PLACEHOLDER } from "@/config";
 import { OUTPUT_DOMAIN_ID } from "@/config/frameworks";
@@ -122,10 +122,10 @@ export default function ScorecardHome() {
                   <ChevronRight size={16} className="shrink-0 text-neutral-300 transition-transform group-hover:translate-x-0.5" />
                 </div>
                 <div className="flex items-end justify-between gap-2">
-                  <span className={cn("text-3xl font-extrabold tnum", d.percent == null ? "text-rag-naText" : rag(d.status).text)}>{d.percent == null ? t("common.na") : pct(d.percent, lang)}</span>
+                  <span className={cn("text-3xl font-extrabold tnum", d.percent == null ? "text-rag-naText" : valueToneClass(d.status))}>{d.percent == null ? t("common.na") : pct(d.percent, lang)}</span>
                   <span className="flex items-center gap-1.5 pb-1">
                     {wow != null && wow !== 0 && (
-                      <span className={cn("inline-flex items-center text-2xs font-bold", wow > 0 ? "text-rag-greenText" : "text-rag-redText")}>
+                      <span className={cn("inline-flex items-center text-2xs font-bold", deltaToneClass(wow, "higher"))}>
                         {wow > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}{locNum(Math.abs(wow), lang)}
                       </span>
                     )}
@@ -155,7 +155,7 @@ export default function ScorecardHome() {
               </span>
             </span>
             <span className="flex items-center gap-2">
-              <span className={cn("text-3xl font-extrabold tnum", rag(output.status).text)}>{pct(output.percent, lang)}</span>
+              <span className={cn("text-3xl font-extrabold tnum", valueToneClass(output.status))}>{pct(output.percent, lang)}</span>
               {output.grade && <RatingBadge grade={output.grade} size="md" />}
               <ChevronRight size={16} className="text-neutral-300 transition-transform group-hover:translate-x-0.5" />
             </span>
@@ -186,7 +186,7 @@ export default function ScorecardHome() {
           )}
           {gsqac?.improvement != null && (
             <p className="mt-3 text-xs text-neutral-500">
-              {t("scorecard.vsLastCycle")}: <b className={gsqac.improvement >= 0 ? "text-rag-greenText" : "text-rag-redText"}>{gsqac.improvement >= 0 ? "+" : ""}{locNum(gsqac.improvement, lang)}%</b>
+              {t("scorecard.vsLastCycle")}: <b className={deltaToneClass(gsqac.improvement, "higher")}>{gsqac.improvement >= 0 ? "+" : ""}{locNum(gsqac.improvement, lang)}%</b>
               {gsqac.synth && <span className="ml-1 text-2xs text-neutral-300">({t("common.sample")})</span>}
             </p>
           )}

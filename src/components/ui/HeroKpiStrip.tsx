@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { KpiRecord, Level, RagStatus } from "@/types";
 import { cn } from "@/lib/cn";
-import { rag } from "@/lib/colors";
+import { rag, deltaToneClass } from "@/lib/colors";
 import { formatValue, formatDelta, locNum, pct } from "@/lib/format";
 import { peerAvg, peerGapOf, peerLevelOf } from "@/lib/peer";
 import { buildTrend } from "@/lib/trend";
@@ -80,7 +80,6 @@ function HeroTile({
   const strat = kpi.displayStrategy;
   const name = tn(kpi.name, kpi.name_gu);
   const isContextDelta = strat === "delta_cycle";
-  const improving = isContextDelta ? (kpi.direction === "higher" ? v >= 0 : v <= 0) : isImproving(rec.trend, kpi.direction);
 
   // N+1 comparison — for level/rate indicators (%/score). At State (no parent) and
   // for genuinely period-to-period cadences only, fall back to vs-previous-period.
@@ -92,9 +91,9 @@ function HeroTile({
   const target = (kpi.target ?? "").replace(/[^0-9]/g, "") || "2";
   const chronicRate = kpi.unit === "count" && enrolment && enrolment > 0 ? (v / enrolment) * 100 : null;
 
-  // ── ONE dominant value (neutral; green/red only for a cycle delta) ──
+  // ── ONE dominant value (neutral; green/red only for a cycle delta, by direction) ──
   const valueEl = isContextDelta ? (
-    <span className={cn("text-2xl font-extrabold tnum", improving ? "text-rag-greenText" : "text-rag-redText")}>{formatDelta(v, "%", lang)}</span>
+    <span className={cn("text-2xl font-extrabold tnum", deltaToneClass(v, kpi.direction))}>{formatDelta(v, "%", lang)}</span>
   ) : kpi.unit === "ratio" ? (
     <span className="text-2xl font-extrabold tnum text-neutral-900">{locNum(v, lang)}<span className="text-sm font-bold text-neutral-400"> / {locNum(target, lang)}</span></span>
   ) : kpi.id === "sq_gsqac" ? (

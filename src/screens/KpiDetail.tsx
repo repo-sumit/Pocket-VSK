@@ -3,7 +3,7 @@ import { useScope, useKpiRecord, useKpiCascade, useFramework } from "@/hooks";
 import { useT } from "@/i18n";
 import { isImproving } from "@/engine";
 import { cn } from "@/lib/cn";
-import { rag } from "@/lib/colors";
+import { rag, deltaToneClass } from "@/lib/colors";
 import { formatValue, formatDelta, locNum } from "@/lib/format";
 import { peerAvg, peerGapOf, peerLevelOf } from "@/lib/peer";
 import { buildTrend, deltaLabelKey, trendTitleKey } from "@/lib/trend";
@@ -29,8 +29,6 @@ export default function KpiDetail() {
   const c = rag(rec.status);
   const na = rec.value == null;
   const improving = isImproving(rec.trend, kpi.direction);
-  // a context delta (e.g. "+16.2% reduction") is GOOD by its sign + direction, not by the weekly trend
-  const ctxGood = kpi.direction === "higher" ? (rec.value ?? 0) >= 0 : (rec.value ?? 0) <= 0;
   const domain = fw.domains.find((d) => d.id === kpi.domain_id);
   const name = tn(kpi.name, kpi.name_gu);
   const isGsqac = kpi.id.startsWith("sq_");
@@ -89,7 +87,7 @@ export default function KpiDetail() {
               </div>
             ) : (
               <div className="mt-1 flex items-end gap-2">
-                <span className={cn("text-4xl font-extrabold tnum", isContextDelta ? (ctxGood ? "text-rag-greenText" : "text-rag-redText") : c.text)}>
+                <span className={cn("text-4xl font-extrabold tnum", isContextDelta ? deltaToneClass(rec.value, kpi.direction) : c.text)}>
                   {isContextDelta ? formatDelta(rec.value, "%", lang) : formatValue(rec.value, kpi.unit, lang)}
                 </span>
                 <TrendArrow trend={rec.trend} improving={improving} size={22} />

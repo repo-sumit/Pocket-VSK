@@ -1,5 +1,23 @@
 # Unified Portal — QA Report
 
+## Colour discipline + School-Quality consistency + domain-page cleanup
+
+Single source of truth added in [lib/colors.ts](app/src/lib/colors.ts): `valueToneClass(status)` for headline numbers and `deltaToneClass(delta, direction)` / `deltaIsGood` for deltas. Colour now signals **good vs bad**, derived from each indicator's `direction` — never a minus sign or "just being a number".
+
+**1. Removed the duplicate "GSQAC · D1–D5 (live data)" section** from `/domain/school_quality` ([DomainView.tsx](app/src/screens/DomainView.tsx)) — the 5-domain breakdown already lives on the School Quality card. Verified the domain page now shows only "KPIs in School Quality".
+
+**2. School Quality card no longer an amber outlier** ([ScorecardHome.tsx](app/src/screens/ScorecardHome.tsx)). All four domain values now use one treatment (`valueToneClass`): good → green, watch (amber) → **neutral**, at-risk → red. So Attendance/Assessment/Administration stay green and **School Quality's "67%" is neutral** (verified `rgb(14,14,14)`), not amber — while the **GSQAC grade badge "B" keeps its official colour** (verified `rgb(176,126,0)`).
+
+**3. Value/delta colouring fixed app-wide — red only for *bad*** (direction-aware):
+- **Reduction in dropout % "+16.2%"** now renders **green** (verified `rgb(21,128,61)`) — higher-is-better, so a positive change is good, not red. Fixed on the hero card and the indicator detail.
+- **Chronic absentees** (lower-is-better): a decrease "−117" renders **green** (verified) — down is good; its value/dot are green when healthy.
+- **Re-enrolment / remediation / assessment** (higher-is-better): up = green, down = red.
+- Applied via the helpers to the hero strip, indicator detail, domain/input cards, the GSQAC vs-last-cycle delta, and the leaderboard "vs avg" gap. `DeltaPill` was already direction-aware (kept). A good value or delta is **never red**; flat = neutral.
+
+**Verified** (production build · Playwright): dropout/chronic/re-enrolment colour correctly; SQ value neutral + badge official; domain page has no D1–D5 section; `tsc` + build clean; **roles 6/6 · access 20/20 · functional 21/21 · 0 console errors**. Screenshot: `audit-home-colours.png` (repo root). Note: "watch/amber" headline numbers are rendered **neutral** (per the rule "a healthy headline is neutral/brand or green, never red"); the status dot + grade badge carry the amber signal.
+
+---
+
 ## Frequency-aware trend graphs + delta tags
 
 Every indicator now carries a **frequency-appropriate trend graph** (on the cards and the detail) plus a **delta tag whose wording is derived from `frequency`** — never a weekly axis or a "Δ this week" tag for non-daily data. All driven from one engine ([lib/trend.ts](app/src/lib/trend.ts)), so cadence + tag are config, not per-card.

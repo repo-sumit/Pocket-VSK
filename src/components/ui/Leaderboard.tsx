@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 import type { LeaderboardEntry } from "@/types";
-import { rag } from "@/lib/colors";
+import { rag, deltaToneClass } from "@/lib/colors";
 import { pct, locNum } from "@/lib/format";
 import { useT, type Lang } from "@/i18n";
 import { RatingBadge } from "./RatingBadge";
@@ -45,7 +45,7 @@ export function Leaderboard({
                 <span className={cn("text-xs font-bold tnum", rag(e.status).text)}>{pct(e.percent, lang)}</span>
               </div>
               {dAvg != null && (
-                <span className={cn("shrink-0 text-2xs font-semibold tnum", dAvg >= 0 ? "text-rag-greenText" : "text-rag-redText")}>
+                <span className={cn("shrink-0 text-2xs font-semibold tnum", deltaToneClass(dAvg, "higher"))}>
                   {dAvg >= 0 ? "+" : ""}{locNum(dAvg, lang)} {t("common.vsBenchmark")}
                 </span>
               )}

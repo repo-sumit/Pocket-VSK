@@ -10,3 +10,4 @@ dist-ssr
 .vite
 verify-shots
 scripts/
+supabase

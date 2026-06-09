@@ -1,4 +1,4 @@
-import type { RagStatus } from "@/types";
+import type { Direction, RagStatus } from "@/types";
 
 /** RAG → Tailwind class bundles + chart hexes. Single source of truth. */
 // `text` uses the AA-dark variant (legible on white + soft bg); `bg`/`dot`/`hex`
@@ -12,6 +12,36 @@ export const RAG = {
 
 export function rag(status: RagStatus) {
   return RAG[status];
+}
+
+/**
+ * Value/delta colour discipline (single source of truth):
+ *  • Colour signals GOOD vs BAD, never a minus sign or "just being a number".
+ *  • A good/healthy figure is GREEN or NEUTRAL — never red.
+ *
+ * `valueToneClass` — the headline number's colour by RAG status: good → green,
+ * "watch" (amber) → neutral (the status dot / grade badge carry that signal, so
+ * the number isn't an amber outlier), at-risk → red, NA → muted. So every domain
+ * card's value reads with the same treatment.
+ */
+export function valueToneClass(status: RagStatus): string {
+  switch (status) {
+    case "green": return "text-rag-greenText";
+    case "red": return "text-rag-redText";
+    case "na": return "text-rag-naText";
+    default: return "text-neutral-900"; // amber / watch → neutral headline
+  }
+}
+
+/** is a delta "good" for a higher/lower-is-better indicator (direction-aware)? */
+export function deltaIsGood(delta: number, direction: Direction): boolean {
+  return direction === "higher" ? delta > 0 : delta < 0;
+}
+
+/** delta text-colour, direction-aware: good → green, flat → neutral, bad → red. */
+export function deltaToneClass(delta: number | null | undefined, direction: Direction): string {
+  if (delta == null || delta === 0) return "text-neutral-400";
+  return deltaIsGood(delta, direction) ? "text-rag-greenText" : "text-rag-redText";
 }
 
 /** GSQAC grade group → OFFICIAL grade colours (per GSQAC model documentation:

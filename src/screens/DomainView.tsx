@@ -4,8 +4,6 @@ import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
 import { rag, accent } from "@/lib/colors";
 import { pct } from "@/lib/format";
-import { OUTPUT_DOMAIN_ID } from "@/config/frameworks";
-import { GSQAC_DOMAINS } from "@/config/kpiCatalog";
 import { Card, SectionLabel, Badge, ProgressBar, StatusDot } from "@/components/ui/atoms";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { Icon, ArrowLeft, ChevronRight } from "@/components/ui/Icon";
@@ -35,8 +33,6 @@ export default function DomainView() {
   }
 
   const a = accent(ds.domain.accent);
-  const isOutput = ds.domain.id === OUTPUT_DOMAIN_ID;
-  const gsqac = entity.meta.gsqac;
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -66,30 +62,6 @@ export default function DomainView() {
         </div>
         {ds.percent != null && <ProgressBar value={ds.percent} status={ds.status} className="mt-4" height={10} />}
       </Card>
-
-      {/* OUTPUT: GSQAC D1-D5 breakdown (real) */}
-      {isOutput && gsqac && (
-        <Card className="card-pad">
-          <SectionLabel>GSQAC · D1–D5 ({t("common.liveData")})</SectionLabel>
-          <div className="mt-3 space-y-2.5">
-            {GSQAC_DOMAINS.map((g) => {
-              const v = gsqac.domains[g.key];
-              return (
-                <div key={g.key} className="flex items-center gap-3">
-                  <span className="w-32 shrink-0 truncate text-xs font-semibold text-neutral-600" title={tn(g.name, g.name_gu)}>{g.key} · {tn(g.name, g.name_gu)}</span>
-                  <ProgressBar value={(v ?? 0) * 100} status={(v ?? 0) * 100 >= 75 ? "green" : (v ?? 0) * 100 >= 50 ? "amber" : "red"} className="flex-1" />
-                  <span className="w-12 shrink-0 text-right text-xs font-bold tnum text-neutral-700">{v == null ? t("common.na") : pct(v * 100, lang)}</span>
-                </div>
-              );
-            })}
-          </div>
-          {gsqac.improvement != null && (
-            <p className="mt-3 border-t border-line/60 pt-3 text-xs text-neutral-500">
-              {t("scorecard.vsLastCycle")}: <b className={gsqac.improvement >= 0 ? "text-rag-greenText" : "text-rag-redText"}>{gsqac.improvement >= 0 ? "+" : ""}{gsqac.improvement}%</b>
-            </p>
-          )}
-        </Card>
-      )}
 
       {/* sub-domains (Administration) → tier-3 drill */}
       {ds.subScores.length > 0 ? (
