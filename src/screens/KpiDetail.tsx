@@ -78,7 +78,8 @@ export default function KpiDetail() {
           <h1 className="text-lg font-extrabold text-neutral-900">{name}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <FrequencyBadge frequency={kpi.frequency} />
-            {kpi.scheduleNote && <span className="text-2xs font-medium text-neutral-400">{kpi.scheduleNote}</span>}
+            {/* the period caption below the value already encodes the schedule month
+                (e.g. "Sep 2025"), so the raw scheduleNote chip is not repeated here. */}
             <span className="inline-flex max-w-full items-center gap-1 truncate text-2xs text-neutral-400" title={kpi.data_source}>
               <Database size={11} className="shrink-0" /> <span className="truncate">{kpi.data_source}</span>
             </span>

@@ -6,31 +6,31 @@ import { FrequencyBadge } from "./DataBadges";
 import { ChevronRight } from "./Icon";
 
 /**
- * Shared KPI-card layout contract. Single-, dual- and triple-metric cards all
- * compose from these pieces so they read as ONE product component: same outer
- * min-height, the same header rhythm (title clamped to 2 lines), a primary region
- * that grows to absorb slack (no blank middle), and a 2-up footer pinned to the
- * bottom. The footer holds either sub-metric tiles (multi) or compact context
- * tiles (single/dual) so every card has the same perceived density.
+ * Shared KPI-card layout pieces — a strict row grammar (header · meta · metrics ·
+ * footer), graph-free and compact (trend charts live only on the KPI detail page).
+ * Single- and multi-metric cards use the same shell, header, metric row and source
+ * line so they read as one component and align across the grid.
  */
 
-/** Outer shell — equal min-height + bottom-anchored footer for the whole grid. */
+/** Outer shell — compact height, bottom-anchored footer. */
 export function KpiCardShell({ onClick, children }: { onClick?: () => void; children: ReactNode }) {
   return (
     <Card
       as="button"
       onClick={onClick}
-      className="group card-pad flex h-full min-h-[16.5rem] w-full flex-col gap-2.5 text-left transition-shadow hover:shadow-raised"
+      className="group card-pad flex h-full min-h-[13rem] w-full flex-col text-left transition-shadow hover:shadow-raised"
     >
       {children}
     </Card>
   );
 }
 
-/** Title (clamped to 2 lines → consistent header height) + chevron + chip row. */
-export function KpiCardHeader({
-  title, frequency, context, scheduleNote,
-}: { title: string; frequency?: Frequency; context?: string | null; scheduleNote?: string }) {
+/**
+ * Header (title + chevron) and the meta row (frequency · last-updated) in one block.
+ * The meta period label already encodes any schedule month (e.g. "Sep 2025"), so the
+ * raw `scheduleNote` is never appended again — that was the "Sep 2025 September" dup.
+ */
+export function KpiCardHeader({ title, frequency, context }: { title: string; frequency?: Frequency; context?: string | null }) {
   return (
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0">
@@ -38,7 +38,6 @@ export function KpiCardHeader({
         <span className="mt-1 flex flex-wrap items-center gap-1.5">
           <FrequencyBadge frequency={frequency} />
           {context && <span className="text-2xs font-medium text-neutral-400">· {context}</span>}
-          {scheduleNote && <span className="text-2xs font-medium text-neutral-400">{scheduleNote}</span>}
         </span>
       </div>
       <ChevronRight size={16} className="mt-0.5 shrink-0 text-neutral-300 transition-transform group-hover:translate-x-0.5" />
@@ -46,24 +45,40 @@ export function KpiCardHeader({
   );
 }
 
-/** Primary region — value + trend. `grows` centres modest content so a sparse card
- *  fills its height instead of leaving a blank gap above the footer. */
-export function KpiPrimary({ children }: { children: ReactNode }) {
-  return <div className="flex flex-1 flex-col justify-center gap-2">{children}</div>;
+/**
+ * One compact metric row with three aligned columns: value · parent N+1 · delta.
+ * Used for every row of a multi-metric card so they line up; the label sits above.
+ */
+export function KpiMetricRow({
+  label, value, valueTone, parentLabel, delta,
+}: { label: string; value: string; valueTone?: string; parentLabel?: string | null; delta?: ReactNode }) {
+  return (
+    <div className="py-2 first:pt-1 last:pb-0">
+      <span className="block text-2xs font-semibold uppercase tracking-wide text-neutral-400">{label}</span>
+      <div className="mt-0.5 grid grid-cols-3 items-baseline gap-x-2">
+        <span className={cn("truncate text-xl font-extrabold tnum leading-none", valueTone)}>{value}</span>
+        <span className="truncate text-2xs text-neutral-400">{parentLabel}</span>
+        <span className="justify-self-end">{delta}</span>
+      </div>
+    </div>
+  );
 }
 
-/** Bottom-anchored 2-up footer grid — same rhythm on every card. */
-export function KpiFooter({ children }: { children: ReactNode }) {
-  return <div className="mt-auto grid grid-cols-2 gap-x-3 gap-y-1 border-t border-line/70 pt-2.5">{children}</div>;
-}
-
-/** Compact context tile (label + value) that fills a footer slot on cards without a
- *  second/third sub-metric: parent (N+1) average, data source, or last-updated. */
+/** Stacked label + value context block (e.g. Parent avg, Source) for single-metric cards. */
 export function KpiContextTile({ label, value, valueTitle, className }: { label: string; value: ReactNode; valueTitle?: string; className?: string }) {
   return (
     <div className={cn("min-w-0", className)}>
-      <span className="block truncate text-2xs font-semibold uppercase tracking-wide text-neutral-400">{label}</span>
+      <span className="block text-2xs font-semibold uppercase tracking-wide text-neutral-400">{label}</span>
       <span className="mt-0.5 block truncate text-xs font-semibold text-neutral-600" title={valueTitle}>{value}</span>
     </div>
+  );
+}
+
+/** Muted single-line source footer (one line, not a metric tile). */
+export function KpiSourceLine({ label, source }: { label: string; source: string }) {
+  return (
+    <p className="mt-auto truncate pt-2 text-2xs text-neutral-400" title={source}>
+      <span className="font-semibold uppercase tracking-wide">{label}</span> · {source}
+    </p>
   );
 }

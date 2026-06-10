@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { KpiRecord, Level, RagStatus } from "@/types";
 import { cn } from "@/lib/cn";
-import { rag, deltaToneClass } from "@/lib/colors";
+import { deltaToneClass } from "@/lib/colors";
 import { formatValue, formatDelta, locNum, pct } from "@/lib/format";
 import { peerAvg, peerLevelOf } from "@/lib/peer";
 import { buildTrend } from "@/lib/trend";
@@ -9,9 +9,9 @@ import { gradeFor, GSQAC_BANDS } from "@/config/ratingBands";
 import { useT } from "@/i18n";
 import { statusFromGrade } from "@/engine";
 import { Card, StatusDot } from "./atoms";
-import { Sparkline } from "./Sparkline";
 import { RatingBadge } from "./RatingBadge";
 import { NPlusOneLine } from "./NPlusOneLine";
+import { FrequencyDelta } from "./FrequencyDelta";
 import { FrequencyBadge } from "./DataBadges";
 
 /**
@@ -75,7 +75,6 @@ function HeroTile({
   const { t, tn, lang } = useT();
   const kpi = rec.kpi;
   const ds = heroStatus(rec);
-  const c = rag(ds);
   const v = rec.value as number;
   const strat = kpi.displayStrategy;
   const name = tn(kpi.name, kpi.name_gu);
@@ -115,9 +114,8 @@ function HeroTile({
     else if (kpi.unit === "ratio") fallback = t("ogm.perMonthMax2");
   }
 
-  // ── micro-viz: a frequency-appropriate mini trend for every hero ──
-  const trendPts = trend.points.map((p) => p.value);
-  const microViz = trendPts.length > 1 ? <Sparkline data={trendPts} color={c.hex} width={120} height={24} /> : null;
+  // delta tag beside the value — direction-aware, frequency-correct wording (no graph)
+  const showDelta = !isContextDelta && trend.delta != null && trend.delta !== 0;
 
   return (
     <Card
@@ -137,8 +135,12 @@ function HeroTile({
           <span className="mt-0.5 block text-2xs text-neutral-400">{fallback}</span>
         ) : null}
       </div>
-      {microViz && <div className="hidden shrink-0 items-end sm:flex">{microViz}</div>}
-      <div className="shrink-0 text-right">{valueEl}</div>
+      <div className="flex shrink-0 flex-col items-end gap-0.5">
+        {valueEl}
+        {showDelta && (
+          <FrequencyDelta delta={trend.delta} unit={kpi.unit} direction={kpi.direction} cadence={trend.cadence} lang={lang} />
+        )}
+      </div>
     </Card>
   );
 }

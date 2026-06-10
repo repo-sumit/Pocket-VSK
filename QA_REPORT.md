@@ -1,5 +1,47 @@
 # Unified Portal — QA Report
 
+## KPI card row-grammar cleanup (uniform, compact, premium)
+
+Follow-up to the graph removal: cards still felt irregular, so this pass enforces a strict **row grammar** (header · meta · metric rows · footer) shared by every KPI card, and fixes the duplicate period label.
+
+- **Duplicate period label fixed** ([kpiCardParts.tsx](app/src/components/ui/kpiCardParts.tsx) `KpiCardHeader`, [KpiDetail.tsx](app/src/screens/KpiDetail.tsx)): the meta row now shows **one** period label. `getLastUpdatedLabel` already encodes the schedule month (e.g. `Sep 2025`), so the raw `scheduleNote` chip is no longer appended — `Yearly · Sep 2025 September` → `Yearly · Sep 2025` (and `Mar 2026 March` → `Mar 2026`). Removed the `scheduleNote` render from both the card header and the detail header.
+- **Compact shell** ([kpiCardParts.tsx](app/src/components/ui/kpiCardParts.tsx)): dropped the tall `min-h-[16.5rem]` and the `flex-1` vertical-centring block; the shell is now `min-h-[13rem]` (~210px) with a bottom-anchored footer (`mt-auto`). Card padding stays at the standard `card-pad` (p-5 ≈ 20px).
+- **Single-metric cards** ([KpiCard.tsx](app/src/components/ui/KpiCard.tsx)): header → meta → headline label (Rate / Count / Score / Latest, by unit) + value + delta/as-on on one row → a 2-up **Parent avg · Source** footer pinned to the foot. No empty middle; Source reads as muted footer text, not a metric. Applies to Attendance/Administration/School-Quality single cards too.
+- **Multi-metric cards** ([MultiMetricKpiCard.tsx](app/src/components/ui/MultiMetricKpiCard.tsx)): now a clean score table — each metric is a reusable **`KpiMetricRow`** with three aligned columns (value · parent N+1 · right-aligned delta), label above, hairline `divide-y` between rows, and **one** muted `Source · …` line at the foot. CET/CGMS use the same rows with no fake Source metric tile and no blank middle.
+- **Reusable row** ([kpiCardParts.tsx](app/src/components/ui/kpiCardParts.tsx) `KpiMetricRow`): single presentational component used by all multi-metric rows, so alignment is consistent (no one-off layouts).
+- **Top Indicators / homepage domain cards**: already row-based and graph-free from the prior pass (Top Indicators = dot + title + N+1 left, value + delta right; domain cards = name + hero label + value + N+1 + delta). Verified no graph, no source row, no empty band — left unchanged.
+- **Section labels** ([index.css](app/src/index.css) `.section-title`): confirmed plain (`text-xs font-bold uppercase tracking-wider text-neutral-500`) — no background/highlight strip. The "selected-looking" label in the screenshot was browser text selection, not a style; no change needed.
+- No card-level graphs remain (`Sparkline` only in its own file + barrel export). KPI detail `TrendChart` panels untouched.
+- No change to KPI names/values/formulas/metadata, delta/N+1/date logic, source values, access, routing, Compare, Export, GSQAC, or provider architecture.
+
+**Files changed:** `components/ui/kpiCardParts.tsx`, `components/ui/KpiCard.tsx`, `components/ui/MultiMetricKpiCard.tsx`, `screens/KpiDetail.tsx`, `i18n/en.ts`, `i18n/gu.ts`, `QA_REPORT.md`.
+
+**Build:** `npm run build` passes (`tsc --noEmit` clean; only the pre-existing entities-seed chunk-size warning).
+
+---
+
+## Graph-free KPI cards — compact redesign (charts stay on detail only)
+
+Removed every sparkline / line graph from KPI cards and redesigned the cards to be compact, information-first status tiles. Rule applied: **trend graphs belong only on KPI detail pages, never on overview cards.**
+
+- **All card-level sparklines removed:**
+  - [KpiCard.tsx](app/src/components/ui/KpiCard.tsx) — single-metric: header → headline value + delta / `as on <date>` → `Parent avg` (N+1) + `Source`, pinned to the foot. No graph. `buildTrend` is kept but used only to compute the delta.
+  - [MultiMetricKpiCard.tsx](app/src/components/ui/MultiMetricKpiCard.tsx) — now a compact **score table**: one stacked row per metric (label · value · N+1 · delta), hairline dividers, and a single muted `Source` line at the foot. Both the primary sparkline and the secondary micro-sparklines are gone.
+  - [HeroKpiStrip.tsx](app/src/components/ui/HeroKpiStrip.tsx) (homepage Top Indicators) — dropped the mini sparkline; the right side now shows value + a direction-aware delta (`↗ 0.3 this half-year` / `↘ 1 today`).
+- **Homepage domain cards** ([DomainSummaryCard.tsx](app/src/components/ui/DomainSummaryCard.tsx)) and **GSQAC card** had no sparkline (delta only) — left as-is; verified no graph renders.
+- **Shared shell** ([kpiCardParts.tsx](app/src/components/ui/kpiCardParts.tsx)): compact `min-h-[11.5rem]` shell, 2-line-clamped header, `KpiContextTile` (stacked label+value) and a new muted `KpiSourceLine`. Same title / value / date / delta / source typography across all card variants; equal grid heights via the existing `sm:auto-rows-fr`.
+- **Detail charts untouched** ([KpiDetail.tsx](app/src/screens/KpiDetail.tsx)): the single-metric `TrendChart` and the per-metric multi-metric trend panels still render. `TrendChart` and `buildTrend` are retained for detail charts, delta and last-updated logic. `Sparkline` is kept as an exported utility (no longer used by any card).
+- **i18n:** removed the now-unused single-card headline labels (`lblRate/lblCount/lblScore/lblValue`); kept `parentAvgLabel`.
+- No change to KPI names, values, formulas, catalog metadata, delta/N+1/date/frequency logic, source labels, access control, routing, Compare, Export, GSQAC, or provider architecture.
+
+**Files changed:** `components/ui/KpiCard.tsx`, `components/ui/MultiMetricKpiCard.tsx`, `components/ui/HeroKpiStrip.tsx`, `components/ui/kpiCardParts.tsx`, `i18n/en.ts`, `i18n/gu.ts`, `QA_REPORT.md`.
+
+**Build:** `npm run build` passes (`tsc --noEmit` clean; only the pre-existing entities-seed chunk-size warning).
+
+**Confirmation:** grep for `Sparkline` shows it only in its own definition + the barrel re-export — no card renders it. `TrendChart` appears only in KPI detail. Cards are shorter and cleaner with no empty graph bands.
+
+---
+
 ## Revert Assessment IA split — back to one KPI grid
 
 Reverted the previous Operational-Indicator / Assessment-Outcomes split. The Assessment domain page is back to a **single `KPIs in Assessment` grid** where every indicator — including `SAT reports downloaded in classrooms` — renders through the normal `KpiCardAuto` path (single-metric → `KpiCard`, multi-metric → `MultiMetricKpiCard`).
