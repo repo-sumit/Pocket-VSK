@@ -78,7 +78,6 @@ export default function ScorecardHome() {
                 name={tn(d.domain.name, d.domain.name_gu)}
                 level={entity.level}
                 heroRec={hero}
-                heroName={hero ? tn(hero.kpi.name, hero.kpi.name_gu) : undefined}
                 parentName={parentName}
                 comparable={comparable}
                 comparing={applied}
@@ -91,7 +90,9 @@ export default function ScorecardHome() {
             );
           })}
 
-          {output && (
+          {/* School Quality (GSQAC) — hidden where it isn't tracked (grade/section → NA),
+              so a teacher's Grade/Section view shows only Attendance + Assessment. */}
+          {output && output.percent != null && (
             <DomainInsightCard
               ds={output}
               name={tn(output.domain.name, output.domain.name_gu)}

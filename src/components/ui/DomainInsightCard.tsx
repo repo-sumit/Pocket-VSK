@@ -2,9 +2,8 @@ import { cn } from "@/lib/cn";
 import type { DomainScore, KpiRecord, Level, Unit } from "@/types";
 import { accent, valueToneClass } from "@/lib/colors";
 import { peerAvg } from "@/lib/peer";
-import { buildTrend, getLastUpdatedLabel } from "@/lib/trend";
+import { getLastUpdatedLabel } from "@/lib/trend";
 import { formatKpiCardTitlePhrase, formatValue } from "@/lib/format";
-import { shouldShowCardDelta } from "@/lib/displayPolicy";
 import { useT, type Lang } from "@/i18n";
 import { Card } from "./atoms";
 import { Icon, ChevronRight } from "./Icon";
@@ -43,14 +42,13 @@ function N1Chip({ parentName, value, unit, lang }: { parentName?: string; value:
  * own buttons, so drilling the domain and drilling a child unit stay distinct.
  */
 export function DomainInsightCard({
-  ds, name, level, heroRec, heroName, parentName, gsqacImprovement, outputPercent, parentPercent,
+  ds, name, level, heroRec, parentName, gsqacImprovement, outputPercent, parentPercent,
   comparable, comparing, bars, chartTitle, hint, onDrill, onOpenChild,
 }: {
   ds: DomainScore;
   name: string;
   level: Level;
   heroRec?: KpiRecord | null;
-  heroName?: string;
   parentName?: string;
   /** GSQAC (output) only: */
   gsqacImprovement?: number | null;
@@ -91,7 +89,7 @@ export function DomainInsightCard({
 
         {isOutput
           ? <OutputHead percent={outputPercent ?? null} grade={ds.grade} status={ds.status} improvement={gsqacImprovement ?? null} parentName={parentName} parentPercent={parentPercent ?? null} lang={lang} />
-          : <InputHead heroRec={heroRec ?? null} heroName={heroName} level={level} parentName={parentName} lang={lang} t={t} />}
+          : <InputHead heroRec={heroRec ?? null} level={level} parentName={parentName} lang={lang} />}
       </button>
 
       {/* ── embedded comparison — only after Compare is applied ── */}
@@ -112,46 +110,31 @@ export function DomainInsightCard({
   );
 }
 
-/** input-domain headline = the domain's hero indicator (count → sentence; else value + label). */
+/** input-domain headline = the domain's hero indicator, as one inline sentence:
+ *  "208 students absent…" / "80.6% SAT reports…" / "1.7 No of CRC/URC Visits…". */
 function InputHead({
-  heroRec, heroName, level, parentName, lang, t,
+  heroRec, level, parentName, lang,
 }: {
   heroRec: KpiRecord | null;
-  heroName?: string;
   level: Level;
   parentName?: string;
   lang: "en" | "gu";
-  t: (k: string, v?: Record<string, string | number>) => string;
 }) {
   if (!heroRec) return null;
   const kpi = heroRec.kpi;
   const value = heroRec.value;
   const unit = kpi.unit;
   const peerScore = level ? peerAvg(kpi.id, level) : null;
-  const showDelta = value != null && shouldShowCardDelta(kpi);
-  const trend = showDelta ? buildTrend(heroRec, lang) : null;
   // headline reads in its RAG status colour (green good / red at-risk / neutral else)
   const valueTone = valueToneClass(heroRec.status);
-  const phrase = value != null ? formatKpiCardTitlePhrase(kpi.name, kpi.name_gu, unit, lang) : null;
+  const phrase = formatKpiCardTitlePhrase(kpi.name, kpi.name_gu, unit, lang);
 
   return (
     <>
-      {phrase ? (
-        <p className="line-clamp-3 min-w-0 text-sm font-semibold leading-snug text-neutral-700">
-          <span className={cn("mr-1.5 align-baseline text-3xl font-extrabold tnum", valueTone)}>{formatValue(value, unit, lang)}</span>
-          {phrase}
-        </p>
-      ) : (
-        <div className="min-w-0">
-          <div className="flex items-end justify-between gap-2">
-            <ValueDisplay value={value} unit={unit} status={heroRec.status} direction={kpi.direction} lang={lang} size="lg" naLabel={t("common.na")} toneClass={valueTone} />
-            {trend && trend.delta != null && trend.delta !== 0 && (
-              <FrequencyDelta delta={trend.delta} unit={unit} direction={kpi.direction} cadence={trend.cadence} lang={lang} className="pb-1" />
-            )}
-          </div>
-          {heroName && <span className="mt-0.5 block text-sm font-medium leading-snug text-neutral-600">{heroName}</span>}
-        </div>
-      )}
+      <p className="line-clamp-3 min-w-0 text-sm font-semibold leading-snug text-neutral-700">
+        <span className={cn("mr-1.5 align-baseline text-3xl font-extrabold tnum", valueTone)}>{formatValue(value, unit, lang)}</span>
+        {phrase}
+      </p>
       <N1Chip parentName={parentName} value={peerScore} unit={unit} lang={lang} />
     </>
   );

@@ -37,22 +37,17 @@ export function KpiCard({
     <KpiCardShell onClick={onClick} compare={<KpiCompareSection kpi={kpi} />}>
       <KpiCardHeader title={name} frequency={kpi.frequency} context={lastUpdated} />
 
-      {/* headline value — delta beside it only for policy-allowed indicators */}
-      <div className="mt-3 flex items-baseline justify-between gap-2">
+      {/* value on the left · N+1 comparison (+ allowed delta) right-aligned */}
+      <div className="mt-3 flex items-baseline justify-between gap-3">
         <ValueDisplay value={rec.value} unit={kpi.unit} status={rec.status} direction={kpi.direction} lang={lang} size="lg" toneClass={valueTone} naLabel={t("common.na")} />
-        {trend && trend.delta != null && trend.delta !== 0 ? (
-          <FrequencyDelta delta={trend.delta} unit={kpi.unit} direction={kpi.direction} cadence={trend.cadence} lang={lang} />
-        ) : null}
+        <span className="flex shrink-0 flex-col items-end gap-0.5 text-right">
+          {hasPeer && <span className="truncate text-xs font-semibold text-neutral-500" title={peerStr}>{peerStr}</span>}
+          {trend && trend.delta != null && trend.delta !== 0 && (
+            <FrequencyDelta delta={trend.delta} unit={kpi.unit} direction={kpi.direction} cadence={trend.cadence} lang={lang} />
+          )}
+        </span>
       </div>
-
-      {/* footer — the N+1 peer comparison, pinned to the foot (no source on cards) */}
-      <div className="mt-auto pt-2.5">
-        {hasPeer ? (
-          <span className="block truncate text-xs font-semibold text-neutral-500" title={peerStr}>{peerStr}</span>
-        ) : na ? (
-          <span className="block text-2xs text-neutral-400">{t("common.notTracked")}</span>
-        ) : null}
-      </div>
+      {na && <span className="mt-1 block text-2xs text-neutral-400">{t("common.notTracked")}</span>}
     </KpiCardShell>
   );
 }

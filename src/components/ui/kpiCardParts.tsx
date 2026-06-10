@@ -52,8 +52,9 @@ export function KpiCardHeader({ title, frequency, context }: { title: string; fr
 }
 
 /**
- * One compact metric row with three aligned columns: value · parent N+1 · delta.
- * Used for every row of a multi-metric card so they line up; the label sits above.
+ * One compact metric row: the metric value on the left, the N+1 comparison (and
+ * any delta) right-aligned. The metric label sits above. Right-aligning the N+1
+ * keeps the row scannable instead of stranding "Kachchh · 94%" in the middle.
  */
 export function KpiMetricRow({
   label, value, valueTone, parentLabel, delta,
@@ -61,10 +62,12 @@ export function KpiMetricRow({
   return (
     <div className="py-2 first:pt-1 last:pb-0">
       <span className="block text-2xs font-semibold uppercase tracking-wide text-neutral-400">{label}</span>
-      <div className="mt-0.5 grid grid-cols-3 items-baseline gap-x-2">
+      <div className="mt-0.5 flex items-baseline justify-between gap-2">
         <span className={cn("truncate text-xl font-extrabold tnum leading-none", valueTone)}>{value}</span>
-        <span className="truncate text-2xs text-neutral-400">{parentLabel}</span>
-        <span className="justify-self-end">{delta}</span>
+        <span className="flex shrink-0 items-baseline gap-2 text-right">
+          {parentLabel && <span className="text-2xs text-neutral-400">{parentLabel}</span>}
+          {delta}
+        </span>
       </div>
     </div>
   );

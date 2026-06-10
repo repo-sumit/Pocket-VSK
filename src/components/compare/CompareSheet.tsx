@@ -13,13 +13,16 @@ import { Check, Search, X } from "@/components/ui/Icon";
  * blur can't capture the fixed overlay.
  */
 export function CompareSheet({
-  open, childLevel, all, initial, onApply, onClose,
+  open, childLevel, all, initial, applied, onApply, onRemove, onClose,
 }: {
   open: boolean;
   childLevel: Level;
   all: Entity[];
   initial: string[];
+  /** whether a comparison is currently applied (enables the Remove action). */
+  applied: boolean;
   onApply: (ids: string[]) => void;
+  onRemove: () => void;
   onClose: () => void;
 }) {
   const { t, tn } = useT();
@@ -126,14 +129,21 @@ export function CompareSheet({
           <button type="button" onClick={onClose} className="flex-1 rounded-full border border-line bg-white py-3 text-sm font-bold text-neutral-600 hover:bg-neutral-50">
             {t("common.cancel")}
           </button>
-          <button
-            type="button"
-            disabled={sel.length === 0}
-            onClick={() => sel.length && onApply(sel)}
-            className={cn("flex-[2] rounded-full py-3 text-sm font-bold text-white", sel.length ? "bg-primary-500 hover:bg-primary-600" : "cursor-not-allowed bg-primary-200")}
-          >
-            {t("common.apply")}{sel.length ? ` (${sel.length})` : ""}
-          </button>
+          {applied && sel.length === 0 ? (
+            // comparison already on, user cleared everything → offer to remove it
+            <button type="button" onClick={onRemove} className="flex-[2] rounded-full bg-neutral-700 py-3 text-sm font-bold text-white hover:bg-neutral-800">
+              {t("compare.remove")}
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={sel.length === 0}
+              onClick={() => sel.length && onApply(sel)}
+              className={cn("flex-[2] rounded-full py-3 text-sm font-bold text-white", sel.length ? "bg-primary-500 hover:bg-primary-600" : "cursor-not-allowed bg-primary-200")}
+            >
+              {t("common.apply")}{sel.length ? ` (${sel.length})` : ""}
+            </button>
+          )}
         </div>
       </div>
     </div>,

@@ -54,7 +54,7 @@ export const en = {
     upTop: "You are at the top of your scope",
     selectTitle: "Select {level}",
     search: "Search {level}…",
-    change: "Change {level}",
+    change: "Select {level}",
     noChild: "No level below {level}",
   },
   scorecard: {
@@ -92,6 +92,7 @@ export const en = {
     hint: "Tap Compare to view {level}-wise chart",
     by: "Compare by",
     notTracked: "Not tracked at this level",
+    remove: "Remove comparison",
   },
   export: { title: "Export scorecard", download: "Download / Print", generatedOn: "Generated on", note: "Use your browser's print dialog to save as PDF.", domain: "Domain", overall: "Overall", homeIndicators: "Home-page indicators", parentAvg: "avg" },
   framework: { label: "Framework", switch: "Switch framework" },

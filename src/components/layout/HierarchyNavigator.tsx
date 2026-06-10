@@ -74,8 +74,19 @@ export function HierarchyNavigator({ className }: { className?: string }) {
         />
       </div>
 
-      {/* ── Desktop: clean trail + change-level control ── */}
-      <div className="hidden min-w-0 items-center gap-1.5 lg:flex">
+      {/* ── Desktop: back-one-level · clean trail · select-level control ── */}
+      <div className="hidden min-w-0 items-center gap-2 lg:flex">
+        {parent && (
+          <button
+            type="button"
+            onClick={() => goTo(parent.id)}
+            aria-label={t("hierarchy.up", { level: t(`levels.${parent.level}`) })}
+            title={t("hierarchy.up", { level: t(`levels.${parent.level}`) })}
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-neutral-100 text-neutral-500 transition-colors hover:bg-neutral-200"
+          >
+            <ChevronLeft size={16} />
+          </button>
+        )}
         <nav className="flex min-w-0 items-center gap-1 overflow-hidden text-xs" aria-label={t("scorecard.yourScope")}>
           {trail.map((e, i) => {
             const last = i === trail.length - 1;

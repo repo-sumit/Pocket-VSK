@@ -25,11 +25,13 @@ interface CompareValue {
   selected: Entity[];
   /** apply a selection (closes the sheet, reveals charts). */
   apply: (ids: string[]) => void;
+  /** clear an applied comparison (hides charts, re-preselects all next open). */
+  remove: () => void;
 }
 
 const Ctx = createContext<CompareValue>({
   childLevel: null, childEntities: [], open: false, setOpen: () => {},
-  applied: false, selectedIds: [], selected: [], apply: () => {},
+  applied: false, selectedIds: [], selected: [], apply: () => {}, remove: () => {},
 });
 
 export function CompareProvider({ children }: { children: ReactNode }) {
@@ -54,6 +56,8 @@ export function CompareProvider({ children }: { children: ReactNode }) {
   const value: CompareValue = {
     childLevel, childEntities, open, setOpen, applied, selectedIds, selected,
     apply: (ids) => { setSelectedIds(ids); setApplied(true); setOpen(false); },
+    // clear: hide charts and reset selection to all, so reopening starts fresh
+    remove: () => { setApplied(false); setOpen(false); setSelectedIds(childEntities.map((c) => c.id)); },
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

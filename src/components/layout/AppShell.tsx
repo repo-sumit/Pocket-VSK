@@ -123,7 +123,7 @@ function CompareControl() {
 
 /** Renders the Compare selection sheet/drawer, driven by the shared compare state. */
 function CompareMount() {
-  const { open, childLevel, childEntities, selectedIds, apply, setOpen } = useCompare();
+  const { open, childLevel, childEntities, selectedIds, applied, apply, remove, setOpen } = useCompare();
   if (!childLevel) return null;
   return (
     <CompareSheet
@@ -131,7 +131,9 @@ function CompareMount() {
       childLevel={childLevel}
       all={childEntities}
       initial={selectedIds}
+      applied={applied}
       onApply={apply}
+      onRemove={remove}
       onClose={() => setOpen(false)}
     />
   );

@@ -55,7 +55,7 @@ export const gu: Dict = {
     upTop: "તમે તમારા કાર્યક્ષેત્રની ટોચ પર છો",
     selectTitle: "{level} પસંદ કરો",
     search: "{level} શોધો…",
-    change: "{level} બદલો",
+    change: "{level} પસંદ કરો",
     noChild: "{level} ની નીચે કોઈ સ્તર નથી",
   },
   scorecard: {
@@ -93,6 +93,7 @@ export const gu: Dict = {
     hint: "{level}-વાર ચાર્ટ જોવા સરખામણી દબાવો",
     by: "આના દ્વારા સરખાવો",
     notTracked: "આ સ્તરે ટ્રેક થતું નથી",
+    remove: "સરખામણી દૂર કરો",
   },
   export: { title: "સ્કોરકાર્ડ નિકાસ કરો", download: "ડાઉનલોડ / પ્રિન્ટ", generatedOn: "બનાવ્યું", note: "PDF તરીકે સાચવવા તમારા બ્રાઉઝરના પ્રિન્ટ ડાયલોગનો ઉપયોગ કરો.", domain: "ડોમેન", overall: "એકંદર", homeIndicators: "હોમ-પેજ સૂચકાંકો", parentAvg: "સરેરાશ" },
   framework: { label: "ફ્રેમવર્ક", switch: "ફ્રેમવર્ક બદલો" },

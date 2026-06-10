@@ -1,5 +1,26 @@
 # Unified Portal — QA Report
 
+## Polish + behaviour pass — teacher SQ, Select-level, hierarchy back, Compare remove, inline values (Pass 19)
+
+Focused update on the existing design (no redesign). Eight targeted changes, all verified in-browser (Playwright) and `npm run build` clean.
+
+1. **School Quality hidden where it's NA.** The home GSQAC card now renders only when `output.percent != null` — so at grade/section (GSQAC is school-and-above) it disappears instead of showing "NA". Verified: a Teacher at Section sees only Attendance + Assessment (2-up, no empty grid slot); officers/school+ still see School Quality. (Implemented data-driven rather than role-gated, so the circled DEO-at-Section "NA" case is fixed too, while every valid GSQAC level keeps the card.)
+2. **`Change <level>` → `Select <level>`.** `hierarchy.change` i18n now "Select {level}" (en) / "{level} પસંદ કરો" (gu) — drives the mobile drill chip and the desktop "Select Block/Cluster/School/…" button.
+3. **Far-left `<` hierarchy-back button.** The mobile navigator pill already had it; added a matching leading `<` icon button on the desktop navigator. It steps up one level (`setScope(parent)`), removing the rightmost selected layer one at a time, and is hidden at the top of the user's scope. Verified: Block → click `<` → back to District; button then hidden.
+4. **Compare "Remove comparison".** When a comparison is applied and the user clears all units, the primary button switches from a disabled "Apply" to an enabled **"Remove comparison"** (`compare.remove`). Clicking it closes the sheet, sets `applied=false`, hides all card charts, and re-preselects all children for the next open (`CompareContext.remove`). If no comparison was ever applied, "Apply" stays disabled at zero selection. Verified end-to-end.
+5. **Inline value + descriptor on all domain cards.** `formatKpiCardTitlePhrase` now returns a descriptor for every unit (count lower-cases the leading word; others keep it), so every home domain card reads as one line: "208 students absent from past 7+ consecutive days", "80.6% SAT reports downloaded in classrooms", "1.7 No of CRC/URC Visits per school". School Quality keeps "62.4%  B" with the "GSQAC Score" eyebrow.
+6. **N+1 moved to the right on KPI listing rows.** `KpiMetricRow` (multi-metric) and the single-metric `KpiCard` now place the value on the left and the N+1 comparison (+ any allowed delta) right-aligned — "85.2%  …  Kachchh · 94%" — instead of stranding the peer in the middle. No "Parent avg", no source, no card graphs until Compare is applied.
+7. **Compare hint stays adaptive** ("Tap Compare to view {district/block/cluster/…}-wise chart") and **charts remain inside cards only** (no standalone bottom chart; only the chart strip scrolls; the page does not). Unchanged from Pass 18, re-verified.
+8. **Visual language preserved** — white rounded cards, soft shadows, grey-blue page, blue actions, RAG status colours. No new design language.
+
+### Files changed
+`screens/ScorecardHome.tsx` (hide NA School Quality; drop heroName), `components/ui/DomainInsightCard.tsx` (always-inline InputHead), `lib/format.ts` (`formatKpiCardTitlePhrase` returns all units), `components/layout/HierarchyNavigator.tsx` (desktop `<` back button), `components/ui/kpiCardParts.tsx` (`KpiMetricRow` N+1 right), `components/ui/KpiCard.tsx` (value left / N+1 right), `components/compare/CompareContext.tsx` (`remove`), `components/compare/CompareSheet.tsx` (Remove-comparison button), `components/layout/AppShell.tsx` (wire `applied`/`onRemove`), `i18n/en.ts` + `i18n/gu.ts` (`hierarchy.change`→Select, `compare.remove`).
+
+### Build & verification
+`npm run typecheck` clean · `npm run build` ✓ (only the pre-existing entities-seed chunk-size warning). Playwright: Teacher/Section (SQ hidden, inline values), DEO desktop (Select Block, inline cards, no `<` at top), Block (`<` back works, "Select Cluster", cluster-wise hint), Compare apply → clear all → "Remove comparison" → charts gone + cards compact, KPI listing N+1 right-aligned. No console errors; no horizontal page overflow (mobile action row wraps).
+
+---
+
 ## Compare action — gated embedded charts (Claude Design `vsk-dashboard`, Pass 18)
 
 **Design implemented:** the Claude Design handoff `swiftchat-design-system/ui_kits/vsk-dashboard/index.html` (run `N4v5-UUHsk3kJJDtUfMTww`), read in full with its chat transcript, `dashboard.jsx`, `app.jsx`, `data.js`. This iteration turns the always-on embedded charts into a **Compare action**: charts are hidden by default and appear only after the user picks which n-1 child units to compare and applies. Implemented against the existing provider/engine, KPI catalog, hierarchy, PM SHRI, i18n and access control (no product-logic changes).

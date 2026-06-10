@@ -124,17 +124,17 @@ export function formatBelowLevelAverageLabel(level: Level, lang: Lang = "en"): s
 }
 
 /**
- * Sentence-style card highlight — the phrase part of "225 students absent from
- * past 7+ consecutive days" (the card renders the number big, then this phrase
- * inline). Used only where it genuinely reads better than label-above-number:
- * count indicators. "% / ratio / score" return null and keep the standard
- * value + label layout ("1.8 no of CRC/URC visits…" would be worse).
+ * Sentence-style card highlight — the descriptor that follows the big value on a
+ * domain card ("225 students absent from past 7+ consecutive days", "80.6% SAT
+ * reports downloaded in classrooms", "1.7 No of CRC/URC Visits per school"). The
+ * card renders the value big, then this phrase inline. For COUNT indicators the
+ * leading word is lower-cased so it reads as a sentence; other units keep the
+ * descriptor as authored (acronyms like SAT/CRC and "No of …" stay intact).
  */
-export function formatKpiCardTitlePhrase(name: string, name_gu: string, unit: Unit, lang: Lang): string | null {
-  if (unit !== "count") return null;
+export function formatKpiCardTitlePhrase(name: string, name_gu: string, unit: Unit, lang: Lang): string {
   if (lang === "gu") return name_gu;
-  // lowercase the leading word unless it is an acronym (SAT, FLN, CET …)
-  return /^[A-Z][a-z]/.test(name) ? name.charAt(0).toLowerCase() + name.slice(1) : name;
+  if (unit === "count" && /^[A-Z][a-z]/.test(name)) return name.charAt(0).toLowerCase() + name.slice(1);
+  return name;
 }
 
 /** Time-based greeting key (FCR-1.2): 05–11 morning · 12–16 afternoon · else evening. */
