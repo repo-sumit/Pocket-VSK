@@ -1,4 +1,4 @@
-import type { KpiDef } from "@/types";
+import type { Frequency, KpiDef } from "@/types";
 import { cadenceOf } from "@/lib/trend";
 
 /**
@@ -42,4 +42,33 @@ export type SourceContext = "card" | "detail" | "export";
 /** Source text is detail-page (and export-table) information, never card chrome. */
 export function shouldShowSource(context: SourceContext): boolean {
   return context !== "card";
+}
+
+/* ── Student Retention (latest product rule) ───────────────────────────────────
+ * The Re-enrolment KPI now displays as a Daily indicator with a static "1st Oct"
+ * as-on date everywhere (card · sub-domain · detail) — never "Half-yearly · Jun
+ * 2026". The underlying frequency/trend stay intact; this overrides DISPLAY only.
+ * Student Retention is an Oct-1 → academic-year-end view; the demo keeps it
+ * visible (RETENTION_DEMO_VISIBLE) so the "Daily · 1st Oct" cards are showcased
+ * regardless of today's date. */
+export const RETENTION_SUBDOMAIN_ID = "adm_retention";
+const RETENTION_KPI_IDS = new Set(["ret_dropout", "ret_reenroll"]);
+export const RETENTION_DEMO_VISIBLE = true;
+
+/** Retention indicators (incl. synthesized sub-metrics) — drives the date override. */
+export function isRetentionKpi(kpiId: string): boolean {
+  return RETENTION_KPI_IDS.has(parentKpiId(kpiId));
+}
+
+/** Re-enrolment is shown as "Daily" (latest rule); everything else keeps its real frequency. */
+export function displayFrequency(kpi: Pick<KpiDef, "id" | "frequency">): Frequency | undefined {
+  return kpi.id === "ret_reenroll" ? "Daily" : kpi.frequency;
+}
+
+/** Whether the Student Retention sub-domain is shown. Real rule: visible Oct 1
+ *  through academic-year end; demo override keeps it visible always. */
+export function studentRetentionVisible(today: Date = new Date()): boolean {
+  if (RETENTION_DEMO_VISIBLE) return true;
+  const m = today.getMonth(); // 0=Jan … visible Oct(9)–Dec(11) and Jan(0)–Mar(2)
+  return m >= 9 || m <= 2;
 }

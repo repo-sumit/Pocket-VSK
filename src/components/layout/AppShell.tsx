@@ -1,37 +1,32 @@
-import { useEffect } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { dataProvider } from "@/data/provider";
 import { useSession } from "@/store/session";
 import { useT } from "@/i18n";
-import { cn } from "@/lib/cn";
 import { CompareProvider, useCompare } from "@/components/compare/CompareContext";
 import { CompareSheet } from "@/components/compare/CompareSheet";
-import { HierarchyNavigator } from "./HierarchyNavigator";
-import { LanguageToggle } from "./LanguageToggle";
-import { PmShriFilter } from "./PmShriFilter";
-import { BarChart3, Download, LogOut } from "../ui/Icon";
+import { HeaderNav } from "./HierarchyNavigator";
+import { FilterSheet } from "./FilterSheet";
+import { Share, FunnelFilter, BarCompare } from "../ui/Icon";
 
 /**
- * App shell — no navigation rails. The portal is one scorecard surface:
- * a slim identity row (logo · user · logout) and a single navigator/action row
- * (smart hierarchy navigator · PM SHRI · Compare · language · Export). Compare is
- * an action (not a destination): it gates the embedded comparison charts behind a
- * child-unit selection. Content gets the full width; the navigator takes its own
- * line on mobile, actions wrap beneath.
+ * App shell (latest design) — one clean header on every page:
+ *   [logo]   ‹ entity · level ›   [share] [filter]
+ * No logout, no large "Unified Portal" mobile title, no role/designation, no
+ * second action row. School-type + Language live in the Filter sheet; Export is
+ * the Share icon; Compare is a desktop header button and a mobile floating action
+ * (bottom-right). Compare is hidden on KPI detail pages.
  */
 export function AppShell() {
   const user = useSession((s) => s.user);
-  const logout = useSession((s) => s.logout);
   const scopeId = useSession((s) => s.scopeId);
   const resetScope = useSession((s) => s.resetScope);
-  const { t, tn } = useT();
-  const loc = useLocation();
+  const { t } = useT();
   const navigate = useNavigate();
+  const [filterOpen, setFilterOpen] = useState(false);
 
-  // ACCESS CONTROL: repair a tampered/stale persisted scope (localStorage) that
-  // points outside the user's subtree, snapping it back to their home entity.
-  // useScope already clamps on read; this also cleans the stored value.
-  // NOTE: client-side guard only — production must enforce scope server-side (RLS).
+  // ACCESS CONTROL: repair a tampered/stale persisted scope that points outside
+  // the user's subtree (client-side guard only; production enforces server-side).
   useEffect(() => {
     if (user && scopeId && !dataProvider.isInScope(user.entity_id, scopeId)) resetScope();
   }, [user, scopeId, resetScope]);
@@ -39,88 +34,67 @@ export function AppShell() {
   if (!user) return <Navigate to="/login" replace />;
 
   const isOfficer = user.role === "crc" || user.role === "brc" || user.role === "deo" || user.role === "state";
-  const onExport = loc.pathname.startsWith("/app/export");
-  // The big "homepage top section" (hierarchy selector + PM SHRI + language +
-  // Export) shows only on the scorecard. Domain/sub-domain pages keep just the
-  // prominent Compare action; KPI detail + export start clean (no top block).
-  const isHome = loc.pathname === "/app" || loc.pathname === "/app/";
-
-  const onLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   return (
     <CompareProvider>
       <div className="min-h-[100dvh] bg-surface-muted">
         <header className="sticky top-0 z-30 border-b border-line/70 bg-white/90 backdrop-blur no-print">
-          {/* identity row */}
-          <div className="mx-auto flex max-w-content items-center gap-3 px-4 py-2">
-            <Link to="/app" className="flex items-center gap-2">
-              <img src="/logo-vsk.png" alt="Vidya Samiksha Kendra" className="h-9 w-9 object-contain" />
-              <span className="leading-none">
+          <div className="mx-auto flex max-w-content items-center gap-1.5 px-3 py-2 sm:gap-2 sm:px-4">
+            {/* left — logo (product name on desktop only) */}
+            <Link to="/app" className="flex shrink-0 items-center gap-2" aria-label={t("app.name")}>
+              <img src="/logo-vsk.png" alt="" className="h-9 w-9 object-contain" />
+              <span className="hidden leading-none lg:block">
                 <span className="block text-base font-extrabold tracking-tight text-neutral-900">{t("app.name")}</span>
-                <span className="hidden text-2xs font-medium text-neutral-400 sm:block">{t("app.tagline")}</span>
+                <span className="block text-2xs font-medium text-neutral-400">{t("app.tagline")}</span>
               </span>
             </Link>
-            <div className="ml-auto flex items-center gap-2">
-              <div className="hidden text-right leading-tight sm:block">
-                <div className="text-xs font-semibold text-neutral-800">{tn(user.name, user.name_gu)}</div>
-                <div className="text-2xs text-neutral-400">{t(`roles.${user.role}`)}</div>
-              </div>
-              <button onClick={onLogout} title={t("nav.logout")} aria-label={t("nav.logout")} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-neutral-100 text-neutral-500 hover:bg-neutral-200">
-                <LogOut size={16} />
-              </button>
+
+            {/* center — hierarchy navigator (entity · level with drill arrows) */}
+            <HeaderNav className="min-w-0 flex-1" />
+
+            {/* right — desktop Compare, Share (export), Filter */}
+            <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+              <CompareHeaderButton />
+              <IconButton label={t("nav.share")} onClick={() => navigate("/app/export")}>
+                <Share size={18} />
+              </IconButton>
+              <IconButton label={t("nav.filter")} onClick={() => setFilterOpen(true)}>
+                <FunnelFilter size={18} />
+              </IconButton>
             </div>
           </div>
-
-          {/* HOME ONLY — the full navigator + actions block. Navigator owns its own line on
-              mobile, shares the row on desktop. Action priority Compare > Export > All Schools >
-              Language: mobile shows two tidy rows ([Compare][Export] / [All Schools ▾][EN|ગુ]) via
-              flex order + 50% basis; desktop is one row [All Schools] [Compare] [EN|ગુ] [Export].
-              Domain/KPI pages drop this block so they start clean (see CompareBarBelowHome). */}
-          {isHome && (
-            <div className="mx-auto flex max-w-content flex-wrap items-center gap-2 px-4 pb-2.5">
-              <HierarchyNavigator className="w-full lg:w-auto lg:min-w-0 lg:flex-1" />
-              <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:flex-nowrap">
-                {isOfficer && <PmShriFilter className="order-3 inline-flex lg:order-1" />}
-                <CompareControl className="order-1 grow basis-[calc(50%-0.25rem)] lg:order-2 lg:grow-0 lg:basis-auto" />
-                <LanguageToggle className="order-4 ml-auto lg:order-3 lg:ml-0" />
-                {!onExport && (
-                  <Link
-                    to="/app/export"
-                    className="order-2 inline-flex grow basis-[calc(50%-0.25rem)] items-center justify-center gap-1.5 rounded-full bg-primary-500 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-primary-600 lg:order-4 lg:grow-0 lg:basis-auto lg:py-1.5"
-                  >
-                    <Download size={14} /> {t("nav.export")}
-                  </Link>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* DOMAIN/SUB-DOMAIN — keep Compare reachable (it's the primary action) without the
-              big home block. Renders nothing on the scorecard, on KPI detail, on export, or at a
-              leaf scope, so those pages start cleanly with no leftover bar. */}
-          {!isHome && <DomainCompareBar />}
         </header>
 
-        <main className="mx-auto min-w-0 max-w-content px-4 py-4 pb-10 sm:py-5">
+        <main className="mx-auto min-w-0 max-w-content px-4 py-4 pb-24 sm:py-5 lg:pb-10">
           <Outlet />
         </main>
 
+        <FloatingCompare />
+        <FilterSheet open={filterOpen} isOfficer={isOfficer} onClose={() => setFilterOpen(false)} />
         <CompareMount />
       </div>
     </CompareProvider>
   );
 }
 
-/** Compare action button — the prominent primary action: always a filled
- *  light-blue pill with a brand border + bar-chart icon (more visible than the
- *  muted "All Schools" filter). "Compare" → "Compare · N" once applied; opens the
- *  child-unit selector. Hidden at leaf scopes (nothing below to compare) and on
- *  KPI/Indicator detail pages (`/app/kpi/*`), where comparison doesn't apply —
- *  the compare state itself is left untouched so it reappears on domain/home. */
-function CompareControl({ className }: { className?: string }) {
+/** A 36px round header icon button. */
+function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-neutral-100 text-neutral-600 transition-colors hover:bg-neutral-200"
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Desktop-only Compare button in the header. Hidden at leaf scopes and on KPI
+ *  detail pages; mobile uses the floating action instead. */
+function CompareHeaderButton() {
   const { childLevel, applied, selectedIds, setOpen } = useCompare();
   const { t } = useT();
   const isKpiDetail = useLocation().pathname.includes("/kpi/");
@@ -130,30 +104,36 @@ function CompareControl({ className }: { className?: string }) {
     <button
       type="button"
       onClick={() => setOpen(true)}
-      className={cn(
-        "inline-flex items-center justify-center gap-1.5 rounded-full border border-primary-500 bg-primary-50 px-3.5 py-2 text-xs font-bold text-primary-700 transition-colors hover:bg-primary-100 lg:py-1.5",
-        className,
-      )}
+      className="hidden items-center gap-1.5 rounded-full border border-primary-500 bg-primary-50 px-3.5 py-1.5 text-xs font-bold text-primary-700 transition-colors hover:bg-primary-100 lg:inline-flex"
     >
-      <BarChart3 size={15} className="text-primary-600" />
+      <BarCompare size={15} className="text-primary-600" />
       {n ? `${t("compare.button")} · ${n}` : t("compare.button")}
     </button>
   );
 }
 
-/** Slim Compare-only bar for domain / sub-domain pages — keeps the prominent
- *  Compare action reachable (per the compare-on-domain requirement) once the big
- *  home navigator/action block is dropped. Returns null when there's nothing to
- *  compare (leaf scope) or on KPI detail / export, so those pages leave no blank
- *  bar. CompareControl itself also guards these cases. */
-function DomainCompareBar() {
-  const { childLevel } = useCompare();
-  const loc = useLocation();
-  if (!childLevel || loc.pathname.includes("/kpi/") || loc.pathname.startsWith("/app/export")) return null;
+/** Mobile floating Compare action (bottom-right) with a selected-count badge.
+ *  Hidden at leaf scopes and on KPI detail pages; desktop uses the header button. */
+function FloatingCompare() {
+  const { childLevel, applied, selectedIds, setOpen } = useCompare();
+  const { t } = useT();
+  const isKpiDetail = useLocation().pathname.includes("/kpi/");
+  if (!childLevel || isKpiDetail) return null;
+  const n = applied ? selectedIds.length : 0;
   return (
-    <div className="mx-auto flex max-w-content justify-end px-4 pb-2.5">
-      <CompareControl />
-    </div>
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      aria-label={n ? `${t("compare.button")} · ${n}` : t("compare.button")}
+      className="fixed bottom-5 right-4 z-40 grid h-14 w-14 place-items-center rounded-full bg-primary-500 text-white shadow-raised transition-transform hover:bg-primary-600 active:scale-95 lg:hidden no-print"
+    >
+      <BarCompare size={24} />
+      {n > 0 && (
+        <span className="absolute -right-0.5 -top-0.5 grid h-6 min-w-[1.5rem] place-items-center rounded-full border-2 border-white bg-rag-red px-1 text-2xs font-extrabold text-white">
+          {n}
+        </span>
+      )}
+    </button>
   );
 }
 

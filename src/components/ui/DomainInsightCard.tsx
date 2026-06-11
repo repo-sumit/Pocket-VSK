@@ -10,7 +10,6 @@ import { Icon, ChevronRight } from "./Icon";
 import { RatingBadge } from "./RatingBadge";
 import { ValueDisplay } from "./ValueDisplay";
 import { FrequencyDelta } from "./FrequencyDelta";
-import { CompareHint } from "./kpiCardParts";
 import { ChildComparisonBars, type ChildBar } from "./ComparisonBars";
 
 /**
@@ -43,7 +42,7 @@ function N1Chip({ parentName, value, unit, lang }: { parentName?: string; value:
  */
 export function DomainInsightCard({
   ds, name, level, heroRec, parentName, gsqacImprovement, outputPercent, parentPercent,
-  comparable, comparing, bars, chartTitle, hint, onDrill, onOpenChild,
+  comparable, comparing, bars, chartTitle, onDrill, onOpenChild,
 }: {
   ds: DomainScore;
   name: string;
@@ -59,7 +58,6 @@ export function DomainInsightCard({
   comparing: boolean;
   bars: ChildBar[];
   chartTitle: string;
-  hint: string;
   onDrill: () => void;
   onOpenChild?: (id: string) => void;
 }) {
@@ -92,19 +90,15 @@ export function DomainInsightCard({
           : <InputHead heroRec={heroRec ?? null} level={level} parentName={parentName} lang={lang} />}
       </button>
 
-      {/* ── embedded comparison — only after Compare is applied ── */}
-      {comparable && (
-        comparing ? (
-          <div className="mt-auto border-t border-line/70 px-4 pb-4 pt-3 sm:px-5">
-            {hasData ? (
-              <ChildComparisonBars title={chartTitle} bars={bars} unit="%" lang={lang} maxValue={100} onOpen={onOpenChild} />
-            ) : (
-              <p className="py-1 text-2xs text-neutral-400">{t("compare.notTracked")}</p>
-            )}
-          </div>
-        ) : (
-          <div className="mt-auto px-4 pb-4 pt-1 sm:px-5"><CompareHint text={hint} /></div>
-        )
+      {/* ── embedded comparison — only after Compare is applied (no hint before; card stays compact) ── */}
+      {comparable && comparing && (
+        <div className="mt-auto border-t border-line/70 px-4 pb-4 pt-3 sm:px-5">
+          {hasData ? (
+            <ChildComparisonBars title={chartTitle} bars={bars} unit="%" lang={lang} maxValue={100} onOpen={onOpenChild} />
+          ) : (
+            <p className="py-1 text-2xs text-neutral-400">{t("compare.notTracked")}</p>
+          )}
+        </div>
       )}
     </Card>
   );

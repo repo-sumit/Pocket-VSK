@@ -2,20 +2,25 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useScope, useScorecard } from "@/hooks";
 import { useT } from "@/i18n";
 import { useCompare } from "@/components/compare/CompareContext";
+import { studentRetentionVisible, RETENTION_SUBDOMAIN_ID } from "@/lib/displayPolicy";
+import { GSQAC_AREAS } from "@/config/gsqac";
 import { Card, StatusDot } from "@/components/ui/atoms";
 import { KpiCardAuto } from "@/components/ui/MultiMetricKpiCard";
 import { BalancedKpiGrid, getKpiCardLayoutWeight } from "@/components/ui/BalancedKpiGrid";
 import { GsqacGradeLegend } from "@/components/ui/GsqacGradeLegend";
+import { GsqacOverallCard, GsqacAreaCard } from "@/components/ui/GsqacCards";
 import { ChevronRight } from "@/components/ui/Icon";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { BackLink } from "@/components/layout/PageHeader";
 import { PageSection, PageGrid } from "@/components/layout/PageSection";
 
 /**
- * Domain view — tier 2 of the 3-click drill. Back link → indicator section
- * (Administration shows its sub-domains first). The n-1 child comparison now
- * lives INSIDE each KPI card, revealed by the top-bar Compare action — there is
- * no standalone bottom comparison panel.
+ * Domain view — tier 2 of the 3-click drill. Back link → indicator section.
+ *  • School Quality (GSQAC output) shows the overall score card + GSQAC AREA
+ *    score cards (drill into Area → Sub-domain → Indicators), not operational KPI cards.
+ *  • Administration shows its sub-domains first (Student Retention gated by date).
+ *  • Other domains list their indicator cards in a balanced two-column grid.
+ * The n-1 child comparison lives INSIDE each KPI card (Compare action).
  */
 export default function DomainView() {
   const { domainId } = useParams();
@@ -37,16 +42,32 @@ export default function DomainView() {
   }
 
   const parentName = sc.parent ? tn(sc.parent.entity.name, sc.parent.entity.name_gu) : undefined;
+  const isGsqac = ds.domain.kind === "output";
+  // Student Retention is date-gated (visible Oct 1 → AY end); demo keeps it visible.
+  const visibleSubs = ds.subScores.filter((ss) => ss.sub.id !== RETENTION_SUBDOMAIN_ID || studentRetentionVisible());
 
   return (
     <ScreenContainer>
       <BackLink label={t("nav.home")} onClick={() => navigate("/app")} />
 
-      {/* sub-domains (Administration) → tier-3 drill */}
-      {ds.subScores.length > 0 ? (
+      {isGsqac ? (
+        /* ── School Quality (GSQAC) — score-card drilldown ── */
+        <>
+          <GsqacOverallCard lang={lang} />
+          <PageSection title={t("gsqac.areas")}>
+            <PageGrid cols="domain">
+              {GSQAC_AREAS.map((a) => (
+                <GsqacAreaCard key={a.key} area={a} lang={lang} onOpen={() => navigate(`/app/gsqac/${a.key}`)} />
+              ))}
+            </PageGrid>
+          </PageSection>
+          <GsqacGradeLegend />
+        </>
+      ) : visibleSubs.length > 0 ? (
+        /* ── Administration — sub-domain nav → tier-3 drill ── */
         <PageSection title={t("scorecard.subDomains")}>
           <PageGrid cols="two" className="gap-2">
-            {ds.subScores.map((ss) => (
+            {visibleSubs.map((ss) => (
               <button
                 key={ss.sub.id}
                 onClick={() => navigate(`/app/domain/${ds.domain.id}/${ss.sub.id}`)}
@@ -63,6 +84,7 @@ export default function DomainView() {
           </PageGrid>
         </PageSection>
       ) : (
+        /* ── Indicator listing (balanced two-column grid) ── */
         <PageSection title={t("domain.kpisIn", { name: tn(ds.domain.name, ds.domain.name_gu) })}>
           <BalancedKpiGrid
             items={ds.records}
@@ -82,9 +104,6 @@ export default function DomainView() {
           />
         </PageSection>
       )}
-
-      {/* School Quality (GSQAC output) — grade-scale legend at the foot of the page */}
-      {ds.domain.kind === "output" && <GsqacGradeLegend />}
     </ScreenContainer>
   );
 }

@@ -9,6 +9,7 @@ import Login from "@/screens/Login";
 const ScorecardHome = lazy(() => import("@/screens/ScorecardHome"));
 const DomainView = lazy(() => import("@/screens/DomainView"));
 const SubDomainView = lazy(() => import("@/screens/SubDomainView"));
+const GsqacAreaView = lazy(() => import("@/screens/GsqacAreaView"));
 const KpiDetail = lazy(() => import("@/screens/KpiDetail"));
 const Export = lazy(() => import("@/screens/Export"));
 const NotFound = lazy(() => import("@/screens/NotFound"));
@@ -38,6 +39,7 @@ export default function App() {
             <Route index element={<ScorecardHome />} />
             <Route path="domain/:domainId" element={<DomainView />} />
             <Route path="domain/:domainId/:subId" element={<SubDomainView />} />
+            <Route path="gsqac/:areaKey" element={<GsqacAreaView />} />
             <Route path="kpi/:kpiId" element={<KpiDetail />} />
             {/* standalone Compare & Leaderboard are retired — old links land on the scorecard */}
             <Route path="compare" element={<Navigate to="/app" replace />} />

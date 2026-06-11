@@ -38,7 +38,6 @@ export default function ScorecardHome() {
 
   const greeting = t(`greeting.${greetingKey()}`);
   const displayName = user ? tn(user.name, user.name_gu) || t(`roles.${user.role}`) : "";
-  const designation = user ? user.designation || t(`roles.${user.role}`) : "";
 
   const statusOf = (v: number | null): RagStatus => (v == null ? "na" : statusFromGrade(gradeFor(v, fw.rating_bands).group));
   const selectedSet = new Set(selectedIds);
@@ -56,7 +55,6 @@ export default function ScorecardHome() {
 
   const comparable = !!childLevel;
   const chartTitle = childLevel ? t("compare.chartTitle", { level: t(`levels.${childLevel}`) }) : "";
-  const hint = childLevel ? t("compare.hint", { level: t(`levels.${childLevel}`).toLowerCase() }) : "";
   const drillChild = (id: string) => setScope(id);
 
   return (
@@ -64,7 +62,7 @@ export default function ScorecardHome() {
       {/* compact, context-aware greeting (entity + parent live in the navigator) */}
       <div className="min-w-0">
         <h1 className="truncate text-lg font-extrabold tracking-tight text-neutral-900 sm:text-xl">{greeting}, {displayName}</h1>
-        <p className="truncate text-xs text-neutral-500">{designation} · {t("hierarchy.viewingLevel", { level: levelLabel })}</p>
+        <p className="truncate text-xs text-neutral-500">{t("hierarchy.youViewing", { level: levelLabel.toLowerCase() })}</p>
       </div>
 
       <PageSection title={t("scorecard.domainsHeader")}>
@@ -83,7 +81,6 @@ export default function ScorecardHome() {
                 comparing={applied}
                 bars={childBars(d.domain.id)}
                 chartTitle={chartTitle}
-                hint={hint}
                 onDrill={() => navigate(`/app/domain/${d.domain.id}`)}
                 onOpenChild={drillChild}
               />
@@ -105,7 +102,6 @@ export default function ScorecardHome() {
               comparing={applied}
               bars={childBars(OUTPUT_DOMAIN_ID)}
               chartTitle={chartTitle}
-              hint={hint}
               onDrill={() => navigate(`/app/domain/${OUTPUT_DOMAIN_ID}`)}
               onOpenChild={drillChild}
             />

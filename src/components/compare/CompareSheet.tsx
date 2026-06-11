@@ -91,12 +91,13 @@ export function CompareSheet({
           </div>
         </div>
 
-        <div className="flex items-center justify-between px-5 pb-1.5">
-          <span className="text-2xs font-bold text-neutral-400">{t("compare.selectedOf", { n: sel.length, total: all.length })}</span>
+        <div className="flex items-center justify-between gap-2 px-5 pb-2">
+          <span className="text-xs font-bold text-neutral-400">{t("compare.selectedOf", { n: sel.length, total: all.length })}</span>
+          {/* large, easy-to-tap pill (≥40px) — not tiny text */}
           <button
             type="button"
             onClick={() => setSel(allChecked ? [] : all.map((c) => c.id))}
-            className="text-2xs font-bold text-primary-600 hover:text-primary-700"
+            className="inline-flex h-10 items-center rounded-full border border-line bg-white px-4 text-xs font-bold text-primary-700 transition-colors hover:bg-primary-50"
           >
             {allChecked ? t("common.clearAll") : t("common.selectAll")}
           </button>

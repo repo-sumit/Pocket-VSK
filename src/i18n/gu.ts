@@ -46,10 +46,12 @@ export const gu: Dict = {
     helpSchool: "શિક્ષક / આચાર્ય લોગિન માટે તમારી ૧૧-અંકની શાળા ID જરૂરી છે.",
     helpPin: "અધિકારી લોગિન માટે ૪-અંકનો PIN જરૂરી છે.",
   },
-  nav: { home: "સ્કોરકાર્ડ", export: "નિકાસ", logout: "લોગ આઉટ", language: "English", menu: "મેનુ", toggleLanguage: "ભાષા બદલો", drillDown: "{level} પર જાઓ" },
+  nav: { home: "સ્કોરકાર્ડ", export: "નિકાસ", share: "શેર કરો", filter: "ફિલ્ટર", logout: "લોગ આઉટ", language: "English", menu: "મેનુ", toggleLanguage: "ભાષા બદલો", drillDown: "{level} પર જાઓ" },
+  filters: { title: "ફિલ્ટર", schoolType: "શાળાનો પ્રકાર", language: "ભાષા", english: "English", gujarati: "ગુજરાતી", done: "થઈ ગયું" },
   hierarchy: {
     viewing: "{level} જોઈ રહ્યા છો",
     viewingLevel: "{level} સ્તર જોઈ રહ્યા છો",
+    youViewing: "તમે {level} સ્તર જોઈ રહ્યા છો",
     parent: "મૂળ",
     up: "{level} પર ઉપર જાઓ",
     upTop: "તમે તમારા કાર્યક્ષેત્રની ટોચ પર છો",
@@ -99,6 +101,12 @@ export const gu: Dict = {
   framework: { label: "ફ્રેમવર્ક", switch: "ફ્રેમવર્ક બદલો" },
   greeting: { morning: "સુપ્રભાત", afternoon: "નમસ્કાર", evening: "શુભ સાંજ" },
   pmShri: { label: "PM SHRI", all: "બધી શાળાઓ", pmshri: "PM SHRI શાળાઓ", non: "બિન-PM SHRI શાળાઓ", aspire: "આકાંક્ષી ટ્રેકર" },
+  gsqac: {
+    overall: "એકંદર GSQAC", outOf: "{got} / {max}", subdomains: "{n} પેટા-ક્ષેત્રો", subdomainsOne: "{n} પેટા-ક્ષેત્ર",
+    areas: "GSQAC ક્ષેત્રો", indicators: "સૂચકાંકો", selectSub: "સૂચકાંકો જોવા માટે પેટા-ક્ષેત્ર પસંદ કરો",
+    school: "શાળા", district: "જિલ્લો", state: "રાજ્ય", comparison: "શાળા vs જિલ્લો vs રાજ્ય",
+    framework: "5 GSQAC ક્ષેત્રોમાં 1000 ગુણમાંથી સ્કોર.",
+  },
   atRisk: { label: "જોખમમાં", tooltip: "બહુવિધ શૈક્ષણિક અને વર્તણૂકીય માપદંડોના આધારે સર્વગ્રાહી રીતે ઓળખાયેલ." },
   teacher: {
     tpdJourney: "તમારી TPD યાત્રા", progress: "પ્રગતિ", target: "લક્ષ્ય", hrs: "કલાક", sevenDay: "૭-દિવસની સંલગ્નતા",

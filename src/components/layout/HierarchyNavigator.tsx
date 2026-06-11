@@ -5,7 +5,75 @@ import type { Entity } from "@/types";
 import { useScope } from "@/hooks";
 import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
-import { ChevronLeft, ChevronRight, Search, X } from "../ui/Icon";
+import { ChevronLeft, ChevronRight, Search, X, CircleChevronLeft, CircleChevronRight } from "../ui/Icon";
+
+/**
+ * Compact in-header navigator (latest design) — the center of the mobile header:
+ *   ‹circle›   EntityName / Level   ›circle›
+ * Left circled-arrow steps one level up (bounded by the user's home scope); the
+ * centre label + right circled-arrow open the next-level picker. Drop-in for the
+ * header on every page so scope is always one tap away. Same picker as the pill.
+ */
+export function HeaderNav({ className }: { className?: string }) {
+  const { entity, trail, children, childLevel, setScope } = useScope();
+  const { t, tn } = useT();
+  const navigate = useNavigate();
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  if (!entity) return null;
+  const parent = trail.length > 1 ? trail[trail.length - 2] : null;
+  const canDrill = !!childLevel && children.length > 0;
+  const levelLabel = t(`levels.${entity.level}`);
+  const goTo = (id: string) => { setScope(id); navigate("/app"); };
+
+  return (
+    <div className={cn("flex min-w-0 items-center justify-center gap-1", className)}>
+      <button
+        type="button"
+        disabled={!parent}
+        onClick={() => parent && goTo(parent.id)}
+        aria-label={parent ? t("hierarchy.up", { level: t(`levels.${parent.level}`) }) : t("hierarchy.upTop")}
+        title={parent ? t("hierarchy.up", { level: t(`levels.${parent.level}`) }) : t("hierarchy.upTop")}
+        className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full transition-colors", parent ? "text-neutral-500 hover:bg-neutral-100 active:bg-neutral-200" : "text-neutral-200")}
+      >
+        <CircleChevronLeft size={24} />
+      </button>
+      <button
+        type="button"
+        disabled={!canDrill}
+        onClick={() => canDrill && setPickerOpen(true)}
+        className={cn("flex min-w-0 flex-col items-center px-1 py-0.5 text-center", canDrill && "rounded-lg hover:bg-neutral-50")}
+        aria-label={canDrill ? t("hierarchy.change", { level: t(`levels.${childLevel!}`) }) : entityName(entity, tn)}
+      >
+        <span className="block max-w-[46vw] truncate text-sm font-extrabold leading-tight text-neutral-900 sm:max-w-[16rem]">{entityName(entity, tn)}</span>
+        <span className="block text-2xs font-medium leading-tight text-neutral-400">{levelLabel}</span>
+      </button>
+      <button
+        type="button"
+        disabled={!canDrill}
+        onClick={() => canDrill && setPickerOpen(true)}
+        aria-label={canDrill ? t("hierarchy.change", { level: t(`levels.${childLevel!}`) }) : t("hierarchy.noChild", { level: levelLabel })}
+        title={canDrill ? t("hierarchy.change", { level: t(`levels.${childLevel!}`) }) : t("hierarchy.noChild", { level: levelLabel })}
+        className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full transition-colors", canDrill ? "text-neutral-500 hover:bg-neutral-100 active:bg-neutral-200" : "text-neutral-200")}
+      >
+        <CircleChevronRight size={24} />
+      </button>
+      {pickerOpen && childLevel && (
+        <ChildPicker
+          levelLabel={t(`levels.${childLevel}`)}
+          children={children}
+          currentId={entity.id}
+          onPick={(id) => { setPickerOpen(false); goTo(id); }}
+          onClose={() => setPickerOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function entityName(entity: Entity, tn: (en: string, gu?: string) => string): string {
+  return tn(entity.name, entity.name_gu);
+}
 
 /**
  * Smart hierarchy navigator — replaces the long breadcrumb (which broke on
@@ -158,7 +226,7 @@ function NavArrow({ dir, disabled, label, onClick }: { dir: "left" | "right"; di
  * Next-level picker — a bottom sheet on mobile (thumb-reachable, big tap rows),
  * a centred card on desktop. Search appears for long lists (districts, schools).
  */
-function ChildPicker({
+export function ChildPicker({
   levelLabel, children, currentId, onPick, onClose,
 }: {
   levelLabel: string;

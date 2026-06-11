@@ -4,7 +4,7 @@ import { useScope, useKpiRecord, useKpiMetrics, useFramework } from "@/hooks";
 import { useT, type Lang } from "@/i18n";
 import { rag } from "@/lib/colors";
 import { resolveMetricLabel } from "@/lib/format";
-import { shouldShowSource } from "@/lib/displayPolicy";
+import { shouldShowSource, displayFrequency } from "@/lib/displayPolicy";
 import { buildTrend, trendTitleKey, getLastUpdatedLabel } from "@/lib/trend";
 import { Card, SectionLabel, EmptyNA } from "@/components/ui/atoms";
 import { TrendChart, MultiTrendChart } from "@/components/ui/TrendChart";
@@ -51,7 +51,7 @@ export default function KpiDetail() {
         {domain && <p className="text-xs font-semibold text-primary-600">{tn(domain.name, domain.name_gu)}</p>}
         <h1 className="mt-0.5 text-xl font-extrabold leading-snug text-neutral-900">{name}</h1>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs text-neutral-400">
-          <FrequencyBadge frequency={kpi.frequency} />
+          <FrequencyBadge frequency={displayFrequency(kpi)} />
           {luLabel && <span>· {luLabel}</span>}
           {shouldShowSource("detail") && (
             <span className="inline-flex items-center gap-1 truncate" title={kpi.data_source}>

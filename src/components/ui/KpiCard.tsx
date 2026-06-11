@@ -3,7 +3,7 @@ import { deltaToneClass, valueToneClass } from "@/lib/colors";
 import { peerAvg, peerLevelOf } from "@/lib/peer";
 import { buildTrend, getLastUpdatedLabel } from "@/lib/trend";
 import { getSingleMetricValueSuffix, formatValue } from "@/lib/format";
-import { shouldShowCardDelta } from "@/lib/displayPolicy";
+import { shouldShowCardDelta, displayFrequency } from "@/lib/displayPolicy";
 import { useT, type Lang } from "@/i18n";
 import { FrequencyDelta } from "./FrequencyDelta";
 import { KpiCardShell, KpiCardHeader, KpiInlineRow } from "./kpiCardParts";
@@ -46,7 +46,7 @@ export function KpiCard({
 
   return (
     <KpiCardShell onClick={onClick} compare={<KpiCompareSection kpi={kpi} />}>
-      <KpiCardHeader title={name} frequency={kpi.frequency} context={lastUpdated} />
+      <KpiCardHeader title={name} frequency={displayFrequency(kpi)} context={lastUpdated} />
 
       {/* inline value (+ short suffix) · N+1 comparison (+ allowed delta) right-aligned */}
       <div className="mt-2">

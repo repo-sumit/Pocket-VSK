@@ -86,6 +86,9 @@ function monthIndexOf(note: string): number {
  * Returns a bare label (no prefix) so callers can wrap it ("as on …", "Yearly · …").
  */
 export function getLastUpdatedLabel(kpi: KpiDef, date: Date, lang: Lang): string {
+  // Student Retention (Re-enrolment / Identified Dropout) shows a static demo
+  // as-on date — never "11 Jun" / "Jun 2026". Pairs with displayFrequency → "Daily".
+  if (kpi.id === "ret_reenroll" || kpi.id === "ret_dropout") return lang === "gu" ? "૧ ઑક્ટો" : "1st Oct";
   const cadence = cadenceOf(kpi.frequency);
   const months = lang === "gu" ? MONTHS_GU : MONTHS_EN;
   if (cadence === "daily") return getWorkingDateLabel(date, lang);

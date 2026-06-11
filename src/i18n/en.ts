@@ -44,11 +44,14 @@ export const en = {
     helpSchool: "Teacher / Principal login requires your 11-digit School ID.",
     helpPin: "Officer login requires a 4-digit PIN.",
   },
-  nav: { home: "Scorecard", export: "Export", logout: "Log out", language: "ગુજરાતી", menu: "Menu", toggleLanguage: "Switch language", drillDown: "Go to {level}" },
+  nav: { home: "Scorecard", export: "Export", share: "Share", filter: "Filter", logout: "Log out", language: "ગુજરાતી", menu: "Menu", toggleLanguage: "Switch language", drillDown: "Go to {level}" },
+  // consolidated filter sheet (school type + language) — opened by the header funnel icon
+  filters: { title: "Filters", schoolType: "School Type", language: "Language", english: "English", gujarati: "ગુજરાતી", done: "Done" },
   // smart hierarchy navigator (replaces the long breadcrumb on mobile)
   hierarchy: {
     viewing: "Viewing {level}",
     viewingLevel: "viewing {level} level",
+    youViewing: "You are viewing {level} level",
     parent: "Parent",
     up: "Go up to {level}",
     upTop: "You are at the top of your scope",
@@ -98,6 +101,13 @@ export const en = {
   framework: { label: "Framework", switch: "Switch framework" },
   greeting: { morning: "Good morning", afternoon: "Good afternoon", evening: "Good evening" },
   pmShri: { label: "PM SHRI", all: "All Schools", pmshri: "PM SHRI Schools", non: "Non-PM SHRI Schools", aspire: "Aspirational tracker" },
+  // GSQAC (School Quality) score-card drilldown
+  gsqac: {
+    overall: "Overall GSQAC", outOf: "{got} / {max}", subdomains: "{n} sub-domains", subdomainsOne: "{n} sub-domain",
+    areas: "GSQAC areas", indicators: "Indicators", selectSub: "Select a sub-domain to see its indicators",
+    school: "School", district: "District", state: "State", comparison: "School vs District vs State",
+    framework: "Scored out of 1000 marks across 5 GSQAC areas.",
+  },
   atRisk: { label: "At Risk", tooltip: "Identified holistically based on multiple academic and behavioural parameters." },
   teacher: {
     tpdJourney: "Your TPD Journey", progress: "Progress", target: "target", hrs: "hrs", sevenDay: "7-day engagement",
