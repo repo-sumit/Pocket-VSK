@@ -6,9 +6,10 @@ import { useT } from "@/i18n";
 import { gsqacAreaByKey, gsqacGrade, gsqacStatus } from "@/config/gsqac";
 import { Card } from "@/components/ui/atoms";
 import { RatingBadge } from "@/components/ui/RatingBadge";
-import { GsqacSubdomainCard } from "@/components/ui/GsqacCards";
+import { GsqacSubdomainCard, GsqacCompareSection } from "@/components/ui/GsqacCards";
 import { GsqacGradeLegend } from "@/components/ui/GsqacGradeLegend";
 import { ChildComparisonBars, type ChildBar } from "@/components/ui/ComparisonBars";
+import { useCompare } from "@/components/compare/CompareContext";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { BackLink } from "@/components/layout/PageHeader";
 import { PageSection } from "@/components/layout/PageSection";
@@ -23,6 +24,7 @@ import { PageSection } from "@/components/layout/PageSection";
 export default function GsqacAreaView() {
   const { areaKey } = useParams();
   const { t, tn, lang } = useT();
+  const { applied: compareApplied } = useCompare();
   const navigate = useNavigate();
   const area = gsqacAreaByKey(areaKey);
 
@@ -60,9 +62,14 @@ export default function GsqacAreaView() {
           </div>
           <RatingBadge grade={grade} size="lg" className="shrink-0" />
         </div>
-        <div className="mt-3 border-t border-line/60 pt-3">
-          <ChildComparisonBars title={t("gsqac.comparison")} bars={cmpBars} unit="%" lang={lang} maxValue={100} noSort />
-        </div>
+        {/* §7 — before Compare: static District·State reference. After Compare: the
+            selected N-1 child units (no redundant current-entity bar either way). */}
+        {!compareApplied && (
+          <div className="mt-3 border-t border-line/60 pt-3">
+            <ChildComparisonBars title={t("gsqac.comparison")} bars={cmpBars} unit="%" lang={lang} maxValue={100} noSort />
+          </div>
+        )}
+        <GsqacCompareSection seedKey={area.key} base={area.percent} lang={lang} />
       </Card>
 
       {/* sub-domain score cards → tap to reveal indicators */}

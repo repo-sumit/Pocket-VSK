@@ -300,3 +300,21 @@ export function gsqacIndicatorScore(subScore: number, i: number): number {
     Math.min(100, Math.round(subScore + offsets[i % offsets.length])),
   );
 }
+
+/**
+ * Deterministic GSQAC comparison value for a child unit (§4) — a stable score near
+ * the card's own headline value, keyed by (childId, seedKey). Self-contained mock so
+ * the embedded Compare bars never change on re-render (GSQAC has no provider series).
+ * Clamped to a realistic 20–99 % GSQAC range; unit stays percent throughout (§5).
+ */
+export function gsqacCompareValue(childId: string, seedKey: string, base: number): number {
+  let h = 2166136261;
+  const s = `${childId}|${seedKey}`;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const r = ((h >>> 0) % 1000) / 1000; // 0..1, deterministic
+  const v = base + (r - 0.5) * 16; // ±8 around the headline score
+  return Math.round(Math.max(20, Math.min(99, v)) * 10) / 10;
+}

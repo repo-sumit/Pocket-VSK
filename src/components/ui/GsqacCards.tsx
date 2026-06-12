@@ -3,11 +3,39 @@ import { cn } from "@/lib/cn";
 import { rag } from "@/lib/colors";
 import { locNum } from "@/lib/format";
 import { useT, type Lang } from "@/i18n";
-import { GSQAC_OVERALL, gsqacGrade, gsqacStatus, gsqacIndicatorScore, type GsqacArea, type GsqacSubdomain } from "@/config/gsqac";
+import { GSQAC_OVERALL, gsqacGrade, gsqacStatus, gsqacIndicatorScore, gsqacCompareValue, type GsqacArea, type GsqacSubdomain } from "@/config/gsqac";
+import { useCompare } from "@/components/compare/CompareContext";
 import { Card } from "./atoms";
 import { RatingBadge } from "./RatingBadge";
 import { CardChevron } from "./kpiCardParts";
+import { ChildComparisonBars, type ChildBar } from "./ComparisonBars";
 import { ChevronDown, Award } from "./Icon";
+
+/**
+ * Embedded GSQAC Compare chart — the same pattern as `KpiCompareSection`, but GSQAC
+ * scores live in a self-contained config (not the provider), so it builds the bars
+ * from `gsqacCompareValue` (deterministic, §4) instead of `useKpiChildSeries`. Renders
+ * NOTHING until Compare is applied (cards stay compact), then shows the selected N-1
+ * child units in percent (§5), worst-first, via the shared `ChildComparisonBars`.
+ */
+export function GsqacCompareSection({ seedKey, base, lang, className }: { seedKey: string; base: number; lang: Lang; className?: string }) {
+  const { childLevel, applied, selected } = useCompare();
+  const { t, tn } = useT();
+  // GSQAC is school-level accreditation — valid child compares are State→District→
+  // Block→Cluster→School only. Below school (grade/section) has no GSQAC data, so
+  // show no chart there (§1). Also nothing before Compare is applied.
+  if (!childLevel || !applied || childLevel === "grade" || childLevel === "section") return null;
+  const bars: ChildBar[] = selected.map((e) => {
+    const value = gsqacCompareValue(e.id, seedKey, base);
+    return { id: e.id, label: tn(e.name, e.name_gu), value, status: gsqacStatus(value) };
+  });
+  if (!bars.length) return null;
+  return (
+    <div className={cn("mt-3 border-t border-line/60 pt-3", className)}>
+      <ChildComparisonBars title={t("compare.chartTitle", { level: t(`levels.${childLevel}`) })} bars={bars} unit="%" lang={lang} maxValue={100} />
+    </div>
+  );
+}
 
 /** Overall GSQAC score card — % · grade · marks out of 1000. */
 export function GsqacOverallCard({ lang }: { lang: Lang }) {
@@ -15,19 +43,22 @@ export function GsqacOverallCard({ lang }: { lang: Lang }) {
   const grade = gsqacGrade(GSQAC_OVERALL.percent);
   const c = rag(gsqacStatus(GSQAC_OVERALL.percent));
   return (
-    <Card className="card-pad flex items-center gap-4">
-      <span className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-2xl", c.soft)}>
-        <Award size={24} className={c.text} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-2xs font-bold uppercase tracking-wide text-neutral-400">{t("gsqac.overall")}</p>
-        <div className="mt-0.5 flex items-baseline gap-2">
-          <span className={cn("text-3xl font-extrabold tnum leading-none", c.text)}>{locNum(GSQAC_OVERALL.percent, lang)}%</span>
-          <span className="text-xs font-semibold text-neutral-500">{locNum(GSQAC_OVERALL.got, lang)} / {locNum(GSQAC_OVERALL.max, lang)}</span>
+    <Card className="card-pad">
+      <div className="flex items-center gap-4">
+        <span className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-2xl", c.soft)}>
+          <Award size={24} className={c.text} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-2xs font-bold uppercase tracking-wide text-neutral-400">{t("gsqac.overall")}</p>
+          <div className="mt-0.5 flex items-baseline gap-2">
+            <span className={cn("text-3xl font-extrabold tnum leading-none", c.text)}>{locNum(GSQAC_OVERALL.percent, lang)}%</span>
+            <span className="text-xs font-semibold text-neutral-500">{locNum(GSQAC_OVERALL.got, lang)} / {locNum(GSQAC_OVERALL.max, lang)}</span>
+          </div>
+          <p className="mt-1 text-2xs text-neutral-400">{t("gsqac.framework")}</p>
         </div>
-        <p className="mt-1 text-2xs text-neutral-400">{t("gsqac.framework")}</p>
+        <RatingBadge grade={grade} size="md" className="shrink-0" />
       </div>
-      <RatingBadge grade={grade} size="md" className="shrink-0" />
+      <GsqacCompareSection seedKey="gsqac_overall" base={GSQAC_OVERALL.percent} lang={lang} />
     </Card>
   );
 }
@@ -55,6 +86,7 @@ export function GsqacAreaCard({ area, lang, onOpen }: { area: GsqacArea; lang: L
           <span className="tnum">{t("gsqac.outOf", { got: locNum(area.got, lang), max: locNum(area.max, lang) })}</span>
         </div>
       </button>
+      <GsqacCompareSection seedKey={area.key} base={area.percent} lang={lang} />
     </Card>
   );
 }
@@ -92,6 +124,7 @@ export function GsqacSubdomainCard({ sub, lang }: { sub: GsqacSubdomain; lang: L
           </ul>
         </div>
       )}
+      <GsqacCompareSection seedKey={sub.id} base={sub.score} lang={lang} className="px-4 pb-3" />
     </Card>
   );
 }

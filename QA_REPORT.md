@@ -1,5 +1,58 @@
 # Pocket VSK — QA Report
 
+## GSQAC Compare support — embedded comparison charts on School Quality cards (Pass 32)
+
+Added embedded Compare charts to the **GSQAC / School Quality** cards so they behave like the
+Attendance / Assessment / Administration cards: when Compare is applied, each GSQAC card shows a
+bar chart of the selected N-1 hierarchy units. Compare was already reachable on these pages — the
+cards just weren't drawing the charts.
+
+### What changed
+
+- **New shared `GsqacCompareSection`** (`components/ui/GsqacCards.tsx`) — mirrors
+  `KpiCompareSection` exactly (renders nothing until Compare is applied, then a
+  `ChildComparisonBars` strip of the selected child units, worst-first, percent units, max 100).
+  It reuses the shared **`ChildComparisonBars`** + **`CompareContext`** rather than a bespoke
+  chart. GSQAC scores live in a self-contained config (not the provider/engine), so the bar
+  values come from a new deterministic helper instead of `useKpiChildSeries`.
+- **`config/gsqac.ts` → `gsqacCompareValue(childId, seedKey, base)`** — deterministic, stable
+  per-(child, card) GSQAC % near the card's own headline score (±8, clamped 20–99). No
+  random-on-render; same scope always renders the same bars (§4). Percent throughout (§5).
+- **GSQAC domain page** (`/app/domain/school_quality`): the **Overall GSQAC** card and all five
+  **area** cards (Teaching and Learning, School Administration, Co-scholastic Activities, Usage of
+  Resources, State-Level Competitive Exams) now render the compare chart when applied
+  (`GsqacOverallCard` restructured to a column so the chart sits below the score row;
+  `GsqacAreaCard` renders the chart outside its tappable button).
+- **GSQAC area page** (`/app/gsqac/:areaKey`): every **sub-domain** card
+  (`GsqacSubdomainCard`) renders the compare chart when applied. The **area headline** card now
+  shows the static District·State reference **only before Compare**; once Compare is applied it
+  shows the selected N-1 child units instead (§7 — never a redundant current-entity bar either
+  way).
+- **Level guard (§1):** GSQAC is school-level accreditation, so the compare chart only renders for
+  valid parent→child levels (State→District→Block→Cluster→School). Below school (grade/section)
+  has no GSQAC data, so no empty chart is shown.
+
+### Consistency / safety
+
+- Charts use the shared blue `ChildComparisonBars` (same baseline-aligned fixed-height tracks,
+  thin bars, 2-line labels, 1–8 spread / 9+ chart-strip-only horizontal scroll). No new chart
+  component, no baseline/overflow regressions (§6).
+- Compare stays hidden on `/app/kpi/*` (unchanged). GSQAC scores, grade bands, formulas, routing,
+  Compare-sheet behaviour, PARAKH, and the non-GSQAC domains are untouched (§9).
+
+### Files changed
+
+`config/gsqac.ts` (gsqacCompareValue), `components/ui/GsqacCards.tsx` (GsqacCompareSection +
+wired into Overall / area / sub-domain cards), `screens/GsqacAreaView.tsx` (area-headline:
+static reference before Compare, selected children after).
+
+### Build
+
+`tsc --noEmit` ✓ · `vite build` ✓ (`built in 26.68s`; only the pre-existing `entities` seed
+chunk-size warning). Playwright not run, per standing instruction.
+
+---
+
 ## Latest Pocket VSK design implementation — role-aware, chevron-only cards, PARAKH-in-Assessment (Pass 31)
 
 **Design source implemented:** Claude Design handoff `aBSC3l6AJc-fw_qaqXYmqA` →
