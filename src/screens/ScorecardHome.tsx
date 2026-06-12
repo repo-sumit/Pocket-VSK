@@ -8,8 +8,6 @@ import { gradeFor } from "@/config/ratingBands";
 import { OUTPUT_DOMAIN_ID } from "@/config/frameworks";
 import { statusFromGrade } from "@/engine";
 import { DomainInsightCard } from "@/components/ui/DomainInsightCard";
-import { ParakhCard, BoardCard } from "@/components/ui/ParakhCards";
-import { BOARD_RESULTS } from "@/config/parakh";
 import type { ChildBar } from "@/components/ui/ComparisonBars";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { PageSection, PageGrid } from "@/components/layout/PageSection";
@@ -111,16 +109,7 @@ export default function ScorecardHome() {
           )}
         </PageGrid>
       </PageSection>
-
-      {/* District focus (§18/§19) — PARAKH category + board results, district scope only. */}
-      {entity.level === "district" && (
-        <PageSection title={t("parakh.districtFocus")}>
-          <PageGrid cols="domain">
-            <ParakhCard district={tn(entity.name, entity.name_gu)} onOpen={() => navigate("/app/parakh")} />
-            {BOARD_RESULTS.map((b) => <BoardCard key={b.id} board={b} />)}
-          </PageGrid>
-        </PageSection>
-      )}
+      {/* PARAKH + board results moved into Assessment → district/state (§12). */}
     </ScreenContainer>
   );
 }

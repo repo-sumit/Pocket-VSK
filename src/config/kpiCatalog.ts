@@ -107,7 +107,7 @@ const BASE_PUBLISHED: Record<string, Pub> = {
   cpd_hours: { school: 38, cluster: 40, block: 42, district: 44, state: 46 }, // avg CPD hours (cap 50)
   cpd_50: { school: 65, cluster: 68, block: 71, district: 74, state: 78 },
   // Administration · Visits & Observations (school-and-above)
-  vis_crc_count: {
+  vis_CRCC_count: {
     school: 1.4,
     cluster: 1.6,
     block: 1.7,
@@ -394,7 +394,7 @@ type CatItem = Omit<KpiDef, "sort_order" | "level_representation"> & {
 const ATT = "Attendance bot";
 const SMA = "SMA";
 /** roles that see a column-J "No" (not-visible-to-teacher) indicator. */
-const NON_TEACHER = ["principal", "crc", "brc", "deo", "state"] as const;
+const NON_TEACHER = ["principal", "CRCC", "brc", "deo", "state"] as const;
 
 /** OGM indicators (object form). Defaults applied below: availableInDataLake:true,
  *  pmShriApplicable:true. `lowestLevel:"school"` ⇒ school-and-above (hidden at
@@ -524,8 +524,25 @@ const RAW: Array<
     ],
   },
 
-  // ── Assessment — result-first (§14): latest SAT result is the hero; the SAT
-  //    report-download compliance KPI moves to the end of the domain. ──
+  // ── Assessment (§13 order): SAT reports downloaded → latest SAT → previous SAT
+  //    → FLN → CET → CGMS. PARAKH + board result cards are injected by the screen. ──
+  {
+    id: "asm_remediation",
+    domain_id: "assessment",
+    name: "SAT reports downloaded in classrooms",
+    name_gu: "વર્ગખંડોમાં ડાઉનલોડ થયેલ SAT રિપોર્ટ",
+    unit: "%",
+    direction: "higher",
+    data_source: "Gyan Prabhav bot",
+    frequency: "Daily",
+    displayStrategy: "compliance",
+    showLastUpdatedOnUi: true,
+    suppressDelta: true,
+    formula:
+      "(Classrooms Where Report Was Downloaded / Total Classrooms) × 100",
+    description:
+      "Gyan Prabhav generates a SAT report card per classroom; this is the share of classrooms that downloaded it.",
+  },
   {
     id: "asm_sat2",
     domain_id: "assessment",
@@ -674,52 +691,32 @@ const RAW: Array<
     formula:
       "Success rate of CGMS (current year); year-on-year change. Class-8 participation = Present / Enrolled × 100.",
   },
-  // §14 — SAT report download moved to the END of Assessment (secondary, not the hero).
-  {
-    id: "asm_remediation",
-    domain_id: "assessment",
-    name: "SAT reports downloaded in classrooms",
-    name_gu: "વર્ગખંડોમાં ડાઉનલોડ થયેલ SAT રિપોર્ટ",
-    unit: "%",
-    direction: "higher",
-    data_source: "Gyan Prabhav bot",
-    frequency: "Daily",
-    displayStrategy: "compliance",
-    showLastUpdatedOnUi: true,
-    suppressDelta: true,
-    formula:
-      "(Classrooms Where Report Was Downloaded / Total Classrooms) × 100",
-    description:
-      "Gyan Prabhav generates a SAT report card per classroom; this is the share of classrooms that downloaded it.",
-  },
-
   // ── Administration · School Observation (Monthly · SMA · officer-only) ──
   {
-    id: "vis_crc_count",
+    id: "vis_CRCC_count",
     domain_id: "administration",
     sub_domain: "adm_visits",
-    name: "No of CRC/URC Visits per school",
-    name_gu: "શાળા દીઠ CRC/URC મુલાકાતની સંખ્યા",
+    name: "No of CRCC/URC Visits per school",
+    name_gu: "શાળા દીઠ CRCC/URC મુલાકાતની સંખ્યા",
     unit: "ratio",
     direction: "higher",
     data_source: SMA,
     availableInDataLake: false,
     frequency: "Monthly",
     displayStrategy: "count_with_rate",
-    hero: true,
     lowestLevel: "school",
     roleVisibility: [...NON_TEACHER],
     showLastUpdatedOnUi: true,
     target: "Max 3 / month",
-    formula: "Count of CRC/URC visits per school per month (max 3).",
+    formula: "Count of CRCC/URC visits per school per month (max 3).",
     description: "A count out of 3 per month — not a percentage.",
   },
   {
     id: "vis_obs_completion",
     domain_id: "administration",
     sub_domain: "adm_visits",
-    name: "School observations completed by CRC/URC",
-    name_gu: "CRC/URC દ્વારા પૂર્ણ શાળા નિરીક્ષણ",
+    name: "School observations completed by CRCC/URC",
+    name_gu: "CRCC/URC દ્વારા પૂર્ણ શાળા નિરીક્ષણ",
     unit: "%",
     direction: "higher",
     data_source: SMA,
@@ -788,8 +785,8 @@ const RAW: Array<
     id: "ad_gshala",
     domain_id: "administration",
     sub_domain: "adm_visits",
-    name: "GSHALA + GSHALA Plus usage",
-    name_gu: "GSHALA + GSHALA Plus ઉપયોગ",
+    name: "G-SHALA/ G-SHALA + usage",
+    name_gu: "G-SHALA/ G-SHALA + ઉપયોગ",
     unit: "%",
     direction: "higher",
     data_source: "LMS",
@@ -800,7 +797,7 @@ const RAW: Array<
     roleVisibility: [...NON_TEACHER],
     showLastUpdatedOnUi: true,
     formula:
-      "Active GSHALA + GSHALA Plus users / Total eligible teachers & students × 100 (combined).",
+      "Active G-SHALA\ G-SHALA Plus users / Total eligible teachers & students × 100 (combined).",
   },
   {
     id: "ad_smart",
@@ -922,6 +919,8 @@ const RAW: Array<
     availableInDataLake: false,
     frequency: "Daily",
     displayStrategy: "count_with_rate",
+    // §19 — Untracked Students is the Administration hero (was CRC/URC visits).
+    hero: true,
     lowestLevel: "school",
     showLastUpdatedOnUi: true,
     formula:
@@ -1074,7 +1073,7 @@ const RAW: Array<
   {
     id: "sq_d4",
     domain_id: "school_quality",
-    name: "Usage of Resources",
+    name: "usage of Resources",
     name_gu: "સંસાધનોનો ઉપયોગ",
     unit: "score",
     direction: "higher",
@@ -1172,7 +1171,7 @@ export const GSQAC_DOMAINS: {
   {
     key: "D4",
     kpiId: "sq_d4",
-    name: "Usage of Resources",
+    name: "usage of Resources",
     name_gu: "સંસાધનોનો ઉપયોગ",
   },
   {

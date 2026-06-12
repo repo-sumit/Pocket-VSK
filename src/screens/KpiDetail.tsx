@@ -10,6 +10,7 @@ import { Card, SectionLabel, EmptyNA } from "@/components/ui/atoms";
 import { TrendChart, MultiTrendChart } from "@/components/ui/TrendChart";
 import { FrequencyBadge } from "@/components/ui/DataBadges";
 import { Database } from "@/components/ui/Icon";
+import { RosterDetail } from "@/components/ui/RosterDetail";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { BackLink } from "@/components/layout/PageHeader";
 
@@ -21,15 +22,17 @@ import { BackLink } from "@/components/layout/PageHeader";
  */
 export default function KpiDetail() {
   const { kpiId } = useParams();
-  const { entity, currentId } = useScope();
+  const { user, entity, currentId, children, childLevel } = useScope();
   const fw = useFramework();
   const rec = useKpiRecord(kpiId, currentId);
   const metricRecs = useKpiMetrics(kpiId, currentId);
   const { t, tn, lang } = useT();
   const navigate = useNavigate();
 
-  if (!rec || !entity) return null;
+  if (!rec || !entity || !user) return null;
   const kpi = rec.kpi;
+  // att_chronic / ret_dropout render role-aware lists instead of a trend chart (§6/§18/§19).
+  const isRoster = kpi.id === "att_chronic" || kpi.id === "ret_dropout";
   const c = rag(rec.status);
   const na = rec.value == null;
   const domain = fw.domains.find((d) => d.id === kpi.domain_id);
@@ -62,9 +65,18 @@ export default function KpiDetail() {
         </div>
       </div>
 
-      {/* TREND — chart title includes KPI/metric name so graphs are unambiguous.
-          GSQAC multi-metric (CET & CGMS) → one chart, one line per sub-metric. */}
-      {isMulti ? (
+      {/* Role-aware roster (att_chronic / ret_dropout) shows lists, not a graph (§6/§18/§19). */}
+      {isRoster ? (
+        <RosterDetail
+          kind={kpi.id === "att_chronic" ? "absent" : "untracked"}
+          role={user.role}
+          level={entity.level}
+          value={rec.value}
+          units={children}
+          childLevel={childLevel}
+          lang={lang}
+        />
+      ) : isMulti ? (
         isGsqac ? (
           <GsqacMultiTrend recs={metricRecs} name={name} level={entity.level} lang={lang} />
         ) : (

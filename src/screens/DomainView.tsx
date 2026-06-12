@@ -9,7 +9,10 @@ import { KpiCardAuto } from "@/components/ui/MultiMetricKpiCard";
 import { BalancedKpiGrid, getKpiCardLayoutWeight } from "@/components/ui/BalancedKpiGrid";
 import { GsqacGradeLegend } from "@/components/ui/GsqacGradeLegend";
 import { GsqacOverallCard, GsqacAreaCard } from "@/components/ui/GsqacCards";
-import { KnowMore } from "@/components/ui/kpiCardParts";
+import { CardChevron } from "@/components/ui/kpiCardParts";
+import { ParakhSurveyCard } from "@/components/ui/ParakhSurveyCard";
+import { BoardCard } from "@/components/ui/ParakhCards";
+import { BOARD_RESULTS } from "@/config/parakh";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { BackLink } from "@/components/layout/PageHeader";
 import { PageSection, PageGrid } from "@/components/layout/PageSection";
@@ -43,6 +46,9 @@ export default function DomainView() {
 
   const parentName = sc.parent ? tn(sc.parent.entity.name, sc.parent.entity.name_gu) : undefined;
   const isGsqac = ds.domain.kind === "output";
+  // §12/§24 — PARAKH + board results live INSIDE Assessment, for district/state only.
+  const isAssessment = ds.domain.id === "assessment";
+  const isDistrictState = entity.level === "district" || entity.level === "state";
   // Student Retention is date-gated (visible Oct 1 → AY end); demo keeps it visible.
   const visibleSubs = ds.subScores.filter((ss) => ss.sub.id !== RETENTION_SUBDOMAIN_ID || studentRetentionVisible());
 
@@ -78,7 +84,7 @@ export default function DomainView() {
                   <span className="block truncate text-sm font-semibold text-neutral-900">{tn(ss.sub.name, ss.sub.name_gu)}</span>
                   <span className="text-2xs text-neutral-400">{ss.records.length} {t("scorecard.indicators")}</span>
                 </span>
-                <KnowMore />
+                <CardChevron />
               </button>
             ))}
           </PageGrid>
@@ -102,6 +108,14 @@ export default function DomainView() {
               />
             )}
           />
+          {/* §12/§13 — PARAKH + board results as continuous Assessment cards (no
+              separate "District Focus" / "Other assessments" heading, §7). */}
+          {isAssessment && isDistrictState && (
+            <PageGrid cols="domain" className="mt-3">
+              <ParakhSurveyCard districtName={entity.name} isState={entity.level === "state"} lang={lang} />
+              {BOARD_RESULTS.map((b) => <BoardCard key={b.id} board={b} />)}
+            </PageGrid>
+          )}
         </PageSection>
       )}
     </ScreenContainer>

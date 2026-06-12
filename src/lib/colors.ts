@@ -4,10 +4,50 @@ import type { Direction, RagStatus } from "@/types";
 // `text` uses the AA-dark variant (legible on white + soft bg); `bg`/`dot`/`hex`
 // keep the vivid fill colour for bars, dots and charts.
 export const RAG = {
-  green: { text: "text-rag-greenText", bg: "bg-rag-green", soft: "bg-rag-greenSoft", ring: "ring-rag-green/30", border: "border-rag-green/40", hex: "#16A34A", softHex: "#DCFCE7", dot: "bg-rag-green", label: { en: "On track", gu: "સારી સ્થિતિ" } },
-  amber: { text: "text-rag-amberText", bg: "bg-rag-amber", soft: "bg-rag-amberSoft", ring: "ring-rag-amber/30", border: "border-rag-amber/40", hex: "#F59E0B", softHex: "#FEF3C7", dot: "bg-rag-amber", label: { en: "Needs attention", gu: "ધ્યાન જરૂરી" } },
-  red: { text: "text-rag-redText", bg: "bg-rag-red", soft: "bg-rag-redSoft", ring: "ring-rag-red/30", border: "border-rag-red/40", hex: "#EF4444", softHex: "#FEE2E2", dot: "bg-rag-red", label: { en: "At risk", gu: "જોખમમાં" } },
-  na: { text: "text-rag-naText", bg: "bg-rag-na", soft: "bg-rag-naSoft", ring: "ring-rag-na/20", border: "border-rag-na/30", hex: "#9CA3AF", softHex: "#F1F3F6", dot: "bg-rag-na", label: { en: "NA", gu: "લાગુ નથી" } },
+  green: {
+    text: "text-rag-greenText",
+    bg: "bg-rag-green",
+    soft: "bg-rag-greenSoft",
+    ring: "ring-rag-green/30",
+    border: "border-rag-green/40",
+    hex: "#16A34A",
+    softHex: "#DCFCE7",
+    dot: "bg-rag-green",
+    label: { en: "On track", gu: "સારી સ્થિતિ" },
+  },
+  amber: {
+    text: "text-rag-amberText",
+    bg: "bg-rag-amber",
+    soft: "bg-rag-amberSoft",
+    ring: "ring-rag-amber/30",
+    border: "border-rag-amber/40",
+    hex: "#F59E0B",
+    softHex: "#FEF3C7",
+    dot: "bg-rag-amber",
+    label: { en: "Needs attention", gu: "ધ્યાન જરૂરી" },
+  },
+  red: {
+    text: "text-rag-redText",
+    bg: "bg-rag-red",
+    soft: "bg-rag-redSoft",
+    ring: "ring-rag-red/30",
+    border: "border-rag-red/40",
+    hex: "#EF4444",
+    softHex: "#FEE2E2",
+    dot: "bg-rag-red",
+    label: { en: "At risk", gu: "જોખમમાં" },
+  },
+  na: {
+    text: "text-rag-naText",
+    bg: "bg-rag-na",
+    soft: "bg-rag-naSoft",
+    ring: "ring-rag-na/20",
+    border: "border-rag-na/30",
+    hex: "#9CA3AF",
+    softHex: "#F1F3F6",
+    dot: "bg-rag-na",
+    label: { en: "NA", gu: "લાગુ નથી" },
+  },
 } as const satisfies Record<RagStatus, unknown>;
 
 export function rag(status: RagStatus) {
@@ -26,10 +66,14 @@ export function rag(status: RagStatus) {
  */
 export function valueToneClass(status: RagStatus): string {
   switch (status) {
-    case "green": return "text-rag-greenText";
-    case "red": return "text-rag-redText";
-    case "na": return "text-rag-naText";
-    default: return "text-neutral-900"; // amber / watch → neutral headline
+    case "green":
+      return "text-rag-greenText";
+    case "red":
+      return "text-rag-redText";
+    case "na":
+      return "text-rag-naText";
+    default:
+      return "text-neutral-900"; // amber / watch → neutral headline
   }
 }
 
@@ -40,25 +84,37 @@ export function deltaIsGood(delta: number, direction: Direction): boolean {
 
 /**
  * RAG status for one bar in an embedded Compare chart (the design's treatment):
- *  • ratio (CRC/URC visits, target 3) — absolute: ≥2 green · ≥1.3 amber · else red
+ *  • ratio (CRCC/URC visits, target 3) — absolute: ≥2 green · ≥1.3 amber · else red
  *  • lower-is-better OR count — RELATIVE within the compared set (worst third red …)
  *    so the units that need attention always stand out, whatever the absolute scale
  *  • higher-is-better % / score — absolute: ≥85 green · ≥72 amber · else red
  */
-export function compareBarStatus(value: number, unit: string, direction: Direction, all: number[]): RagStatus {
-  if (unit === "ratio") return value >= 2 ? "green" : value >= 1.3 ? "amber" : "red";
+export function compareBarStatus(
+  value: number,
+  unit: string,
+  direction: Direction,
+  all: number[],
+): RagStatus {
+  if (unit === "ratio")
+    return value >= 2 ? "green" : value >= 1.3 ? "amber" : "red";
   if (direction === "lower" || unit === "count") {
-    const mn = Math.min(...all), mx = Math.max(...all);
-    const t = (value - mn) / ((mx - mn) || 1);
+    const mn = Math.min(...all),
+      mx = Math.max(...all);
+    const t = (value - mn) / (mx - mn || 1);
     return t < 0.34 ? "green" : t < 0.67 ? "amber" : "red";
   }
   return value >= 85 ? "green" : value >= 72 ? "amber" : "red";
 }
 
 /** delta text-colour, direction-aware: good → green, flat → neutral, bad → red. */
-export function deltaToneClass(delta: number | null | undefined, direction: Direction): string {
+export function deltaToneClass(
+  delta: number | null | undefined,
+  direction: Direction,
+): string {
   if (delta == null || delta === 0) return "text-neutral-400";
-  return deltaIsGood(delta, direction) ? "text-rag-greenText" : "text-rag-redText";
+  return deltaIsGood(delta, direction)
+    ? "text-rag-greenText"
+    : "text-rag-redText";
 }
 
 /** GSQAC grade group → OFFICIAL grade colours (per GSQAC model documentation:
@@ -68,10 +124,30 @@ export function deltaToneClass(delta: number | null | undefined, direction: Dire
  *  official fill is too light to read as body text (the yellow B). Operational
  *  status (On Track / Watch / Needs Attention) stays in `RAG` — kept separate. */
 export const GRADE_GROUP = {
-  A: { text: "text-[#1B7F4B]", chip: "bg-[#1B7F4B]/10 text-[#1B7F4B]", hex: "#1B7F4B", glow: "from-emerald-500 to-green-700" },
-  B: { text: "text-[#B07E00]", chip: "bg-[#E0A400]/[0.14] text-[#B07E00]", hex: "#E0A400", glow: "from-amber-400 to-yellow-600" },
-  C: { text: "text-[#D33A2C]", chip: "bg-[#D33A2C]/[0.1] text-[#D33A2C]", hex: "#D33A2C", glow: "from-red-400 to-rose-600" },
-  D: { text: "text-[#2B2B2B]", chip: "bg-[#2B2B2B]/[0.08] text-[#2B2B2B]", hex: "#2B2B2B", glow: "from-neutral-600 to-neutral-900" },
+  A: {
+    text: "text-[#1B7F4B]",
+    chip: "bg-[#1B7F4B]/10 text-[#1B7F4B]",
+    hex: "#1B7F4B",
+    glow: "from-emerald-500 to-green-700",
+  },
+  B: {
+    text: "text-[#B07E00]",
+    chip: "bg-[#E0A400]/[0.14] text-[#B07E00]",
+    hex: "#E0A400",
+    glow: "from-amber-400 to-yellow-600",
+  },
+  C: {
+    text: "text-[#D33A2C]",
+    chip: "bg-[#D33A2C]/[0.1] text-[#D33A2C]",
+    hex: "#D33A2C",
+    glow: "from-red-400 to-rose-600",
+  },
+  D: {
+    text: "text-[#2B2B2B]",
+    chip: "bg-[#2B2B2B]/[0.08] text-[#2B2B2B]",
+    hex: "#2B2B2B",
+    glow: "from-neutral-600 to-neutral-900",
+  },
 } as const;
 
 export function gradeGroupOf(grade: string): "A" | "B" | "C" | "D" {
@@ -87,24 +163,77 @@ export const GSQAC_BAND_HEX: Record<string, string> = {
   "A3★": "#56AE57",
   "A2★": "#8BBF45",
   "A1★": "#C0CA33",
-  "B": "#E0A400",
-  "C": "#EF6C00",
-  "D": "#D33A2C",
+  B: "#E0A400",
+  C: "#EF6C00",
+  D: "#D33A2C",
 };
 
 /** Soft domain-accent tints — bg/ring reference the `tint` theme tokens
  *  (no raw hex in classes); `hex` is the chart-fill colour (a JS value). */
-export const ACCENT: Record<string, { bg: string; ring: string; icon: string; hex: string }> = {
-  blue: { bg: "bg-tint-blueBg", ring: "ring-tint-blueRing", icon: "text-sky-600", hex: "#38BDF8" },
-  mint: { bg: "bg-tint-mintBg", ring: "ring-tint-mintRing", icon: "text-emerald-600", hex: "#34D399" },
-  purple: { bg: "bg-tint-purpleBg", ring: "ring-tint-purpleRing", icon: "text-violet-600", hex: "#A78BFA" },
-  orange: { bg: "bg-tint-orangeBg", ring: "ring-tint-orangeRing", icon: "text-orange-600", hex: "#FB923C" },
-  green: { bg: "bg-tint-greenBg", ring: "ring-tint-greenRing", icon: "text-green-700", hex: "#22C55E" },
-  yellow: { bg: "bg-tint-yellowBg", ring: "ring-tint-yellowRing", icon: "text-amber-600", hex: "#FBBF24" },
-  pink: { bg: "bg-tint-pinkBg", ring: "ring-tint-pinkRing", icon: "text-pink-600", hex: "#F472B6" },
-  cream: { bg: "bg-tint-creamBg", ring: "ring-tint-creamRing", icon: "text-yellow-700", hex: "#EAB308" },
-  lightblue: { bg: "bg-tint-lightblueBg", ring: "ring-tint-lightblueRing", icon: "text-sky-500", hex: "#38BDF8" },
-  grey: { bg: "bg-tint-greyBg", ring: "ring-tint-greyRing", icon: "text-slate-500", hex: "#94A3B8" },
+export const ACCENT: Record<
+  string,
+  { bg: string; ring: string; icon: string; hex: string }
+> = {
+  blue: {
+    bg: "bg-tint-blueBg",
+    ring: "ring-tint-blueRing",
+    icon: "text-sky-600",
+    hex: "#38BDF8",
+  },
+  mint: {
+    bg: "bg-tint-mintBg",
+    ring: "ring-tint-mintRing",
+    icon: "text-emerald-600",
+    hex: "#34D399",
+  },
+  purple: {
+    bg: "bg-tint-purpleBg",
+    ring: "ring-tint-purpleRing",
+    icon: "text-violet-600",
+    hex: "#A78BFA",
+  },
+  orange: {
+    bg: "bg-tint-orangeBg",
+    ring: "ring-tint-orangeRing",
+    icon: "text-orange-600",
+    hex: "#FB923C",
+  },
+  green: {
+    bg: "bg-tint-greenBg",
+    ring: "ring-tint-greenRing",
+    icon: "text-green-700",
+    hex: "#22C55E",
+  },
+  yellow: {
+    bg: "bg-tint-yellowBg",
+    ring: "ring-tint-yellowRing",
+    icon: "text-amber-600",
+    hex: "#FBBF24",
+  },
+  pink: {
+    bg: "bg-tint-pinkBg",
+    ring: "ring-tint-pinkRing",
+    icon: "text-pink-600",
+    hex: "#F472B6",
+  },
+  cream: {
+    bg: "bg-tint-creamBg",
+    ring: "ring-tint-creamRing",
+    icon: "text-yellow-700",
+    hex: "#EAB308",
+  },
+  lightblue: {
+    bg: "bg-tint-lightblueBg",
+    ring: "ring-tint-lightblueRing",
+    icon: "text-sky-500",
+    hex: "#38BDF8",
+  },
+  grey: {
+    bg: "bg-tint-greyBg",
+    ring: "ring-tint-greyRing",
+    icon: "text-slate-500",
+    hex: "#94A3B8",
+  },
 };
 
 export function accent(key?: string) {

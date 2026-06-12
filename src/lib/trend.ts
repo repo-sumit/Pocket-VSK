@@ -26,8 +26,34 @@ export interface Trend {
   delta: number | null;
 }
 
-const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const MONTHS_GU = ["જાન્યુ", "ફેબ્રુ", "માર્ચ", "એપ્રિલ", "મે", "જૂન", "જુલાઈ", "ઑગસ્ટ", "સપ્ટે", "ઑક્ટો", "નવે", "ડિસે"];
+const MONTHS_EN = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+const MONTHS_GU = [
+  "જાન્યુ",
+  "ફેબ્રુ",
+  "માર્ચ",
+  "એપ્રિલ",
+  "મે",
+  "જૂન",
+  "જુલાઈ",
+  "ઑગસ્ટ",
+  "સપ્ટે",
+  "ઑક્ટો",
+  "નવે",
+  "ડિસે",
+];
 
 export function cadenceOf(freq?: Frequency): Cadence {
   switch (freq) {
@@ -69,7 +95,20 @@ export function periodLabelKey(c: Cadence): string {
   return PERIOD_KEY[c];
 }
 
-const MONTH_ABBR = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const MONTH_ABBR = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+];
 function monthIndexOf(note: string): number {
   return MONTH_ABBR.indexOf(note.trim().slice(0, 3).toLowerCase());
 }
@@ -85,10 +124,15 @@ function monthIndexOf(note: string): number {
  *   Latest / unknown          → "" (caller falls back to "Latest available")
  * Returns a bare label (no prefix) so callers can wrap it ("as on …", "Yearly · …").
  */
-export function getLastUpdatedLabel(kpi: KpiDef, date: Date, lang: Lang): string {
+export function getLastUpdatedLabel(
+  kpi: KpiDef,
+  date: Date,
+  lang: Lang,
+): string {
   // Student Retention (Re-enrolment / Identified Dropout) shows a static demo
   // as-on date — never "11 Jun" / "Jun 2026". Pairs with displayFrequency → "Daily".
-  if (kpi.id === "ret_reenroll" || kpi.id === "ret_dropout") return lang === "gu" ? "૧ ઑક્ટો" : "1st Oct";
+  if (kpi.id === "ret_reenroll" || kpi.id === "ret_dropout")
+    return lang === "gu" ? "૧ ઑક્ટો" : "1st Oct";
   const cadence = cadenceOf(kpi.frequency);
   const months = lang === "gu" ? MONTHS_GU : MONTHS_EN;
   if (cadence === "daily") return getWorkingDateLabel(date, lang);
@@ -97,7 +141,8 @@ export function getLastUpdatedLabel(kpi: KpiDef, date: Date, lang: Lang): string
   if (kpi.scheduleNote) {
     const mi = monthIndexOf(kpi.scheduleNote);
     if (mi >= 0) {
-      const y = mi <= date.getMonth() ? date.getFullYear() : date.getFullYear() - 1;
+      const y =
+        mi <= date.getMonth() ? date.getFullYear() : date.getFullYear() - 1;
       return `${months[mi]} ${locNum(y, lang)}`;
     }
   }
@@ -110,10 +155,14 @@ export function getLastUpdatedLabel(kpi: KpiDef, date: Date, lang: Lang): string
 
 /** i18n key for a snapshot/cycle context line (for indicators with no time trend). */
 export function snapshotContextKey(c: Cadence): string {
-  return c === "monthly" ? "kpi.currentMonth"
-    : c === "twice" ? "kpi.currentCycle"
-      : c === "half" ? "kpi.currentHalf"
-        : c === "yearly" ? "kpi.currentYear"
+  return c === "monthly"
+    ? "kpi.currentMonth"
+    : c === "twice"
+      ? "kpi.currentCycle"
+      : c === "half"
+        ? "kpi.currentHalf"
+        : c === "yearly"
+          ? "kpi.currentYear"
           : "kpi.latestAvailable";
 }
 
@@ -134,15 +183,29 @@ function pointCount(c: Cadence): number {
 
 /** ~30-day dummy history for the overall score (gently trending to `percent`,
  *  can dip), deterministic by `seedKey`. For the small homepage trend line. */
-export function overallTrendData(percent: number | null, seedKey: string): number[] {
+export function overallTrendData(
+  percent: number | null,
+  seedKey: string,
+): number[] {
   if (percent == null) return [];
-  const n = 30, cur = percent;
+  const n = 30,
+    cur = percent;
   const drift = Math.max(cur * 0.05, 1.5) / (n - 1);
   const amp = Math.max(cur * 0.02, 0.8);
   const out: number[] = [];
   for (let i = 0; i < n; i++) {
     const back = n - 1 - i;
-    out.push(Math.max(0, Math.min(100, Math.round((cur - back * drift + noise(`${seedKey}|ov${i}`, amp)) * 10) / 10)));
+    out.push(
+      Math.max(
+        0,
+        Math.min(
+          100,
+          Math.round(
+            (cur - back * drift + noise(`${seedKey}|ov${i}`, amp)) * 10,
+          ) / 10,
+        ),
+      ),
+    );
   }
   out[n - 1] = cur;
   return out;
@@ -172,11 +235,15 @@ export function buildTrend(rec: KpiRecord, lang: Lang): Trend {
   vals[n - 1] = cur; // pin the latest point to the real current value
 
   const labels = labelsFor(cadence, n, lang);
-  const points = vals.map((v, i) => ({ x: labels[i], value: round1(clampVal(v, unit, isContext, cur)) }));
+  const points = vals.map((v, i) => ({
+    x: labels[i],
+    value: round1(clampVal(v, unit, isContext, cur)),
+  }));
 
   // delta tag compares to one tag-period back: a week (~7 pts) for daily, else 1 point
   const backIdx = cadence === "daily" ? n - 8 : n - 2;
-  const delta = backIdx >= 0 ? round1(points[n - 1].value - points[backIdx].value) : null;
+  const delta =
+    backIdx >= 0 ? round1(points[n - 1].value - points[backIdx].value) : null;
 
   return { cadence, points, delta };
 }
@@ -204,10 +271,14 @@ function labelsFor(cadence: Cadence, n: number, lang: Lang): string[] {
   if (cadence === "twice") {
     // newest = SAT2 of (year-1); step back one semester each time
     const out: string[] = [];
-    let y = year - 1, sem = 2;
+    let y = year - 1,
+      sem = 2;
     for (let k = 0; k < n; k++) {
       out.push(`SAT${locNum(sem, lang)} '${yy(y)}`);
-      if (sem === 1) { sem = 2; y--; } else sem = 1;
+      if (sem === 1) {
+        sem = 2;
+        y--;
+      } else sem = 1;
     }
     return out.reverse();
   }
@@ -216,25 +287,40 @@ function labelsFor(cadence: Cadence, n: number, lang: Lang): string[] {
     const mar = lang === "gu" ? MONTHS_GU[2] : "Mar";
     const sept = lang === "gu" ? MONTHS_GU[8] : "Sept";
     const out: string[] = [];
-    let y = year, isMar = true;
+    let y = year,
+      isMar = true;
     for (let k = 0; k < n; k++) {
       out.push(`${isMar ? mar : sept} '${yy(y)}`);
-      if (isMar) { isMar = false; y--; } else isMar = true;
+      if (isMar) {
+        isMar = false;
+        y--;
+      } else isMar = true;
     }
     return out.reverse();
   }
   // yearly: newest = year-1, count back; ascending
-  return Array.from({ length: n }, (_, i) => locNum(year - 1 - (n - 1 - i), lang));
+  return Array.from({ length: n }, (_, i) =>
+    locNum(year - 1 - (n - 1 - i), lang),
+  );
 }
 
-function clampVal(v: number, unit: Unit, isContext: boolean, cur: number): number {
+function clampVal(
+  v: number,
+  unit: Unit,
+  isContext: boolean,
+  cur: number,
+): number {
   if (unit === "count") return Math.max(0, Math.round(v));
-  // ratio = CRC/URC visits per school — hard product cap of 3 visits/month
+  // ratio = CRCC/URC visits per school — hard product cap of 3 visits/month
   if (unit === "ratio") return clamp(v, 0, 3);
   if (unit === "score") return clamp(v, 0, Math.max(100, Math.abs(cur) * 1.2));
   if (isContext) return clamp(v, -30, 100); // change-deltas may dip negative
   return clamp(v, 0, 100);
 }
 
-function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)); }
-function round1(v: number) { return Math.round(v * 10) / 10; }
+function clamp(v: number, lo: number, hi: number) {
+  return Math.max(lo, Math.min(hi, v));
+}
+function round1(v: number) {
+  return Math.round(v * 10) / 10;
+}

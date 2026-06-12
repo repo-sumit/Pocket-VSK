@@ -1,23 +1,19 @@
 import type { ReactNode } from "react";
 import type { Frequency } from "@/types";
 import { cn } from "@/lib/cn";
-import { useT } from "@/i18n";
 import { Card } from "./atoms";
 import { FrequencyBadge } from "./DataBadges";
 import { ChevronRight } from "./Icon";
 
 /**
- * Top-right "Know more ›" CTA — the single navigation affordance on a clickable
- * card (§9). It replaces the old right-side chevron (never shown alongside one)
- * and sits where that chevron used to be. Blue, medium-weight, compact, with a
- * small trailing arrow. Always rendered inside the card's own button, so the whole
- * card is the tap target (well above the 36–44px minimum).
+ * Right-side navigation chevron — the card's ONLY tap affordance (latest design).
+ * No "Know more" text: a clean circular chevron sits top-right; the whole card is
+ * tappable. Never paired with a text CTA.
  */
-export function KnowMore({ className }: { className?: string }) {
-  const { t } = useT();
+export function CardChevron({ className }: { className?: string }) {
   return (
-    <span className={cn("inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs font-semibold text-primary-600", className)}>
-      {t("common.knowMore")} <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+    <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface-sunken text-neutral-400 transition-transform group-hover:translate-x-0.5", className)}>
+      <ChevronRight size={16} />
     </span>
   );
 }
@@ -56,13 +52,13 @@ export function KpiCardShell({ onClick, children, compare, metrics = 1 }: { onCl
 }
 
 /**
- * Header (title + top-right "Know more" CTA) and the meta row (frequency ·
- * last-updated) in one block. The "Know more" sits where the old chevron was — the
- * card's single navigation affordance — and only shows when the card is clickable.
+ * Header (title + right-side chevron) and the meta row (frequency · last-updated)
+ * in one block. The chevron is the card's only navigation affordance (latest
+ * design — no "Know more" text) and only shows when the card is clickable.
  * The meta period label already encodes any schedule month (e.g. "Sep 2025"), so the
  * raw `scheduleNote` is never appended again — that was the "Sep 2025 September" dup.
  */
-export function KpiCardHeader({ title, frequency, context, showKnowMore = false }: { title: string; frequency?: Frequency; context?: string | null; showKnowMore?: boolean }) {
+export function KpiCardHeader({ title, frequency, context, chevron = false }: { title: string; frequency?: Frequency; context?: string | null; chevron?: boolean }) {
   return (
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0">
@@ -72,7 +68,7 @@ export function KpiCardHeader({ title, frequency, context, showKnowMore = false 
           {context && <span className="text-2xs font-medium text-neutral-400">· {context}</span>}
         </span>
       </div>
-      {showKnowMore && <KnowMore className="mt-0.5" />}
+      {chevron && <CardChevron className="mt-0.5" />}
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import { cn } from "@/lib/cn";
 import type { RagStatus, Unit } from "@/types";
-import { rag } from "@/lib/colors";
 import { formatValue, formatValueFull } from "@/lib/format";
 import { useT, type Lang } from "@/i18n";
 import { ChevronRight } from "./Icon";
@@ -89,7 +88,6 @@ export function ChildComparisonBars({
         {sorted.map((b) => {
           const v = b.value as number;
           const h = Math.max(6, (v / top) * height);
-          const c = rag(b.status);
           return (
             <button
               key={b.id}
@@ -99,11 +97,12 @@ export function ChildComparisonBars({
               className="flex shrink-0 flex-col items-center gap-1 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
               style={{ width: ITEM_W, cursor: onOpen ? "pointer" : "default" }}
             >
-              {/* value label — single line, fixed height */}
-              <span className={cn("h-3.5 text-2xs font-bold tnum leading-none", c.text)}>{formatValue(v, unit, lang)}</span>
+              {/* value label — single line, fixed height. Neutral (§10): comparison bars
+                  use ONE brand colour, no RAG coding outside GSQAC/delta. */}
+              <span className="h-3.5 text-2xs font-bold tnum leading-none text-neutral-500">{formatValue(v, unit, lang)}</span>
               {/* bar track — fixed height; fill bottom-aligned to the shared baseline */}
               <span className="flex w-full items-end justify-center" style={{ height }}>
-                <span className={cn("origin-bottom animate-bar-grow", c.bg)} style={{ width: BAR_W, height: h, borderRadius: "5px 5px 2px 2px" }} />
+                <span className="origin-bottom animate-bar-grow bg-primary-400" style={{ width: BAR_W, height: h, borderRadius: "5px 5px 2px 2px" }} />
               </span>
               {/* unit label — below the baseline, up to 2 lines (reserved height), never moves the bar */}
               <span className="line-clamp-2 block min-h-[2.4em] w-full break-words text-center text-2xs font-semibold leading-tight text-neutral-400" title={b.label}>

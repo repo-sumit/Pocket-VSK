@@ -51,8 +51,12 @@ class MockProviderImpl implements DataProvider {
   }
 
   // ── hierarchy ──────────────────────────────────────────────────────
-  getEntity(id: string) { return this.byId.get(id); }
-  getChildren(id: string) { return (this.childrenOf.get(id) ?? []).slice(); }
+  getEntity(id: string) {
+    return this.byId.get(id);
+  }
+  getChildren(id: string) {
+    return (this.childrenOf.get(id) ?? []).slice();
+  }
 
   getAncestors(id: string) {
     const out: Entity[] = [];
@@ -132,13 +136,19 @@ class MockProviderImpl implements DataProvider {
   }
 
   // ── auth ───────────────────────────────────────────────────────────
-  getUserByLogin(loginId: string) { return this.usersByLogin.get(loginId.trim().toUpperCase()); }
+  getUserByLogin(loginId: string) {
+    return this.usersByLogin.get(loginId.trim().toUpperCase());
+  }
 
   resolveLogin(role: Role, loginId: string, secondField: string) {
     const u = this.getUserByLogin(loginId);
     if (!u || !u.active || u.role !== role) return undefined;
     if (role === "teacher" || role === "principal") {
-      return u.school_id && secondField.trim() && u.school_id === secondField.trim() ? u : undefined;
+      return u.school_id &&
+        secondField.trim() &&
+        u.school_id === secondField.trim()
+        ? u
+        : undefined;
     }
     return u.passcode && u.passcode === secondField.trim() ? u : undefined;
   }
@@ -154,7 +164,11 @@ class MockProviderImpl implements DataProvider {
   // ── value generation (per-level anchoring) ──────────────────────────
   getValueSeries(entity: Entity, kpi: KpiDef, periods: Period[]): RawSeries {
     const rep = kpi.level_representation[entity.level];
-    if (rep === "NA") return { series: periods.map((p) => ({ period: p.id, value: null })), benchmark: null };
+    if (rep === "NA")
+      return {
+        series: periods.map((p) => ({ period: p.id, value: null })),
+        benchmark: null,
+      };
     // School Quality (output) = REAL GSQAC from entity.meta — annual, so flat
     // across periods (no weekly trend); "vs last cycle" is the sq_improvement KPI.
     if (kpi.id.startsWith("sq_")) {
@@ -169,10 +183,16 @@ class MockProviderImpl implements DataProvider {
           v = dv == null ? null : round1(dv * 100);
         }
       }
-      return { series: periods.map((p) => ({ period: p.id, value: v })), benchmark: this.benchmarkFor(kpi, entity.level) };
+      return {
+        series: periods.map((p) => ({ period: p.id, value: v })),
+        benchmark: this.benchmarkFor(kpi, entity.level),
+      };
     }
     const benchmark = this.benchmarkFor(kpi, entity.level);
-    const series = periods.map((p) => ({ period: p.id, value: this.valueAt(entity, kpi, p.index) }));
+    const series = periods.map((p) => ({
+      period: p.id,
+      value: this.valueAt(entity, kpi, p.index),
+    }));
     return { series, benchmark };
   }
 
@@ -188,24 +208,45 @@ class MockProviderImpl implements DataProvider {
     const level = entity.level;
     if (level === "grade") {
       const secs = this.getChildren(entity.id);
-      const vals = secs.map((s) => this.valueAt(s, kpi, pIndex)).filter((v): v is number => v != null);
+      const vals = secs
+        .map((s) => this.valueAt(s, kpi, pIndex))
+        .filter((v): v is number => v != null);
       return vals.length ? round1(mean(vals)) : null;
     }
     const pub = PUBLISHED[kpi.id]?.[level];
     if (pub == null) return null;
-    return this.anchored(entity, kpi, this.biasedAnchor(pub, kpi, level), pIndex);
+    return this.anchored(
+      entity,
+      kpi,
+      this.biasedAnchor(pub, kpi, level),
+      pIndex,
+    );
   }
 
   /** PM SHRI filter nudges aggregate (cluster↑) anchors; schools/own scope unbiased. */
   private biasedAnchor(anchor: number, kpi: KpiDef, level: Level): number {
-    if (this.filterMode === "all" || level === "section" || level === "grade" || level === "school") return anchor;
-    const numberUp = this.filterMode === "pmshri" ? kpi.direction === "higher" : kpi.direction === "lower";
+    if (
+      this.filterMode === "all" ||
+      level === "section" ||
+      level === "grade" ||
+      level === "school"
+    )
+      return anchor;
+    const numberUp =
+      this.filterMode === "pmshri"
+        ? kpi.direction === "higher"
+        : kpi.direction === "lower";
     if (kpi.unit === "%") return clamp(anchor + (numberUp ? 3 : -3), 0, 100);
     const frac = this.filterMode === "pmshri" ? 0.06 : 0.03;
     return Math.max(0, anchor * (numberUp ? 1 + frac : 1 - frac));
   }
 
-  private anchored(entity: Entity, kpi: KpiDef, anchor: number, pIndex: number): number {
+  private anchored(
+    entity: Entity,
+    kpi: KpiDef,
+    anchor: number,
+    pIndex: number,
+  ): number {
     const improve = N_PERIODS - 1 - pIndex; // 0 now, larger for past periods
     const higher = kpi.direction === "higher";
     const offKey = `${entity.id}|${kpi.id}`; // stable per-entity offset (period-independent)
@@ -222,7 +263,7 @@ class MockProviderImpl implements DataProvider {
       const jf = noise(offKey, 0.12);
       const trend = (higher ? -improve : improve) * 0.012;
       const v = anchor * (1 + jf) * (1 + trend) + noise(wob, anchor * 0.02);
-      // ratio = CRC/URC visits per school — never above the product cap of 3/month
+      // ratio = CRCC/URC visits per school — never above the product cap of 3/month
       const hi = kpi.unit === "ratio" ? 3 : anchor * 1.6;
       return round1(clamp(v, 0, hi));
     }
@@ -239,8 +280,14 @@ class MockProviderImpl implements DataProvider {
   }
 }
 
-function mean(a: number[]) { return a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0; }
-function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)); }
-function round1(v: number) { return Math.round(v * 10) / 10; }
+function mean(a: number[]) {
+  return a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+}
+function clamp(v: number, lo: number, hi: number) {
+  return Math.max(lo, Math.min(hi, v));
+}
+function round1(v: number) {
+  return Math.round(v * 10) / 10;
+}
 
 export const MockProvider: DataProvider = new MockProviderImpl();

@@ -6,7 +6,7 @@ import { useT, type Lang } from "@/i18n";
 import { GSQAC_OVERALL, gsqacGrade, gsqacStatus, gsqacIndicatorScore, type GsqacArea, type GsqacSubdomain } from "@/config/gsqac";
 import { Card } from "./atoms";
 import { RatingBadge } from "./RatingBadge";
-import { KnowMore } from "./kpiCardParts";
+import { CardChevron } from "./kpiCardParts";
 import { ChevronDown, Award } from "./Icon";
 
 /** Overall GSQAC score card — % · grade · marks out of 1000. */
@@ -43,7 +43,7 @@ export function GsqacAreaCard({ area, lang, onOpen }: { area: GsqacArea; lang: L
       <button onClick={onOpen} className="group flex w-full flex-col text-left">
         <div className="flex items-start justify-between gap-2">
           <span className="min-w-0 text-sm font-bold leading-snug text-neutral-900">{tn(area.name, area.name_gu)}</span>
-          <KnowMore className="mt-0.5" />
+          <CardChevron className="mt-0.5" />
         </div>
         <div className="mt-2 flex items-center gap-2.5">
           <span className={cn("text-2xl font-extrabold tnum leading-none", c.text)}>{locNum(area.percent, lang)}%</span>

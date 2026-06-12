@@ -1,5 +1,5 @@
 import type { KpiRecord, Level } from "@/types";
-import { deltaToneClass, valueToneClass } from "@/lib/colors";
+import { valueToneClass } from "@/lib/colors";
 import { peerAvg, peerLevelOf } from "@/lib/peer";
 import { buildTrend, getLastUpdatedLabel } from "@/lib/trend";
 import { getSingleMetricValueSuffix, formatValue } from "@/lib/format";
@@ -28,28 +28,28 @@ export function KpiCard({
   const trend = showDelta ? buildTrend(rec, lang) : null;
   const peerScore = level && peerLevelOf(level) ? peerAvg(kpi.id, level) : null;
   const isGsqac = kpi.id.startsWith("sq_");
-  // value colour: GSQAC scores follow RAG status; others follow the delta only
-  // when one is shown; otherwise neutral.
+  // value colour (§10): ONLY GSQAC scores follow RAG status. Every other KPI number
+  // stays neutral black — delta is the separate coloured signal, not the value.
   const valueTone = na
     ? "text-rag-naText"
     : isGsqac
       ? valueToneClass(rec.status)
-      : trend?.delta
-        ? deltaToneClass(trend.delta, kpi.direction)
-        : "text-neutral-900";
+      : "text-neutral-900";
   const lastUpdated = getLastUpdatedLabel(kpi, new Date(), lang) || null;
   // N+1 comparison vs the next level UP (e.g. "vs State", "vs District") — the level
   // word, not the entity name (§11). parentName presence still gates it.
   const parentLevel = level ? peerLevelOf(level) : null;
   const hasPeer = !na && !!parentName && peerScore != null && !!parentLevel;
-  const peerStr = hasPeer ? `${t("common.vs")} ${t(`levels.${parentLevel}`)} · ${formatValue(peerScore, kpi.unit, lang)}` : "";
+  // §22: percentage/score comparisons are averages → append "avg"; counts are not.
+  const peerIsAvg = kpi.unit !== "count";
+  const peerStr = hasPeer ? `${t("common.vs")} ${t(`levels.${parentLevel}`)}${peerIsAvg ? ` ${t("common.avg")}` : ""} · ${formatValue(peerScore, kpi.unit, lang)}` : "";
   // short suffix (count KPIs) or "" (percent/score/visits show the bare value) —
   // never the full title, which already sits in the header.
   const suffix = getSingleMetricValueSuffix(kpi.id, lang);
 
   return (
     <KpiCardShell onClick={onClick} compare={<KpiCompareSection kpi={kpi} />}>
-      <KpiCardHeader title={name} frequency={displayFrequency(kpi)} context={lastUpdated} showKnowMore={!!onClick} />
+      <KpiCardHeader title={name} frequency={displayFrequency(kpi)} context={lastUpdated} chevron={!!onClick} />
 
       {/* inline value (+ short suffix) · N+1 comparison (+ allowed delta) right-aligned */}
       <div className="mt-2">

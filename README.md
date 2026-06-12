@@ -360,7 +360,7 @@ app/
 
 | ID                   | Name                         | Unit  | Frequency |
 | -------------------- | ---------------------------- | ----- | --------- |
-| `vis_crc_count`      | CRC Visits                   | count | Monthly   |
+| `vis_CRCC_count`     | CRCC Visits                  | count | Monthly   |
 | `vis_obs_completion` | Observation Completion       | %     | Monthly   |
 | `vis_ict`            | ICT Lab Utilisation          | %     | Monthly   |
 | `vis_library`        | Library Utilisation          | %     | Monthly   |
@@ -504,7 +504,7 @@ Role is inferred from the digit length of the user's primary ID — no role pick
 | `state`          | 2                 | Entire state  | → Districts         |
 | `deo` (District) | 4                 | One district  | → Blocks            |
 | `brc` (Block)    | 6                 | One block     | → Clusters          |
-| `crc` (Cluster)  | 10                | One cluster   | → Schools           |
+| `CRCC` (Cluster) | 10                | One cluster   | → Schools           |
 | `principal`      | 11 (school UDISE) | One school    | → Grades → Sections |
 | `teacher`        | 8                 | One classroom | Section only        |
 
@@ -515,7 +515,7 @@ Role is inferred from the digit length of the user's primary ID — no role pick
 | State              | `24`          | PIN `0000`              |
 | District (DEO)     | `2401`        | PIN `3456`              |
 | Block (BRC)        | `240101`      | PIN `2345`              |
-| Cluster (CRC)      | `2401010001`  | PIN `1234`              |
+| Cluster (CRCC)     | `2401010001`  | PIN `1234`              |
 | School / Principal | `24010100011` | PIN `1111`              |
 | Teacher            | `24000009`    | School ID `24010100011` |
 

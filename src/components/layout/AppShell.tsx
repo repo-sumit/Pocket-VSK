@@ -44,7 +44,7 @@ export function AppShell() {
   if (!user) return <Navigate to="/login" replace />;
 
   const isOfficer =
-    user.role === "crc" ||
+    user.role === "CRCC" ||
     user.role === "brc" ||
     user.role === "deo" ||
     user.role === "state";

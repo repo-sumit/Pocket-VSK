@@ -22,11 +22,11 @@
     "active": true
   },
   {
-    "id": "u-crc",
+    "id": "u-CRCC",
     "login_id": "2401010005",
     "name": "Anjali Gohil",
     "name_gu": "",
-    "role": "crc",
+    "role": "CRCC",
     "designation": "Cluster Resource Coordinator",
     "entity_id": "cluster-2401010005",
     "passcode": "1234",

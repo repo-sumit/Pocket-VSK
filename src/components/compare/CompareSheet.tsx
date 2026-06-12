@@ -103,7 +103,7 @@ export function CompareSheet({
               type="button"
               onClick={() => setSel(all.map((c) => c.id))}
               disabled={allChecked}
-              className={cn("inline-flex h-9 items-center rounded-full border border-line bg-white px-3.5 text-xs font-bold transition-colors", allChecked ? "cursor-not-allowed text-neutral-300" : "text-primary-700 hover:bg-primary-50")}
+              className={cn("inline-flex h-11 items-center rounded-full border border-line bg-white px-4 text-sm font-bold transition-colors", allChecked ? "cursor-not-allowed text-neutral-300" : "text-primary-700 hover:bg-primary-50")}
             >
               {t("common.selectAll")}
             </button>
@@ -111,7 +111,7 @@ export function CompareSheet({
               type="button"
               onClick={() => setSel([])}
               disabled={sel.length === 0}
-              className={cn("inline-flex h-9 items-center rounded-full border border-line bg-white px-3.5 text-xs font-bold transition-colors", sel.length === 0 ? "cursor-not-allowed text-neutral-300" : "text-primary-700 hover:bg-primary-50")}
+              className={cn("inline-flex h-11 items-center rounded-full border border-line bg-white px-4 text-sm font-bold transition-colors", sel.length === 0 ? "cursor-not-allowed text-neutral-300" : "text-primary-700 hover:bg-primary-50")}
             >
               {t("common.clearAll")}
             </button>

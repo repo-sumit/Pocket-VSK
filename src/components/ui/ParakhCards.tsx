@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 import { useT } from "@/i18n";
 import { PARAKH_BANDS, PARAKH_META, parakhBandOf, type ParakhBandId, type BoardResult } from "@/config/parakh";
 import { Card } from "./atoms";
-import { KnowMore } from "./kpiCardParts";
+import { CardChevron } from "./kpiCardParts";
 import { Layers, ArrowUpRight, ArrowDownRight } from "./Icon";
 
 /** PARAKH category badge — band id + stage, in the band's colour. */
@@ -35,7 +35,7 @@ export function ParakhCard({ district, onOpen }: { district: string; onOpen: () 
             <span className="block text-sm font-bold text-neutral-900">PARAKH District Category</span>
             <span className="block text-2xs font-medium text-neutral-400">Grade 3 · Static {PARAKH_META.year}</span>
           </span>
-          <KnowMore className="mt-0.5" />
+          <CardChevron className="mt-0.5" />
         </div>
         <div className="mt-3.5 flex items-center gap-3">
           <span className="min-w-0 flex-1">

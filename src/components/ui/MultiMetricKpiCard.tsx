@@ -1,6 +1,5 @@
 import type { KpiRecord, Level } from "@/types";
-import { deltaToneClass } from "@/lib/colors";
-import { formatValue, resolveMetricLabel } from "@/lib/format";
+import { formatValue, resolveMetricLabel, formatBelowLevelLabel } from "@/lib/format";
 import { peerAvg, peerLevelOf } from "@/lib/peer";
 import { buildTrend, getLastUpdatedLabel } from "@/lib/trend";
 import { shouldShowCardDelta, displayFrequency } from "@/lib/displayPolicy";
@@ -35,7 +34,7 @@ export function MultiMetricKpiCard({
 
   return (
     <KpiCardShell onClick={onClick} compare={<KpiCompareSection kpi={kpi} />} metrics={metrics.length || 1}>
-      <KpiCardHeader title={name} frequency={displayFrequency(kpi)} context={lastUpdated} showKnowMore={!!onClick} />
+      <KpiCardHeader title={name} frequency={displayFrequency(kpi)} context={lastUpdated} chevron={!!onClick} />
 
       <div className="mt-2">
         {metrics.length ? (
@@ -61,8 +60,16 @@ function MetricRow({
   const delta = trend?.delta ?? null;
   const parentLevel = level ? peerLevelOf(level) : null;
   const peer = parentLevel ? peerAvg(kpi.id, level!) : null;
-  const tone = na ? "text-rag-naText" : delta ? deltaToneClass(delta, kpi.direction) : "text-neutral-900";
-  const label = resolveMetricLabel(kpi.name, kpi.name_gu, level ?? "school", lang);
+  // §10: KPI numbers stay neutral black (delta carries the colour, not the value).
+  const tone = na ? "text-rag-naText" : "text-neutral-900";
+  // §15: the below-average sub-metric reads "Students below {Level} avg" — the value
+  // already shows "27%", so the label must not add a second "%".
+  const isBelowAvg = kpi.id.endsWith("belowHierarchyAvg");
+  const label = isBelowAvg
+    ? formatBelowLevelLabel(level ?? "school", lang)
+    : resolveMetricLabel(kpi.name, kpi.name_gu, level ?? "school", lang);
+  // §22: percentage/score peer figures are averages → "avg"; counts are not.
+  const peerIsAvg = kpi.unit !== "count";
 
   return (
     <KpiInlineRow
@@ -70,7 +77,7 @@ function MetricRow({
       label={label}
       value={na ? "—" : formatValue(rec.value, kpi.unit, lang)}
       valueTone={tone}
-      peerLabel={parentName && peer != null && parentLevel ? `${t("common.vs")} ${t(`levels.${parentLevel}`)} · ${formatValue(peer, kpi.unit, lang)}` : null}
+      peerLabel={parentName && peer != null && parentLevel ? `${t("common.vs")} ${t(`levels.${parentLevel}`)}${peerIsAvg ? ` ${t("common.avg")}` : ""} · ${formatValue(peer, kpi.unit, lang)}` : null}
       delta={delta != null && delta !== 0 ? (
         <FrequencyDelta delta={delta} unit={kpi.unit} direction={kpi.direction} cadence={trend!.cadence} lang={lang} />
       ) : null}

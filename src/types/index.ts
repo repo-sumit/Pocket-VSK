@@ -23,7 +23,7 @@ export type Level = (typeof LEVELS)[number];
 export const ROLES = [
   "teacher",
   "principal",
-  "crc",
+  "CRCC",
   "brc",
   "deo",
   "state",

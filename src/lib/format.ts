@@ -11,8 +11,34 @@ export function locNum(n: number | string, lang: Lang): string {
 }
 
 const MONTHS_SHORT = {
-  en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-  gu: ["જાન્યુ", "ફેબ્રુ", "માર્ચ", "એપ્રિલ", "મે", "જૂન", "જુલાઈ", "ઑગસ્ટ", "સપ્ટે", "ઑક્ટો", "નવે", "ડિસે"],
+  en: [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ],
+  gu: [
+    "જાન્યુ",
+    "ફેબ્રુ",
+    "માર્ચ",
+    "એપ્રિલ",
+    "મે",
+    "જૂન",
+    "જુલાઈ",
+    "ઑગસ્ટ",
+    "સપ્ટે",
+    "ઑક્ટો",
+    "નવે",
+    "ડિસે",
+  ],
 } as const;
 
 /** Short, localised report date — e.g. "9 Jun 2026" / "૯ જૂન ૨૦૨૬". */
@@ -32,25 +58,36 @@ export function getWorkingDate(date: Date = new Date()): Date {
 
 /** Compact working-day label (day + short month, no year) — e.g. "9 Jun" / "૯ જૂન".
  *  Used as the "as on" date context for Daily indicators. */
-export function getWorkingDateLabel(date: Date = new Date(), lang: Lang = "en"): string {
+export function getWorkingDateLabel(
+  date: Date = new Date(),
+  lang: Lang = "en",
+): string {
   const d = getWorkingDate(date);
   const months = lang === "gu" ? MONTHS_SHORT.gu : MONTHS_SHORT.en;
   return `${locNum(d.getDate(), lang)} ${months[d.getMonth()]}`;
 }
 
 /** Format a KPI value with its unit, or an explicit em-dash for NA. */
-export function formatValue(value: number | null, unit: Unit, lang: Lang = "en"): string {
+export function formatValue(
+  value: number | null,
+  unit: Unit,
+  lang: Lang = "en",
+): string {
   if (value == null) return "—";
   const n = Number.isInteger(value) ? value : Math.round(value * 10) / 10;
   switch (unit) {
     case "%":
       return `${locNum(n, lang)}%`;
     case "days":
-      return lang === "gu" ? `${locNum(n, lang)} દિવસ` : `${n} day${n === 1 ? "" : "s"}`;
+      return lang === "gu"
+        ? `${locNum(n, lang)} દિવસ`
+        : `${n} day${n === 1 ? "" : "s"}`;
     case "hours":
       return lang === "gu" ? `${locNum(n, lang)} કલાક` : `${n} hrs`;
     case "count":
-      return Math.abs(n) >= 1000 ? compactNum(n, lang) : locNum(formatCount(n), lang);
+      return Math.abs(n) >= 1000
+        ? compactNum(n, lang)
+        : locNum(formatCount(n), lang);
     case "score":
       return `${locNum(n, lang)}`;
     default:
@@ -74,13 +111,21 @@ function trimZero(v: number): string {
 }
 
 /** Full localized value for tooltips (no K/M abbreviation). */
-export function formatValueFull(value: number | null, unit: Unit, lang: Lang = "en"): string {
+export function formatValueFull(
+  value: number | null,
+  unit: Unit,
+  lang: Lang = "en",
+): string {
   if (value == null) return "—";
   if (unit === "count") return locNum(formatCount(Math.round(value)), lang);
   return formatValue(value, unit, lang);
 }
 
-export function formatDelta(delta: number | null, unit: Unit, lang: Lang = "en"): string {
+export function formatDelta(
+  delta: number | null,
+  unit: Unit,
+  lang: Lang = "en",
+): string {
   if (delta == null) return "—";
   const sign = delta > 0 ? "+" : delta < 0 ? "−" : "±";
   const abs = Math.abs(Math.round(delta * 10) / 10);
@@ -94,12 +139,22 @@ export function pct(value: number | null, lang: Lang = "en"): string {
 }
 
 const LEVEL_NAME_EN: Record<Level, string> = {
-  state: "state", district: "district", block: "block", cluster: "cluster",
-  school: "school", grade: "grade", section: "section",
+  state: "state",
+  district: "district",
+  block: "block",
+  cluster: "cluster",
+  school: "school",
+  grade: "grade",
+  section: "section",
 };
 const LEVEL_NAME_GU: Record<Level, string> = {
-  state: "રાજ્ય", district: "જિલ્લા", block: "બ્લોક", cluster: "ક્લસ્ટર",
-  school: "શાળા", grade: "ધોરણ", section: "વિભાગ",
+  state: "રાજ્ય",
+  district: "જિલ્લા",
+  block: "બ્લોક",
+  cluster: "ક્લસ્ટર",
+  school: "શાળા",
+  grade: "ધોરણ",
+  section: "વિભાગ",
 };
 
 /**
@@ -109,31 +164,68 @@ const LEVEL_NAME_GU: Record<Level, string> = {
  * Returns the input unchanged when it contains no level placeholder, so callers
  * can apply it unconditionally.
  */
-export function resolveMetricLabel(name: string, name_gu: string, level: Level, lang: Lang): string {
+export function resolveMetricLabel(
+  name: string,
+  name_gu: string,
+  level: Level,
+  lang: Lang,
+): string {
   // apply BOTH replacements to the selected string — gu copy may fall back to an
   // English source string (e.g. formulas), and that English "hierarchy" must
   // still resolve, never render literally.
   const s = lang === "gu" && name_gu ? name_gu : name;
-  return s.replace(/hierarchy/g, LEVEL_NAME_EN[level]).replace(/સ્તર/g, LEVEL_NAME_GU[level]);
+  return s
+    .replace(/hierarchy/g, LEVEL_NAME_EN[level])
+    .replace(/સ્તર/g, LEVEL_NAME_GU[level]);
 }
 
 /** The scope-specific "% below <level> average" label (§ dynamic below-level avg). */
-export function formatBelowLevelAverageLabel(level: Level, lang: Lang = "en"): string {
+export function formatBelowLevelAverageLabel(
+  level: Level,
+  lang: Lang = "en",
+): string {
   if (lang === "gu") return `${LEVEL_NAME_GU[level]} સરેરાશથી નીચે %`;
   return `% below ${LEVEL_NAME_EN[level]} average`;
+}
+
+const LEVEL_TITLE_EN: Record<Level, string> = {
+  state: "State",
+  district: "District",
+  block: "Block",
+  cluster: "Cluster",
+  school: "School",
+  grade: "Grade",
+  section: "Section",
+};
+
+/**
+ * The value-row descriptor for a "below average" sub-metric — "Students below
+ * District avg" (§15). The value already renders as "27%", so this label must NOT
+ * carry a second "%" (that produced the "27% % below district average" bug). The
+ * level word is capitalised so the row reads cleanly next to the bold value.
+ */
+export function formatBelowLevelLabel(level: Level, lang: Lang = "en"): string {
+  if (lang === "gu") return `${LEVEL_NAME_GU[level]} સરેરાશથી નીચે વિદ્યાર્થીઓ`;
+  return `Students below ${LEVEL_TITLE_EN[level]} avg`;
 }
 
 /**
  * Sentence-style card highlight — the descriptor that follows the big value on a
  * domain card ("225 students absent from past 7+ consecutive days", "80.6% SAT
- * reports downloaded in classrooms", "1.7 No of CRC/URC Visits per school"). The
+ * reports downloaded in classrooms", "1.7 No of CRCC/URC Visits per school"). The
  * card renders the value big, then this phrase inline. For COUNT indicators the
  * leading word is lower-cased so it reads as a sentence; other units keep the
- * descriptor as authored (acronyms like SAT/CRC and "No of …" stay intact).
+ * descriptor as authored (acronyms like SAT/CRCC and "No of …" stay intact).
  */
-export function formatKpiCardTitlePhrase(name: string, name_gu: string, unit: Unit, lang: Lang): string {
+export function formatKpiCardTitlePhrase(
+  name: string,
+  name_gu: string,
+  unit: Unit,
+  lang: Lang,
+): string {
   if (lang === "gu") return name_gu;
-  if (unit === "count" && /^[A-Z][a-z]/.test(name)) return name.charAt(0).toLowerCase() + name.slice(1);
+  if (unit === "count" && /^[A-Z][a-z]/.test(name))
+    return name.charAt(0).toLowerCase() + name.slice(1);
   return name;
 }
 
@@ -153,10 +245,11 @@ export function getSingleMetricValueSuffix(kpiId: string, lang: Lang): string {
 }
 
 /** Time-based greeting key (FCR-1.2): 05–11 morning · 12–16 afternoon · else evening. */
-export function greetingKey(d: Date = new Date()): "morning" | "afternoon" | "evening" {
+export function greetingKey(
+  d: Date = new Date(),
+): "morning" | "afternoon" | "evening" {
   const h = d.getHours();
   if (h >= 5 && h < 12) return "morning";
   if (h >= 12 && h < 17) return "afternoon";
   return "evening";
 }
-
