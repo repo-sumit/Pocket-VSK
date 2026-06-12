@@ -1,5 +1,117 @@
 # Pocket VSK — QA Report
 
+## Hide Administration "Compare by" at School/Grade/Section (Pass 46)
+
+At School/Grade/Section the officer-view **Administration** card showed a "Compare by" chip row
+(`[Untracked Students] [CRC/URC Visits]`) followed by **"Not tracked at this level"** — its KPIs
+(`ret_dropout`, `vis_CRCC_count`, `lowestLevel: school`) have no child data to compare below
+school, so the whole section was noise.
+
+### Guards added (Administration card only)
+
+1. **Level guard** (`ScorecardHome.tsx`): for `domain.id === "administration"`, the card's
+   `comparable` is now `comparable && !isSchoolOrBelow`, where `isSchoolOrBelow` =
+   `level ∈ {school, grade, section}`. So the entire compare section is suppressed at those levels.
+2. **Valid-rows guard** (`DomainInsightCard.tsx`): the compare section now renders only when
+   `comparable && comparing && (metrics.length <= 1 || hasData)`. The multi-metric card
+   (Administration is the only one passing >1 `compareMetrics`) thus requires valid child rows —
+   no chips and no "Not tracked at this level" when there's nothing to compare.
+
+Together these match the spec's `canShowAdministrationCompare = applied && level not in
+{school,grade,section} && childRows > 0`.
+
+### Result
+
+- School/Grade/Section: Administration card is compact — KPI rows + N+1 pills only (`7 untracked
+  Students` / `Cluster · 22`, `1.4 No of CRC/URC Visits per school` / `Cluster · 1.6`), no
+  Compare by, no "Not tracked".
+- Cluster/Block/District/State: unchanged — Compare by chips + comparison chart still show when
+  Compare is applied and data exists.
+- Single-metric input cards (Attendance, Assessment) and GSQAC are untouched — `metrics.length <= 1`
+  keeps the valid-rows guard inert, and only the Administration card gets the level guard.
+
+### Files changed
+
+- `src/screens/ScorecardHome.tsx` — `isSchoolOrBelow`; per-card `cardComparable` for Administration.
+- `src/components/ui/DomainInsightCard.tsx` — compare section requires `hasData` for the
+  multi-metric card.
+
+### Verification
+
+- `npx tsc --noEmit` ✓ clean · `npm run build` ✓ (`built in 16.01s`; only the pre-existing
+  >1.5 MB `entities` chunk-size warning).
+- No changes to Administration KPI values, untracked / CRC-URC logic, N+1 pills, compare sheet,
+  other domain cards, domain/KPI-detail pages, or header/filter/share behaviour.
+
+---
+
+## Drop "avg" from N+1 comparison pills on cards (Pass 45)
+
+The card-level N+1 comparison pills appended "avg" for percent/score/ratio metrics
+(`School avg 76%`, `vs State avg · 84%`, `District avg · 1.8`). Removed that word so the pills now
+read `School 76%` / `State · 84%` / `District · 1.8`. The "avg" came from `t("common.avg")` in
+exactly three card components; fixed at the source (no per-card hacks):
+
+- `DomainInsightCard.tsx` — `N1Chip` lost its `avg` prop + the `{avg ? " avg" : ""}` render (and
+  the now-unused local `t`); the three call sites (InputHead, OutputHead, Administration secondary)
+  dropped `avg={…}`. Covers homepage domain cards, GSQAC card, and the Administration CRC/URC pill.
+- `KpiCard.tsx` — removed `peerIsAvg`; `peerStr` is now `"{Level} · {value}"`. Covers domain-page
+  single-metric KPI cards (Attendance, SAT, etc.).
+- `MultiMetricKpiCard.tsx` — removed `peerIsAvg`; `peerLabel` is now `"{Level} · {value}"`. Covers
+  multi-metric sub-rows.
+
+### Deliberately NOT changed (these "avg"s are metric names / non-card, per the task)
+
+- `formatBelowLevelLabel` / `format.ts` → "Students below {Level} avg" — an actual metric label
+  (MultiMetricKpiCard still uses it for the below-average sub-metric). Unchanged.
+- `Export.tsx` indicator-table column header "{Level} avg" (`export.parentAvg`) — a print/table
+  column, not a card pill. Out of scope; unchanged.
+- Parakh survey card "State avg N" — Parakh is out of scope per the standing constraints. Unchanged.
+- `common.avg` i18n key left defined (now unused) so the en/gu dict shapes stay aligned.
+
+### Files changed
+
+- `src/components/ui/DomainInsightCard.tsx`, `src/components/ui/KpiCard.tsx`,
+  `src/components/ui/MultiMetricKpiCard.tsx`.
+
+### Verification
+
+- `npx tsc --noEmit` ✓ clean · `npm run build` ✓ (`built in 26.79s`; only the pre-existing
+  >1.5 MB `entities` chunk-size warning).
+- Grep confirms **zero** remaining `common.avg` / `peerIsAvg` usages in `src/`.
+- No changes to login/header/filter/share-export behaviour, compare sheet, GSQAC pages, assessment
+  ordering, Parakh, chart logic, or KPI values/formulas.
+
+---
+
+## Untracked Students card/drilldown spec re-review — no change (Pass 44)
+
+Re-received the original "Add Untracked Students card + role-aware drilldown" spec. Verified the
+whole spec is already implemented and chose (with the user) to **keep the current card** rather
+than revert it.
+
+Already in place (Passes 38/41):
+
+- `UntrackedHomeCard` renders on the Teacher/Principal homepage (`ScorecardHome.tsx:156`),
+  alongside Attendance · Assessment · School Quality — card order intact.
+- Title is "Untracked Students" (never "Dropout"); tapping navigates to `/app/kpi/ret_dropout`.
+- Drilldown is role-aware (`KpiDetail` → `RosterDetail`): Teacher → student list (avatar · name ·
+  grade·section · Untracked/Re-enrolled pill); Principal → grade-wise expandable accordion; Officer
+  → N-1 hierarchy counts via `useKpiChildSeries`, no names.
+- Values are deterministic from `UNTRACKED_SUMMARY` / `UNTRACKED_BY_GRADE` (no hardcoded component
+  values); card and detail summary use the same source.
+
+Intentional divergence from the (re-pasted, older) spec — kept by user decision:
+
+- The spec shows a "43 re-enrolled this year" line and a "vs" prefix on the pill. Both were
+  deliberately removed in Pass 40, and a principal CRC/URC visits row was added in Pass 41 (with
+  compare chips in Pass 43). The user chose to keep these refinements, so the homepage card is
+  **unchanged**. (The detail summary still shows both untracked + re-enrolled counts.)
+
+No files changed; no rebuild (last green build: Pass 43).
+
+---
+
 ## Administration card — N+1 pill + Compare on BOTH KPIs (Pass 43)
 
 The homepage **Administration** card carries two KPIs — Untracked Students (hero) and No. of

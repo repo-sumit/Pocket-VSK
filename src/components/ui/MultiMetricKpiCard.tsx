@@ -68,8 +68,6 @@ function MetricRow({
   const label = isBelowAvg
     ? formatBelowLevelLabel(level ?? "school", lang)
     : resolveMetricLabel(kpi.name, kpi.name_gu, level ?? "school", lang);
-  // §22: percentage/score peer figures are averages → "avg"; counts are not.
-  const peerIsAvg = kpi.unit !== "count";
 
   return (
     <KpiInlineRow
@@ -77,7 +75,7 @@ function MetricRow({
       label={label}
       value={na ? "—" : formatValue(rec.value, kpi.unit, lang)}
       valueTone={tone}
-      peerLabel={parentName && peer != null && parentLevel ? `${t(`levels.${parentLevel}`)}${peerIsAvg ? ` ${t("common.avg")}` : ""} · ${formatValue(peer, kpi.unit, lang)}` : null}
+      peerLabel={parentName && peer != null && parentLevel ? `${t(`levels.${parentLevel}`)} · ${formatValue(peer, kpi.unit, lang)}` : null}
       delta={delta != null && delta !== 0 ? (
         <FrequencyDelta delta={delta} unit={kpi.unit} direction={kpi.direction} cadence={trend!.cadence} lang={lang} />
       ) : null}

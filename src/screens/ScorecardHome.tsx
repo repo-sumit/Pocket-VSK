@@ -82,6 +82,10 @@ export default function ScorecardHome() {
     .map((en) => ({ id: en.entity.id, label: tn(en.entity.name, en.entity.name_gu) }));
 
   const comparable = !!childLevel;
+  // Administration KPIs (untracked, CRC/URC visits) aren't tracked below school, so there
+  // is no valid N-1 comparison at School/Grade/Section — its "Compare by" section is
+  // hidden entirely there (no chips, no "Not tracked at this level").
+  const isSchoolOrBelow = entity.level === "school" || entity.level === "grade" || entity.level === "section";
   const chartTitle = childLevel ? t("compare.chartTitle", { level: t(`levels.${childLevel}`) }) : "";
   const drillChild = (id: string) => setScope(id);
 
@@ -110,6 +114,8 @@ export default function ScorecardHome() {
                   { rec: secondary, chipLabel: t("compare.crcVisits") },
                 ]
               : undefined;
+            // Administration has no valid comparison at School/Grade/Section (§ above).
+            const cardComparable = d.domain.id === "administration" ? comparable && !isSchoolOrBelow : comparable;
             return (
               <DomainInsightCard
                 key={d.domain.id}
@@ -119,7 +125,7 @@ export default function ScorecardHome() {
                 heroRec={hero}
                 secondaryRec={secondary}
                 parentName={parentName}
-                comparable={comparable}
+                comparable={cardComparable}
                 comparing={applied}
                 compareChildren={compareChildren}
                 compareMetrics={adminCompareMetrics}

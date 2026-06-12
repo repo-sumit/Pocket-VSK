@@ -26,23 +26,16 @@ function N1Chip({
   value,
   unit,
   lang,
-  avg,
 }: {
   label?: string | null;
   value: number | null;
   unit: Unit;
   lang: Lang;
-  /** §22: append "avg" when the compared figure is an average (percent/score). */
-  avg?: boolean;
 }) {
-  const { t } = useT();
   if (!label || value == null) return null;
   return (
     <span className="mt-2.5 inline-flex w-fit items-center gap-2 rounded-full bg-primary-50 px-3 py-1.5 ring-1 ring-primary-200">
-      <span className="text-xs font-bold text-primary-700">
-        {label}
-        {avg ? ` ${t("common.avg")}` : ""}
-      </span>
+      <span className="text-xs font-bold text-primary-700">{label}</span>
       <span className="text-base font-extrabold tnum text-primary-700">
         {formatValue(value, unit, lang)}
       </span>
@@ -191,8 +184,7 @@ export function DomainInsightCard({
         )}
 
         {/* optional second metric below a divider (Administration → CRC/URC visits),
-            with its OWN N+1 pill. A ratio/decimal average → "District avg · 1.8" (avg,
-            no %); a count → "District · 260". */}
+            with its OWN N+1 pill — "District · 1.8" (decimal, no %); a count → "District · 260". */}
         {!isOutput && secondaryRec && (
           <div className="mt-1 border-t border-line/60 pt-2.5">
             <p className="line-clamp-2 min-w-0 text-sm font-semibold leading-snug text-neutral-700">
@@ -206,14 +198,16 @@ export function DomainInsightCard({
               value={peerAvg(secondaryRec.kpi.id, level)}
               unit={secondaryRec.kpi.unit}
               lang={lang}
-              avg={secondaryRec.kpi.unit !== "count"}
             />
           </div>
         )}
       </button>
 
-      {/* ── embedded comparison — only after Compare is applied (no hint before; card stays compact) ── */}
-      {comparable && comparing && (
+      {/* ── embedded comparison — only after Compare is applied (no hint before; card stays
+          compact). The multi-metric card (Administration) additionally requires valid child
+          rows: it has nothing to compare below school, so we show no chips and no "Not tracked
+          at this level" there — just the compact KPI rows above. ── */}
+      {comparable && comparing && (metrics.length <= 1 || hasData) && (
         <div className="mt-auto border-t border-line/70 px-4 pb-4 pt-3 sm:px-5">
           {/* two-metric card (Administration) → "Compare by" chips; one chart at a time */}
           {metrics.length > 1 && (
@@ -289,7 +283,7 @@ function InputHead({
         </span>
         {phrase}
       </p>
-      <N1Chip label={parentLabel} value={peerScore} unit={unit} lang={lang} avg={unit !== "count"} />
+      <N1Chip label={parentLabel} value={peerScore} unit={unit} lang={lang} />
     </>
   );
 }
@@ -336,7 +330,7 @@ function OutputHead({
           />
         )}
       </div>
-      <N1Chip label={parentLabel} value={parentPercent} unit="%" lang={lang} avg />
+      <N1Chip label={parentLabel} value={parentPercent} unit="%" lang={lang} />
     </>
   );
 }
