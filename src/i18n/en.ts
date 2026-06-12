@@ -262,6 +262,7 @@ export const en = {
     selectedOf: "{n} of {total} selected",
     chartTitle: "{level} comparison",
     by: "Compare by",
+    crcVisits: "CRC/URC Visits",
     notTracked: "Not tracked at this level",
     remove: "Remove comparison",
   },

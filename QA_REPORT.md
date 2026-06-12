@@ -1,5 +1,110 @@
 # Pocket VSK — QA Report
 
+## Administration card — N+1 pill + Compare on BOTH KPIs (Pass 43)
+
+The homepage **Administration** card carries two KPIs — Untracked Students (hero) and No. of
+CRC/URC Visits per school (secondary). The hero already had an N+1 pill and a compare chart; the
+CRC/URC row had neither. Both now behave identically.
+
+### N+1 comparison pill on the CRC/URC row
+
+The secondary row now renders its own `N1Chip` (same pill style as every other card) using
+`peerAvg(vis_CRCC_count, level)` — the parent-level published average — with `avg = unit !== "count"`.
+So at block view it reads **`District avg · 1.8`** (ratio → "avg", formatted as a decimal, never
+`%`), while the untracked row stays **`District · 260`** (count, no "avg"). At State (no parent)
+neither pill shows, matching the existing peer logic used across all cards.
+
+### "Compare by" selector — both metrics comparable
+
+When Compare is applied, the Administration card now shows a **Compare by** chip selector
+(`[Untracked Students] [CRC/URC Visits]`, default Untracked) and one chart at a time — mirroring
+the multi-metric `KpiCompareSection` pattern, so the card never grows two stacked charts:
+
+- **Untracked Students** → count bars (`useKpiChildSeries("ret_dropout", childIds)`, auto-scaled,
+  worst-first since lower-is-better).
+- **CRC/URC Visits** → decimal bars (`useKpiChildSeries("vis_CRCC_count", childIds)`, `unit:"ratio"`,
+  `maxValue:3`) — no `%`.
+
+Chips/charts appear only after Compare is applied (no empty space, no "Tap Compare…" hint). Every
+other input domain stays single-metric (no chips); GSQAC keeps its domain-% bars.
+
+### Data consistency
+
+All three figures come from the canonical sources — the card value from the scorecard record, the
+N+1 value from `peerAvg` (PUBLISHED parent), and the bars from `useKpiChildSeries` — the same
+sources the KPI detail and other compare charts use. No values are hardcoded in the component.
+
+### Implementation
+
+`DomainInsightCard` now takes an optional `compareMetrics: { rec, chipLabel }[]`. When >1 it
+renders the chip selector and drives the chart off the SELECTED metric's record (its own unit /
+direction / maxValue); the default is the hero alone (no chips). `ScorecardHome` builds the
+two-metric list only for `domain.id === "administration"` (chip labels: the untracked KPI name +
+the new `compare.crcVisits` = "CRC/URC Visits", en + gu).
+
+### Files changed
+
+- `src/components/ui/DomainInsightCard.tsx` — CRC/URC N+1 pill; `compareMetrics` prop + chip
+  selector; chart driven by the selected metric.
+- `src/screens/ScorecardHome.tsx` — pass `compareMetrics` for the Administration card.
+- `src/i18n/en.ts`, `src/i18n/gu.ts` — `compare.crcVisits`.
+
+### Verification
+
+- `npx tsc --noEmit` ✓ clean · `npm run build` ✓ (`built in 27.88s`; only the pre-existing
+  >1.5 MB `entities` chunk-size warning).
+- Reference values confirmed: `ret_dropout` district 260, `vis_CRCC_count` district 1.8 →
+  pills "District · 260" and "District avg · 1.8".
+- No changes to login/header/filter/share-export/compare sheet behaviour, GSQAC, assessment
+  ordering, Parakh, the Untracked detail page, other domain cards, KPI formulas, or routes.
+
+---
+
+## Home compare bars use the hero indicator's unit, not the domain % (Pass 42)
+
+### Bug
+
+On the homepage domain cards, the embedded "… COMPARISON" bars always rendered the **domain
+score percent** (`leaderboard.domainPercents[domainId]`) with a hardcoded `unit="%"` /
+`maxValue={100}`. So the Attendance card — whose hero is a **count** ("225 students absent") —
+showed cluster bars as `87.9% … 92.8%` (the attendance *score*), not the absent-student counts.
+The N+1 pill ("District 790") was already a count; only the bars disagreed.
+
+### Fix
+
+The bars now follow the **hero indicator's own unit**, mirroring the already-correct
+`KpiCompareSection` used on the KPI/domain pages:
+
+- `DomainInsightCard` computes its own input-domain bars from
+  `useKpiChildSeries(heroKpi.id, selectedChildIds)` (the same provider series the detail uses),
+  rendering them in `heroKpi.unit`: `count → count`, `% → %`, `ratio → ratio`. `maxValue` is 100
+  for %/score, 3 for ratio, else auto-scaled; `lowerBetter` follows `heroKpi.direction` so
+  lower-is-better counts (absent, untracked) sort worst-first.
+- GSQAC (output) is itself a percent score, so it keeps the domain-percent `bars` path (`unit=%`,
+  max 100) — unchanged.
+- `ScorecardHome` now passes `compareChildren` (selected child id + label) to input cards instead
+  of pre-baked `bars`; `bars` is passed only for the GSQAC card. The `bars` prop is now optional.
+
+Net: Attendance/Administration (count heroes) show counts; Assessment (% hero) shows %; GSQAC
+shows the score %. Verified hero units — `att_chronic` count·lower, admin untracked count·lower,
+`asm_sat2` %·higher.
+
+### Files changed
+
+- `src/components/ui/DomainInsightCard.tsx` — compute hero-unit bars via `useKpiChildSeries`;
+  `bars` optional + new `compareChildren` prop; pass `unit`/`maxValue`/`lowerBetter` through.
+- `src/screens/ScorecardHome.tsx` — pass `compareChildren` to input cards; keep `childBars` (the
+  domain-percent path) for the GSQAC card only.
+
+### Verification
+
+- `npx tsc --noEmit` ✓ clean · `npm run build` ✓ (`built in 16.01s`; only the pre-existing
+  >1.5 MB `entities` chunk-size warning).
+- No changes to login/routing, header, filter/compare sheets, GSQAC scoring, assessment ordering,
+  or Parakh. KPI values/formulas unchanged; this only changes which series the bars plot.
+
+---
+
 ## CRC/URC visits on the Administration domain card — non-teachers only (Pass 41)
 
 Moved/extended the "No. of CRC/URC visits" metric so it sits with untracked students on the

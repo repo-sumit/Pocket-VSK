@@ -263,6 +263,7 @@ export const gu: Dict = {
     selectedOf: "{total} માંથી {n} પસંદ",
     chartTitle: "{level} સરખામણી",
     by: "આના દ્વારા સરખાવો",
+    crcVisits: "CRC/URC મુલાકાતો",
     notTracked: "આ સ્તરે ટ્રેક થતું નથી",
     remove: "સરખામણી દૂર કરો",
   },

@@ -103,6 +103,13 @@ export default function ScorecardHome() {
             const secondary = d.domain.id === "administration"
               ? d.records.find((r) => r.kpi.id === "vis_CRCC_count") ?? null
               : null;
+            // Both Administration metrics are comparable → "Compare by" chip selector.
+            const adminCompareMetrics = d.domain.id === "administration" && hero && secondary
+              ? [
+                  { rec: hero, chipLabel: tn(hero.kpi.name, hero.kpi.name_gu) },
+                  { rec: secondary, chipLabel: t("compare.crcVisits") },
+                ]
+              : undefined;
             return (
               <DomainInsightCard
                 key={d.domain.id}
@@ -115,6 +122,7 @@ export default function ScorecardHome() {
                 comparable={comparable}
                 comparing={applied}
                 compareChildren={compareChildren}
+                compareMetrics={adminCompareMetrics}
                 chartTitle={chartTitle}
                 onDrill={() => navigate(`/app/domain/${d.domain.id}`)}
                 onOpenChild={drillChild}

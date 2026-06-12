@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { cn } from "@/lib/cn";
 import type { DomainScore, KpiRecord, Level, Unit } from "@/types";
 import { accent } from "@/lib/colors";
@@ -75,6 +76,7 @@ export function DomainInsightCard({
   comparing,
   bars,
   compareChildren,
+  compareMetrics,
   chartTitle,
   onDrill,
   onOpenChild,
@@ -100,6 +102,10 @@ export function DomainInsightCard({
   /** input domains — selected child units; bars are computed from the hero KPI's
    *  per-child values in the hero's OWN unit (count→count, %→%), not the domain %. */
   compareChildren?: { id: string; label: string }[];
+  /** input domains with >1 comparable metric (e.g. Administration: untracked +
+   *  CRC/URC visits) — drives the "Compare by" chip selector. Defaults to the hero
+   *  alone (no chips). Each metric's bars use its OWN record's unit. */
+  compareMetrics?: { rec: KpiRecord; chipLabel: string }[];
   chartTitle: string;
   onDrill: () => void;
   onOpenChild?: (id: string) => void;
@@ -108,22 +114,26 @@ export function DomainInsightCard({
   const a = accent(ds.domain.accent);
   const isOutput = ds.domain.kind === "output";
 
-  // Embedded comparison data. The hero indicator's unit drives the bars: a count
-  // hero (e.g. "students absent") shows counts, a % hero shows percentages — never
-  // the domain SCORE percent. GSQAC (output) is itself a %, so it keeps the passed
-  // domain-percent `bars`.
-  const heroKpi = isOutput ? null : heroRec?.kpi ?? null;
-  const compareIds = comparable && comparing && heroKpi ? (compareChildren ?? []).map((c) => c.id) : [];
-  const heroSeries = useKpiChildSeries(heroKpi?.id, compareIds);
+  // Embedded comparison data. The SELECTED metric's unit drives the bars: a count
+  // metric (e.g. "students absent", "untracked") shows counts, a ratio metric
+  // (CRC/URC visits) shows decimals, a % metric shows percentages — never the domain
+  // SCORE percent. Administration has two metrics (chip selector); other input domains
+  // just the hero. GSQAC (output) is itself a %, so it keeps the passed domain-% `bars`.
+  const metrics = compareMetrics ?? (!isOutput && heroRec ? [{ rec: heroRec, chipLabel: "" }] : []);
+  const [mi, setMi] = useState(0);
+  const selIdx = Math.min(mi, Math.max(0, metrics.length - 1));
+  const selKpi = metrics[selIdx]?.rec.kpi ?? null;
+  const compareIds = comparable && comparing && selKpi ? (compareChildren ?? []).map((c) => c.id) : [];
+  const selSeries = useKpiChildSeries(selKpi?.id, compareIds);
   const labelById = new Map((compareChildren ?? []).map((c) => [c.id, c.label]));
-  const inputBars: ChildBar[] = heroSeries
+  const inputBars: ChildBar[] = selSeries
     .filter((s) => s.value != null)
     .map((s) => ({ id: s.id, label: labelById.get(s.id) ?? s.id, value: s.value, status: "na" }));
 
   const chartBars = isOutput ? bars ?? [] : inputBars;
-  const chartUnit: Unit = isOutput ? "%" : heroKpi?.unit ?? "%";
+  const chartUnit: Unit = isOutput ? "%" : selKpi?.unit ?? "%";
   const chartMax = chartUnit === "%" || chartUnit === "score" ? 100 : chartUnit === "ratio" ? 3 : undefined;
-  const chartLowerBetter = !isOutput && heroKpi?.direction === "lower";
+  const chartLowerBetter = !isOutput && selKpi?.direction === "lower";
   const hasData = chartBars.some((b) => b.value != null);
   // N+1 compares to the next level UP, labelled by the level word ("vs State"), §11
   const parentLevel = peerLevelOf(level);
@@ -180,20 +190,53 @@ export function DomainInsightCard({
           />
         )}
 
-        {/* optional second metric below a divider (Administration → CRC/URC visits) */}
+        {/* optional second metric below a divider (Administration → CRC/URC visits),
+            with its OWN N+1 pill. A ratio/decimal average → "District avg · 1.8" (avg,
+            no %); a count → "District · 260". */}
         {!isOutput && secondaryRec && (
-          <p className="mt-1 line-clamp-2 min-w-0 border-t border-line/60 pt-2.5 text-sm font-semibold leading-snug text-neutral-700">
-            <span className="mr-1.5 align-baseline text-2xl font-extrabold tnum text-neutral-900">
-              {formatValue(secondaryRec.value, secondaryRec.kpi.unit, lang)}
-            </span>
-            {formatKpiCardTitlePhrase(secondaryRec.kpi.name, secondaryRec.kpi.name_gu, secondaryRec.kpi.unit, lang)}
-          </p>
+          <div className="mt-1 border-t border-line/60 pt-2.5">
+            <p className="line-clamp-2 min-w-0 text-sm font-semibold leading-snug text-neutral-700">
+              <span className="mr-1.5 align-baseline text-2xl font-extrabold tnum text-neutral-900">
+                {formatValue(secondaryRec.value, secondaryRec.kpi.unit, lang)}
+              </span>
+              {formatKpiCardTitlePhrase(secondaryRec.kpi.name, secondaryRec.kpi.name_gu, secondaryRec.kpi.unit, lang)}
+            </p>
+            <N1Chip
+              label={parentLabel}
+              value={peerAvg(secondaryRec.kpi.id, level)}
+              unit={secondaryRec.kpi.unit}
+              lang={lang}
+              avg={secondaryRec.kpi.unit !== "count"}
+            />
+          </div>
         )}
       </button>
 
       {/* ── embedded comparison — only after Compare is applied (no hint before; card stays compact) ── */}
       {comparable && comparing && (
         <div className="mt-auto border-t border-line/70 px-4 pb-4 pt-3 sm:px-5">
+          {/* two-metric card (Administration) → "Compare by" chips; one chart at a time */}
+          {metrics.length > 1 && (
+            <div className="mb-2">
+              <span className="mb-1.5 block text-2xs font-bold uppercase tracking-wide text-neutral-400">{t("compare.by")}</span>
+              <div className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-0.5">
+                {metrics.map((m, i) => (
+                  <button
+                    key={m.rec.kpi.id}
+                    type="button"
+                    onClick={() => setMi(i)}
+                    aria-pressed={i === selIdx}
+                    className={cn(
+                      "inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-full border px-3.5 text-xs font-semibold transition-colors",
+                      i === selIdx ? "border-primary-500 bg-primary-50 text-primary-700" : "border-line bg-white text-neutral-600 hover:bg-neutral-50",
+                    )}
+                  >
+                    {m.chipLabel}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {hasData ? (
             <ChildComparisonBars
               title={chartTitle}
