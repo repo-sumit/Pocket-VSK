@@ -10,6 +10,7 @@ const ScorecardHome = lazy(() => import("@/screens/ScorecardHome"));
 const DomainView = lazy(() => import("@/screens/DomainView"));
 const SubDomainView = lazy(() => import("@/screens/SubDomainView"));
 const GsqacAreaView = lazy(() => import("@/screens/GsqacAreaView"));
+const GsqacSubDomainView = lazy(() => import("@/screens/GsqacSubDomainView"));
 const ParakhScreen = lazy(() => import("@/screens/ParakhScreen"));
 const KpiDetail = lazy(() => import("@/screens/KpiDetail"));
 const Export = lazy(() => import("@/screens/Export"));
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="domain/:domainId" element={<DomainView />} />
             <Route path="domain/:domainId/:subId" element={<SubDomainView />} />
             <Route path="gsqac/:areaKey" element={<GsqacAreaView />} />
+            <Route path="gsqac/:areaKey/:subId" element={<GsqacSubDomainView />} />
             <Route path="parakh" element={<ParakhScreen />} />
             <Route path="kpi/:kpiId" element={<KpiDetail />} />
             {/* standalone Compare & Leaderboard are retired — old links land on the scorecard */}

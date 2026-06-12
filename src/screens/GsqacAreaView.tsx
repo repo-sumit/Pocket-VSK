@@ -77,7 +77,12 @@ export default function GsqacAreaView() {
         <p className="-mt-1 mb-2 text-2xs text-neutral-400">{t("gsqac.selectSub")}</p>
         <div className="flex flex-col gap-2.5">
           {area.subdomains.map((sub) => (
-            <GsqacSubdomainCard key={sub.id} sub={sub} lang={lang} />
+            <GsqacSubdomainCard
+              key={sub.id}
+              sub={sub}
+              lang={lang}
+              onOpen={() => navigate(`/app/gsqac/${area.key}/${sub.id}`)}
+            />
           ))}
         </div>
       </PageSection>

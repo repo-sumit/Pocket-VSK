@@ -2,12 +2,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import type { KpiRecord, Level } from "@/types";
 import { useScope, useKpiRecord, useKpiMetrics, useFramework } from "@/hooks";
 import { useT, type Lang } from "@/i18n";
+import { cn } from "@/lib/cn";
 import { rag } from "@/lib/colors";
-import { resolveMetricLabel } from "@/lib/format";
+import { resolveMetricLabel, locNum } from "@/lib/format";
 import { shouldShowSource, displayFrequency } from "@/lib/displayPolicy";
 import { buildTrend, trendTitleKey, getLastUpdatedLabel } from "@/lib/trend";
+import { gsqacIndicatorById, gsqacIndicatorTrend, gsqacGrade, gsqacStatus } from "@/config/gsqac";
 import { Card, SectionLabel, EmptyNA } from "@/components/ui/atoms";
 import { TrendChart, MultiTrendChart } from "@/components/ui/TrendChart";
+import { RatingBadge } from "@/components/ui/RatingBadge";
 import { FrequencyBadge } from "@/components/ui/DataBadges";
 import { Database } from "@/components/ui/Icon";
 import { RosterDetail } from "@/components/ui/RosterDetail";
@@ -28,6 +31,11 @@ export default function KpiDetail() {
   const metricRecs = useKpiMetrics(kpiId, currentId);
   const { t, tn, lang } = useT();
   const navigate = useNavigate();
+
+  // GSQAC indicators live in a self-contained config (not the provider), so they get
+  // a dedicated detail (score + yearly trend + how-it's-calculated), not a KpiRecord.
+  const gsqacInd = gsqacIndicatorById(kpiId);
+  if (gsqacInd) return <GsqacIndicatorDetail found={gsqacInd} onBack={() => navigate(-1)} />;
 
   if (!rec || !entity || !user) return null;
   const kpi = rec.kpi;
@@ -171,5 +179,61 @@ function MetricTrendCard({ rec, level, lang }: { rec: KpiRecord; level: Level; l
         <TrendChart points={trend.points} unit={rec.kpi.unit} color={c.hex} cadence={trend.cadence} lang={lang} height={180} />
       </div>
     </Card>
+  );
+}
+
+/**
+ * GSQAC indicator detail — self-contained config (not a provider KPI). Shows the
+ * indicator score, a deterministic yearly trend line, how-it's-calculated and the
+ * GSQAC source. No embedded Compare here (Compare lives on the listing pages, §5/§9).
+ */
+function GsqacIndicatorDetail({
+  found,
+  onBack,
+}: {
+  found: NonNullable<ReturnType<typeof gsqacIndicatorById>>;
+  onBack: () => void;
+}) {
+  const { t, tn, lang } = useT();
+  const { area, sub, indicator } = found;
+  const c = rag(gsqacStatus(indicator.score));
+  const points = gsqacIndicatorTrend(indicator.id, indicator.score);
+  const subName = tn(sub.name, sub.name_gu ?? sub.name);
+  const formula =
+    lang === "gu"
+      ? `"${sub.name}" (${tn(area.name, area.name_gu)}) અંતર્ગત આ સૂચક માટેનો GSQAC ક્ષેત્ર-મૂલ્યાંકન સ્કોર, સત્તાવાર શાળા ગુણવત્તા રૂબ્રિક પર 0–100%.`
+      : `GSQAC field-assessment score for this indicator under ${sub.name} (${area.name}), rated 0–100% on the official School Quality rubric.`;
+  return (
+    <ScreenContainer>
+      <BackLink label={subName} onClick={onBack} />
+
+      <div className="pb-2">
+        <p className="text-xs font-semibold text-primary-600">{tn(area.name, area.name_gu)}</p>
+        <h1 className="mt-0.5 text-xl font-extrabold leading-snug text-neutral-900">{indicator.name}</h1>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs text-neutral-400">
+          <FrequencyBadge frequency="Yearly" />
+          <span>· 2024–25</span>
+          <span className="inline-flex items-center gap-1 truncate" title="GSQAC Dashboard">
+            <Database size={10} className="shrink-0" /> GSQAC Dashboard
+          </span>
+        </div>
+        <div className="mt-3 flex items-center gap-2.5">
+          <span className={cn("text-4xl font-extrabold tnum leading-none", c.text)}>{locNum(indicator.score, lang)}%</span>
+          <RatingBadge grade={gsqacGrade(indicator.score)} size="sm" />
+        </div>
+      </div>
+
+      <Card className="card-pad">
+        <SectionLabel>{t("kpi.trendYearly")}</SectionLabel>
+        <div className="mt-2">
+          <TrendChart points={points} unit="%" color={c.hex} cadence="yearly" lang={lang} />
+        </div>
+      </Card>
+
+      <Card className="card-pad">
+        <SectionLabel>{t("kpi.formula")}</SectionLabel>
+        <p className="mt-2 text-sm text-neutral-700">{formula}</p>
+      </Card>
+    </ScreenContainer>
   );
 }

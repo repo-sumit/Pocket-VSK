@@ -1,5 +1,79 @@
 # Pocket VSK — QA Report
 
+## GSQAC drill: Area → Sub-domain page → Indicator cards → KPI detail, all Compare-enabled (Pass 33)
+
+Extended the GSQAC / School Quality flow to a full domain-style drill, so every level lists
+its children as proper cards and supports embedded Compare, ending in a normal KPI detail page.
+
+### Navigation flow (implemented)
+
+```
+/app/domain/school_quality            → Overall + 5 area cards            (Compare ✓)
+  → /app/gsqac/:areaKey               → area headline + sub-domain cards  (Compare ✓)
+    → /app/gsqac/:areaKey/:subId      → sub-domain headline + indicator cards (Compare ✓)
+      → /app/kpi/:indicatorId         → GSQAC indicator detail (trend + data, no Compare)
+```
+
+The existing `/app/gsqac/:areaKey` prefix was **extended by one level** (`:areaKey/:subId`)
+rather than colliding with the generic `/app/domain/:domainId/:subId` route — behaviourally
+equivalent to the spec's nested paths, no existing routes broken (§1). New route registered in
+`App.tsx` (lazy-loaded `GsqacSubDomainView`).
+
+### GSQAC data restructure (`config/gsqac.ts`)
+
+- Sub-domain `indicators` changed from `string[]` → **`GsqacIndicator[]` (`{ id, name, score }`)**
+  with stable, GSQAC-prefixed ids (`sq_<subId>_<i>`) so each indicator can be its own card,
+  drill to `/app/kpi/:id`, and resolve back. Indicator names + scores are the brief's §6 dataset
+  (deterministic dummy data — no provider series exists for GSQAC).
+- Added `gsqacSubdomainById(subId)` and `gsqacIndicatorById(id)` lookups, and
+  `gsqacIndicatorTrend(id, score)` — a deterministic 4-point yearly series for the detail chart.
+- `gsqacCompareValue` (Pass 32) reused for every level's Compare bars.
+
+### Sub-domain & indicator cards (`components/ui/GsqacCards.tsx`)
+
+- **`GsqacSubdomainCard`** is no longer an inline accordion — it's a **navigation card**
+  (score · grade · indicator count · chevron) that opens the sub-domain page and shows the
+  embedded `GsqacCompareSection` after Compare is applied (§2).
+- New **`GsqacIndicatorCard`** — compact KPI-style row (status dot · name · score% · chevron)
+  with the same `GsqacCompareSection`, drilling to the KPI detail (§3, §4, §8).
+- Both reuse the shared `ChildComparisonBars` + `CompareContext` via `GsqacCompareSection`
+  (no one-off chart). Compare bars stay percent, baseline-aligned, with the school-and-above
+  level guard (no fabricated grade/section GSQAC, §10).
+
+### Screens
+
+- New **`GsqacSubDomainView`** (`/app/gsqac/:areaKey/:subId`): sub-domain headline + one
+  `GsqacIndicatorCard` per indicator.
+- **`GsqacAreaView`**: sub-domain cards now navigate to the sub-domain page (were inline
+  accordions).
+- **`KpiDetail`**: detects a GSQAC indicator id (`gsqacIndicatorById`) and renders a dedicated
+  **`GsqacIndicatorDetail`** — area eyebrow · indicator name · `Yearly · 2024–25 · GSQAC
+  Dashboard` meta · big score + grade · **yearly trend line chart** · "How it's calculated".
+  No embedded Compare on the detail page; Compare button stays hidden on `/app/kpi/*` (§5, §9).
+
+### Visual / chart rules
+
+GSQAC indicator + sub-domain cards follow the same white-rounded-card language (title, value,
+right chevron, grade colour allowed for GSQAC). Bars use the shared component (same baseline,
+fixed-height tracks, 2-line labels, 1–8 spread / 9+ chart-strip-only scroll) — no new chart
+bugs, no full-page horizontal overflow (§8, §10).
+
+### Files changed
+
+`config/gsqac.ts` (indicator objects + ids + lookups + trend), `components/ui/GsqacCards.tsx`
+(sub-domain nav card + new indicator card), `screens/GsqacSubDomainView.tsx` (new),
+`screens/GsqacAreaView.tsx` (sub-domain navigation), `screens/KpiDetail.tsx` (GSQAC indicator
+detail), `App.tsx` (new route).
+
+### Build
+
+`tsc --noEmit` ✓ · `vite build` ✓ (`built in 11.95s`; only the pre-existing `entities` seed
+chunk-size warning). Playwright not run, per standing instruction. Non-GSQAC domains, login,
+header, filter, share/export, PARAKH, Assessment ordering, and Administration cleanup untouched
+(§12).
+
+---
+
 ## GSQAC Compare support — embedded comparison charts on School Quality cards (Pass 32)
 
 Added embedded Compare charts to the **GSQAC / School Quality** cards so they behave like the
