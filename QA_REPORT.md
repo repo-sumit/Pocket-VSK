@@ -1,5 +1,51 @@
 # Pocket VSK — QA Report
 
+## Homepage cards driven by current view level, not login role (Pass 51)
+
+### Bug
+A direct Teacher/Principal login at School/Grade/Section saw 4 cards (Attendance, Assessment,
+School Quality, Untracked Students), but an officer who **drilled down** to the same level saw only
+Attendance + Assessment. Card visibility was gated on `isTP` (role) instead of the current scope.
+
+### Fix (single source of truth = current scope level)
+`src/screens/ScorecardHome.tsx`:
+- Replaced the `isTP` role gate with `atSchoolOrBelow` (= `entity.level ∈ {school, grade, section}`)
+  for all three card decisions, so **any** user at school/grade/section gets the same homepage:
+  - **inputs**: drop the `administration` domain card (replaced by Untracked Students) for everyone
+    at school-or-below; officers above school keep the full set incl. Administration.
+  - **School Quality**: at grade/section, fall back to the **nearest school** in the scope `trail`
+    (`trail.find(level==="school")`) — works whether the user logged in at the school or drilled in
+    (previously used `homeId`, which for a drilled officer is their officer entity, not the school).
+  - **Untracked Students**: shown at school/grade/section for every role; count comes from the new
+    shared `scopedUntrackedStudents(role, level, gradeNo, sectionLabel)` helper so it matches the
+    detail (§8). N+1 pill = the teacher/principal benchmark, shown at school only.
+- `UntrackedHomeCard` is now purely presentational (`count` + optional `compare` pill), role-agnostic.
+- `src/lib/rosterMock.ts`: added `scopedUntrackedStudents` (teacher → own 5; principal/officer → the
+  school's 82; then filtered to grade / grade+section). `src/components/ui/RosterDetail.tsx` now reads
+  the same helper for its scoped count across **all** roles, so card and detail agree; the names list
+  stays privacy-gated (officers → counts only, no names, §5/§23).
+
+### Unchanged
+Officer homepage at State/District/Block/Cluster (Attendance, Assessment, Administration, School
+Quality). Teacher/Principal direct login. Detail privacy (officers see counts only). Compare,
+GSQAC nested pages, Assessment ordering, Parakh, Grade 10/12, routes, KPI formulas.
+
+### QC
+- `npx tsc --noEmit` ✓ · `npm run build` ✓ (`built in 16.57s`; pre-existing chunk-size warning only).
+  No stale `isTP`/`homeId`/`homeSc` references.
+- **Playwright (390×844, real browser, 0 console errors):**
+  - Cluster Officer at **cluster** → officer set (Attendance, Assessment, Administration, School Quality). Unchanged.
+  - Cluster Officer drilled to **School** → Attendance, Assessment, **School Quality 58.8% B** (not NA/empty), **Untracked Students 82**. No Administration card.
+  - Cluster Officer drilled to **Grade 1** → same 4 cards; School Quality 58.8% (school fallback); **Untracked Students 12** (scoped to Grade 1).
+  - Officer → Untracked detail at Grade 1 → summary "12 untracked" (matches card) with **no student names** ("Not tracked at this level" N-1 list) — privacy preserved.
+  - (The fix is level-based, so State/District/Block officers behave identically; cluster was exercised as representative.)
+
+### Files changed
+- `src/screens/ScorecardHome.tsx`, `src/components/ui/UntrackedHomeCard.tsx`,
+  `src/components/ui/RosterDetail.tsx`, `src/lib/rosterMock.ts`.
+
+---
+
 ## Parakh detail bars sized to match Compare charts (Pass 50)
 
 The Parakh subject bars on `/app/kpi/assessment_parakh` were thinner (18px) than the Compare

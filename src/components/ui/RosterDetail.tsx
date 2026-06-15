@@ -9,7 +9,7 @@ import { Card } from "./atoms";
 import { ChevronDown } from "./Icon";
 import {
   TEACHER_ABSENTEES, ABSENT_BY_GRADE, TEACHER_UNTRACKED, UNTRACKED_BY_GRADE, UNTRACKED_SUMMARY,
-  type AbsentStudent, type UntrackedStudent,
+  scopedUntrackedStudents, type AbsentStudent, type UntrackedStudent,
 } from "@/lib/rosterMock";
 
 /**
@@ -51,22 +51,19 @@ export function RosterDetail({
     ? UNTRACKED_SUMMARY[role as "teacher" | "principal"]
     : null;
 
-  // Untracked roster scoped to the CURRENT hierarchy level (§1): school → the whole
-  // role roster (teacher = own 5, principal = school 82); grade → that grade only;
-  // section → that grade + section only. The summary count always equals the list length.
-  const untrackedRoster: UntrackedStudent[] = isTeacher
-    ? TEACHER_UNTRACKED
-    : UNTRACKED_BY_GRADE.flatMap((g) => g.students);
-  const gradeStr = gradeNo != null ? `Grade ${gradeNo}` : null;
-  const scopedUntracked = kind !== "untracked" || !isTP
-    ? null
-    : level === "section" && gradeStr
-      ? untrackedRoster.filter((s) => s.grade === gradeStr && s.section === (sectionLabel ?? ""))
-      : level === "grade" && gradeStr
-        ? untrackedRoster.filter((s) => s.grade === gradeStr)
-        : untrackedRoster; // school (and above)
-  const scopedInGradeSection = !!scopedUntracked && (level === "grade" || level === "section");
-  const untrackedCount = scopedUntracked ? scopedUntracked.length : null;
+  // Untracked count scoped to the CURRENT level (§1/§8) — via the shared
+  // `scopedUntrackedStudents` helper, so the homepage card and this detail always agree
+  // for EVERY role, incl. a drilled officer (teacher = own 5; principal/officer = the
+  // school's 82; then filtered to the grade / grade+section). The names LIST is still
+  // privacy-gated below (officers never see names, §5/§23).
+  const isSchoolOrBelow = level === "school" || level === "grade" || level === "section";
+  const untrackedScoped = kind === "untracked" && isSchoolOrBelow
+    ? scopedUntrackedStudents(role, level, gradeNo ?? null, sectionLabel ?? null)
+    : null;
+  const untrackedCount = untrackedScoped ? untrackedScoped.length : null;
+  const scopedInGradeSection = level === "grade" || level === "section";
+  // flat names list only for teacher/principal at grade/section (officers → OfficerList)
+  const showScopedNames = isTP && !!untrackedScoped && scopedInGradeSection;
 
   const comparePill = tpUntracked ? (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-700 ring-1 ring-primary-200">
@@ -81,9 +78,9 @@ export function RosterDetail({
   const summary = (
     <Card className="card-pad">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        {tpUntracked ? (
+        {untrackedCount != null ? (
           <span className="flex items-baseline gap-1.5">
-            <b className="text-3xl font-extrabold tnum text-neutral-900">{locNum(untrackedCount ?? tpUntracked.untracked, lang)}</b>
+            <b className="text-3xl font-extrabold tnum text-neutral-900">{locNum(untrackedCount, lang)}</b>
             <span className="text-sm font-medium text-neutral-500">{t("roster.untrackedCount")}</span>
           </span>
         ) : (
@@ -106,8 +103,8 @@ export function RosterDetail({
   return (
     <div className="flex flex-col gap-3">
       {summary}
-      {scopedInGradeSection && scopedUntracked ? (
-        <ScopedUntrackedList students={scopedUntracked} />
+      {showScopedNames && untrackedScoped ? (
+        <ScopedUntrackedList students={untrackedScoped} />
       ) : isTeacher ? (
         <TeacherList kind={kind} />
       ) : isPrincipal ? (

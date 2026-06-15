@@ -5,7 +5,7 @@
  * renders the same list. Names appear ONLY for teacher/principal scope (§23); officers
  * see counts per child unit, never names.
  */
-import type { Level } from "@/types";
+import type { Level, Role } from "@/types";
 
 function h(s: string): number {
   let x = 2166136261;
@@ -130,6 +130,26 @@ export const UNTRACKED_SUMMARY: Record<"teacher" | "principal", UntrackedSummary
   teacher: { untracked: 5, compareLevel: "school", compareValue: "18" },
   principal: { untracked: 82, compareLevel: "state", compareValue: "1.2K" },
 };
+
+/**
+ * Untracked students scoped to the current view level (§1/§8) — the SINGLE source the
+ * homepage card and the ret_dropout detail both read, so their counts always agree across
+ * login and drilldown. A teacher sees their own class roster (5); everyone else — principal
+ * AND an officer who has drilled into a school — sees that school's grade-wise roster (82),
+ * then filtered to the current grade / grade + section.
+ */
+export function scopedUntrackedStudents(
+  role: Role,
+  level: Level,
+  gradeNo: number | null,
+  sectionLabel: string | null,
+): UntrackedStudent[] {
+  const base = role === "teacher" ? TEACHER_UNTRACKED : UNTRACKED_BY_GRADE.flatMap((g) => g.students);
+  const gradeStr = gradeNo != null ? `Grade ${gradeNo}` : null;
+  if (level === "section" && gradeStr) return base.filter((s) => s.grade === gradeStr && s.section === (sectionLabel ?? ""));
+  if (level === "grade" && gradeStr) return base.filter((s) => s.grade === gradeStr);
+  return base; // school (and above)
+}
 
 // NOTE: the officer N-1 list is NOT generated here. It reads the SAME canonical
 // provider series the comparison chart uses (`useKpiChildSeries`) so the detail list
