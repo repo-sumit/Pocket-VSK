@@ -1,5 +1,55 @@
 # Pocket VSK — QA Report
 
+## Fix Vercel build break — mangled `asm_sat1`/`asm_sat2` identifiers (Pass 47)
+
+### Symptom
+
+Vercel build (commit `02202a5`) failed in `tsc --noEmit` with ~120 cascading errors in
+`src/config/kpiCatalog.ts` — `TS1005 ',' expected`, `TS6189 Multiple consecutive numeric
+separators`, `TS1351 An identifier or keyword cannot immediately follow a numeric literal`,
+starting at lines 58/66 and breaking the parser from ~182 on.
+
+### Root cause
+
+An autocorrect/"humanizer" transformation had rewritten the KPI identifiers `asm_sat1` → `asm_SAT 1`
+and `asm_sat2` → `asm_SAT 2` (uppercased the acronym and inserted a space before the digit). As
+**object keys / property access** (`BASE_PUBLISHED` and `METRIC_PUBLISHED`) the space made them
+invalid syntax, which is what broke the build. The same mangling also hit the `id:` strings and a
+couple of references/comments (valid syntax but wrong ids). Display labels like `"(SAT 2)"`, the
+`resultSubMetrics("SAT 2", …)` label, and prose comments were intentionally left as-is — they lack
+the `asm_` prefix. (Local Pass 46 build was clean, so this was introduced into the working copy
+*after* that, and committed.)
+
+### Fix
+
+Restored the canonical lowercase ids across the three affected files (`asm_SAT 1` → `asm_sat1`,
+`asm_SAT 2` → `asm_sat2`):
+
+- `src/config/kpiCatalog.ts` — `BASE_PUBLISHED` keys (58, 66), `METRIC_PUBLISHED` keys + anchor
+  property access (182–209), and the two `id:` strings (547, 570).
+- `src/lib/displayPolicy.ts` — `ASSESSMENT_DELTA_PARENTS` set entries (19, 20) + a comment.
+- `src/types/index.ts` — a doc comment.
+
+No surviving correct `asm_sat*` references existed (all were mangled together), so the ids are now
+internally consistent: parent ids `asm_sat1`/`asm_sat2` match the synthesized sub-metric keys
+(`asm_sat1__avgScore`, …) in `METRIC_PUBLISHED`.
+
+### Verification
+
+- Grep confirms **zero** remaining `asm_SAT ` (spaced) tokens in `src/`.
+- `npx tsc --noEmit` ✓ clean (whole project — no other corruption) · `npm run build` ✓
+  (`built in 12.39s`; only the pre-existing >1.5 MB `entities` chunk-size warning) — this mirrors
+  the exact Vercel build command `tsc --noEmit && vite build`.
+
+> Note: the Vercel log's two "Error while parsing config file: package-lock.json" lines are benign
+> npm notices (build continued past them); they were not the failure cause.
+
+### Files changed
+
+- `src/config/kpiCatalog.ts`, `src/lib/displayPolicy.ts`, `src/types/index.ts`.
+
+---
+
 ## Hide Administration "Compare by" at School/Grade/Section (Pass 46)
 
 At School/Grade/Section the officer-view **Administration** card showed a "Compare by" chip row

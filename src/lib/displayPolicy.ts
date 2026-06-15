@@ -16,13 +16,13 @@ import { cadenceOf } from "@/lib/trend";
  */
 
 const ASSESSMENT_DELTA_PARENTS = new Set([
-  "asm_SAT 1",
-  "asm_SAT 2",
+  "asm_sat1",
+  "asm_sat2",
   "asm_cet",
   "asm_cgms",
 ]);
 
-/** parent indicator id of a (possibly synthesized) sub-metric id — `asm_SAT 1__avgScore` → `asm_SAT 1`. */
+/** parent indicator id of a (possibly synthesized) sub-metric id — `asm_sat1__avgScore` → `asm_sat1`. */
 export function parentKpiId(kpiId: string): string {
   return kpiId.split("__")[0];
 }

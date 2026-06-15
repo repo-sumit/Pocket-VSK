@@ -55,7 +55,7 @@ const BASE_PUBLISHED: Record<string, Pub> = {
   // att_report is multi-metric — parent anchor not used directly (sub-metrics resolve via METRIC_PUBLISHED)
   att_report: { school: 92, cluster: 91, block: 93, district: 94, state: 95 },
   // Assessment — all classroom-level (down to section); CET/CGMS hidden from teacher via roleVisibility.
-  asm_SAT 1: {
+  asm_sat1: {
     section: 72,
     school: 74,
     cluster: 76,
@@ -63,7 +63,7 @@ const BASE_PUBLISHED: Record<string, Pub> = {
     district: 81,
     state: 83,
   },
-  asm_SAT 2: {
+  asm_sat2: {
     section: 74,
     school: 76,
     cluster: 78,
@@ -179,8 +179,8 @@ const BASE_PUBLISHED: Record<string, Pub> = {
  */
 const METRIC_PUBLISHED: Record<string, Pub> = {
   // SAT 1 — Avg score (= parent), students below hierarchy avg (lower better), participation
-  asm_SAT 1__avgScore: BASE_PUBLISHED.asm_SAT 1,
-  asm_SAT 1__belowHierarchyAvg: {
+  asm_sat1__avgScore: BASE_PUBLISHED.asm_sat1,
+  asm_sat1__belowHierarchyAvg: {
     section: 34,
     school: 32,
     cluster: 30,
@@ -188,7 +188,7 @@ const METRIC_PUBLISHED: Record<string, Pub> = {
     district: 24,
     state: 21,
   },
-  asm_SAT 1__participation: {
+  asm_sat1__participation: {
     section: 88,
     school: 89,
     cluster: 90,
@@ -197,8 +197,8 @@ const METRIC_PUBLISHED: Record<string, Pub> = {
     state: 93,
   },
   // SAT 2
-  asm_SAT 2__avgScore: BASE_PUBLISHED.asm_SAT 2,
-  asm_SAT 2__belowHierarchyAvg: {
+  asm_sat2__avgScore: BASE_PUBLISHED.asm_sat2,
+  asm_sat2__belowHierarchyAvg: {
     section: 33,
     school: 31,
     cluster: 29,
@@ -206,7 +206,7 @@ const METRIC_PUBLISHED: Record<string, Pub> = {
     district: 23,
     state: 20,
   },
-  asm_SAT 2__participation: {
+  asm_sat2__participation: {
     section: 89,
     school: 90,
     cluster: 91,
@@ -544,7 +544,7 @@ const RAW: Array<
       "Gyan Prabhav generates a SAT report card per classroom; this is the share of classrooms that downloaded it.",
   },
   {
-    id: "asm_SAT 2",
+    id: "asm_sat2",
     domain_id: "assessment",
     name: "Semester Assessment Test 2 (SAT 2)",
     name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 2 (SAT 2)",
@@ -567,7 +567,7 @@ const RAW: Array<
     description: "Latest SAT result — the result-first Assessment headline.",
   },
   {
-    id: "asm_SAT 1",
+    id: "asm_sat1",
     domain_id: "assessment",
     name: "Semester Assessment Test 1 (SAT 1)",
     name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 1 (SAT 1)",

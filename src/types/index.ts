@@ -140,7 +140,7 @@ export interface SubDomainDef {
  * Below-hierarchy-avg and Participation in its Formula/Logic column). Config-driven:
  * a sub-metric is rendered as a compact row/tile inside the parent indicator's card,
  * never as a separate top-level indicator. `id` is suffixed onto the parent KPI id
- * (`asm_SAT 1__participation`) so the provider can resolve a deterministic series for it.
+ * (`asm_sat1__participation`) so the provider can resolve a deterministic series for it.
  */
 export interface KpiMetricDef {
   id: string;
