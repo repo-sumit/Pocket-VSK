@@ -3,6 +3,7 @@ import { useScope, useScorecard } from "@/hooks";
 import { useT } from "@/i18n";
 import { useCompare } from "@/components/compare/CompareContext";
 import { studentRetentionVisible, RETENTION_SUBDOMAIN_ID } from "@/lib/displayPolicy";
+import { scopedAbsentStudents } from "@/lib/rosterMock";
 import { GSQAC_AREAS } from "@/config/gsqac";
 import { Card, StatusDot } from "@/components/ui/atoms";
 import { KpiCardAuto } from "@/components/ui/MultiMetricKpiCard";
@@ -98,18 +99,27 @@ export default function DomainView() {
             items={ds.records}
             getKey={(r) => r.kpi.id}
             getWeight={(r) => getKpiCardLayoutWeight(r.kpi, compareApplied)}
-            renderItem={(r) => (
-              <KpiCardAuto
-                rec={r}
-                name={tn(r.kpi.name, r.kpi.name_gu)}
-                lang={lang}
-                level={entity.level}
-                parentName={parentName}
-                currentId={currentId}
-                role={user?.role}
-                onClick={() => navigate(`/app/kpi/${r.kpi.id}`)}
-              />
-            )}
+            renderItem={(r) => {
+              // att_chronic (Students absent 7+ days) count is roster-canonical at
+              // school/grade/section so this card matches the home card + detail (§4) and
+              // is always a whole number; the provider aggregate is kept at cluster+.
+              const atSchoolOrBelow = entity.level === "school" || entity.level === "grade" || entity.level === "section";
+              const rec = atSchoolOrBelow && r.kpi.id === "att_chronic" && user
+                ? { ...r, value: scopedAbsentStudents(user.role, entity.level, entity.meta.grade_no ?? null, entity.meta.section_label ?? null).length }
+                : r;
+              return (
+                <KpiCardAuto
+                  rec={rec}
+                  name={tn(r.kpi.name, r.kpi.name_gu)}
+                  lang={lang}
+                  level={entity.level}
+                  parentName={parentName}
+                  currentId={currentId}
+                  role={user?.role}
+                  onClick={() => navigate(`/app/kpi/${r.kpi.id}`)}
+                />
+              );
+            }}
           />
           {/* §12/§13 — PARAKH + board results as continuous Assessment cards (no
               separate "District Focus" / "Other assessments" heading, §7). */}

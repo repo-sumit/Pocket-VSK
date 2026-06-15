@@ -9,7 +9,7 @@ import { OUTPUT_DOMAIN_ID } from "@/config/frameworks";
 import { statusFromGrade } from "@/engine";
 import { DomainInsightCard } from "@/components/ui/DomainInsightCard";
 import { UntrackedHomeCard } from "@/components/ui/UntrackedHomeCard";
-import { scopedUntrackedStudents, UNTRACKED_SUMMARY } from "@/lib/rosterMock";
+import { scopedUntrackedStudents, scopedAbsentStudents, UNTRACKED_SUMMARY } from "@/lib/rosterMock";
 import type { ChildBar } from "@/components/ui/ComparisonBars";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { PageSection, PageGrid } from "@/components/layout/PageSection";
@@ -111,7 +111,13 @@ export default function ScorecardHome() {
       <PageSection title={t("scorecard.domainsHeader")}>
         <PageGrid cols="domain">
           {inputs.map((d) => {
-            const hero = d.records.find((r) => r.kpi.hero) ?? null;
+            const rawHero = d.records.find((r) => r.kpi.hero) ?? null;
+            // att_chronic (Students absent 7+ days) is a COUNT — at school/grade/section its
+            // headline comes from the canonical roster (= the detail's list length), so the
+            // card and the detail always agree (§4) and the value is always a whole number.
+            const hero = atSchoolOrBelow && rawHero?.kpi.id === "att_chronic"
+              ? { ...rawHero, value: scopedAbsentStudents(user.role, entity.level, entity.meta.grade_no ?? null, entity.meta.section_label ?? null).length }
+              : rawHero;
             // Administration (officers only — teachers have no access to this domain):
             // show No. of CRC/URC visits below the untracked-students hero, separated by
             // a divider. Sourced from the same scorecard record as the domain detail.

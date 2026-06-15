@@ -84,10 +84,15 @@ export function formatValue(
         : `${n} day${n === 1 ? "" : "s"}`;
     case "hours":
       return lang === "gu" ? `${locNum(n, lang)} કલાક` : `${n} hrs`;
-    case "count":
-      return Math.abs(n) >= 1000
-        ? compactNum(n, lang)
-        : locNum(formatCount(n), lang);
+    case "count": {
+      // a count is always a whole number — round defensively so a stray decimal from an
+      // upstream source can never render as "3.5 students" (§7).
+      const c = Math.round(n);
+      if (process.env.NODE_ENV !== "production" && !Number.isInteger(value)) {
+        console.warn("[format] count metric received a non-integer value", { value });
+      }
+      return Math.abs(c) >= 1000 ? compactNum(c, lang) : locNum(formatCount(c), lang);
+    }
     case "score":
       return `${locNum(n, lang)}`;
     default:

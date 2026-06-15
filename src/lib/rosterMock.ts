@@ -36,6 +36,9 @@ function pick<T>(arr: readonly T[] | undefined, index: number, fallback: T): T {
 
 export interface AbsentStudent {
   name: string;
+  /** "Grade 1".."Grade 8" — used to scope the list by the current grade/section. */
+  grade: string;
+  /** section label only: "A" | "B" | "C". */
   section: string;
   days: number;
   lastPresent: string;
@@ -55,10 +58,10 @@ export interface GradeCount {
 }
 /** A teacher's own-class absentee list — the brief's Grade 5 sample, verbatim. */
 export const TEACHER_ABSENTEES: AbsentStudent[] = [
-  { name: "Aarav Patel", section: "Section A", days: 8, lastPresent: "3 Jun" },
-  { name: "Riya Sharma", section: "Section A", days: 9, lastPresent: "2 Jun" },
-  { name: "Dev Joshi", section: "Section B", days: 7, lastPresent: "4 Jun" },
-  { name: "Meera Chauhan", section: "Section B", days: 11, lastPresent: "31 May" },
+  { name: "Aarav Patel", grade: "Grade 5", section: "A", days: 8, lastPresent: "3 Jun" },
+  { name: "Riya Sharma", grade: "Grade 5", section: "A", days: 9, lastPresent: "2 Jun" },
+  { name: "Dev Joshi", grade: "Grade 5", section: "B", days: 7, lastPresent: "4 Jun" },
+  { name: "Meera Chauhan", grade: "Grade 5", section: "B", days: 11, lastPresent: "31 May" },
 ];
 
 function genStudents(grade: string, n: number): AbsentStudent[] {
@@ -66,7 +69,8 @@ function genStudents(grade: string, n: number): AbsentStudent[] {
     const hv = h(grade + "abs" + i);
     return {
       name: `${pick(FIRST, hv, "Student")} ${pick(LAST, hv >> 4, "K")}`,
-      section: hv % 2 ? "Section A" : "Section B",
+      grade,
+      section: hv % 2 ? "A" : "B",
       days: 7 + (hv % 7),
       lastPresent: pick(LAST_DATES, hv, "1 Jun"),
     };
@@ -85,6 +89,25 @@ export const ABSENT_BY_GRADE: GradeCount[] = [
   ...c,
   students: c.grade === "Grade 5" ? TEACHER_ABSENTEES : genStudents(c.grade, c.n),
 }));
+
+/**
+ * Absentees (7+ consecutive days) scoped to the current view level (§1/§4) — the SINGLE
+ * source the detail headline and list both read, so the count is always an integer that
+ * equals the visible list. Teacher → own class (4); principal/officer → the school's
+ * grade-wise breakdown; then filtered to the current grade / grade + section.
+ */
+export function scopedAbsentStudents(
+  role: Role,
+  level: Level,
+  gradeNo: number | null,
+  sectionLabel: string | null,
+): AbsentStudent[] {
+  const base = role === "teacher" ? TEACHER_ABSENTEES : ABSENT_BY_GRADE.flatMap((g) => g.students);
+  const gradeStr = gradeNo != null ? `Grade ${gradeNo}` : null;
+  if (level === "section" && gradeStr) return base.filter((s) => s.grade === gradeStr && s.section === (sectionLabel ?? ""));
+  if (level === "grade" && gradeStr) return base.filter((s) => s.grade === gradeStr);
+  return base; // school (and above)
+}
 
 /** Teacher's own-class untracked list (demo, §3) — untracked students only. */
 export const TEACHER_UNTRACKED: UntrackedStudent[] = [

@@ -233,6 +233,8 @@ export const gu: Dict = {
   },
   roster: {
     studentsAbsent: "ગેરહાજર વિદ્યાર્થીઓ",
+    studentsAbsentShort: "ગેરહાજર વિદ્યાર્થીઓ",
+    noAbsentHere: "આ ધોરણ/વિભાગમાં કોઈ ગેરહાજર વિદ્યાર્થી નથી.",
     absentInClass: "તમારા વર્ગના ગેરહાજર વિદ્યાર્થીઓ",
     classWise: "વર્ગ મુજબ ગેરહાજર વિદ્યાર્થીઓ",
     absentForDays: "{n} દિવસથી ગેરહાજર",

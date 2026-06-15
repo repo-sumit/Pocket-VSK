@@ -1,5 +1,56 @@
 # Pocket VSK — QA Report
 
+## Fix "3.5 students absent" — integer count + headline/list consistency (Pass 52)
+
+### Root cause (three layers, all fixed)
+1. **Provider** `mockProvider.valueAt` rolled a grade up as `round1(mean(section values))` — a
+   fractional MEAN for a count → sections [4,3] gave **3.5**. Fixed: a COUNT now rolls up as the
+   integer **SUM** of its section counts; %/score/ratio still use the mean.
+2. **Formatter** `formatValue` didn't round the `count` case. Fixed: `count` is always
+   `Math.round`-ed before display, with a dev-only `console.warn` if a non-integer count arrives
+   (§7 defensive guard).
+3. **Source mismatch** the att_chronic detail headline used the provider value while the list used
+   the roster (3.5 vs 4 students). Fixed: the headline now derives from the same canonical roster
+   the list does (`scopedAbsentStudents`), so **headline == visible list length**, always integer.
+
+### Canonical-source unification (§4) — att_chronic count at School/Grade/Section
+Added `scopedAbsentStudents(role, level, gradeNo, sectionLabel)` in `rosterMock.ts` (mirrors the
+untracked helper): teacher → own class; principal/officer → the school's grade-wise breakdown;
+filtered to the current grade / grade+section. This single source now drives the count on **every**
+surface at school/grade/section:
+- Homepage Attendance card hero (`ScorecardHome` overrides att_chronic's value).
+- Attendance domain-page card (`DomainView` overrides it).
+- KPI detail headline + list (`RosterDetail`).
+At Cluster/Block/District/State the provider aggregate is kept (the roster doesn't reach there).
+
+### Other changes
+- `AbsentStudent` gained `grade`; `section` normalised to a label ("A"/"B"); `genStudents` /
+  `TEACHER_ABSENTEES` updated. The absent detail list is now grade/section-scoped (§5), with a flat
+  `ScopedAbsentList` at grade/section and the empty-state `roster.noAbsentHere`.
+- Concise value-row label (§9): the summary now reads "N students absent" via the new
+  `roster.studentsAbsentShort` (the full KPI name stays only as the page heading), not the repeated
+  full title.
+- Privacy (§6) unchanged: officers see counts only (OfficerList), never names.
+
+### QC
+- `npx tsc --noEmit` ✓ · `npm run build` ✓ (~31s; pre-existing chunk-size warning only).
+- **Playwright (390×844, real browser, 0 console errors), Principal:**
+  - **Grade 1** — homepage Attendance card "**3** students absent", Attendance domain-page card
+    "**3** students absent · School · 18", detail headline "**3** students absent" = list of **3**
+    (all "Grade 1 · A/B"). All three surfaces agree; no decimals on the page.
+  - **Section 1-A** — detail headline "**2**" = list of **2** rows, both "Grade 1 · A"; no decimals.
+  - The original "3.5" no longer appears anywhere (DOM scan for `\d+\.\d+` on the card pages = none).
+- N+1 pill ("School · 18") and compare bars use published/anchored provider values — integers.
+
+### Files changed
+- `src/data/provider/mockProvider.ts` (grade SUM for count), `src/lib/format.ts` (count→integer +
+  dev guard), `src/lib/rosterMock.ts` (`AbsentStudent.grade`, `scopedAbsentStudents`),
+  `src/components/ui/RosterDetail.tsx` (headline=list, scoped absent list, concise label),
+  `src/screens/ScorecardHome.tsx` + `src/screens/DomainView.tsx` (att_chronic hero = roster count),
+  `src/i18n/en.ts`, `src/i18n/gu.ts` (`studentsAbsentShort`, `noAbsentHere`).
+
+---
+
 ## Homepage cards driven by current view level, not login role (Pass 51)
 
 ### Bug

@@ -232,6 +232,8 @@ export const en = {
   // role-aware list detail (absentees / untracked) — §6, §18, §19
   roster: {
     studentsAbsent: "Students absent from past 7+ consecutive days",
+    studentsAbsentShort: "students absent",
+    noAbsentHere: "No absentees at this grade/section.",
     absentInClass: "Absent students in your class",
     classWise: "Class-wise absent students",
     absentForDays: "Absent for {n} days",

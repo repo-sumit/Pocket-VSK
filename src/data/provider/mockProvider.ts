@@ -211,7 +211,12 @@ class MockProviderImpl implements DataProvider {
       const vals = secs
         .map((s) => this.valueAt(s, kpi, pIndex))
         .filter((v): v is number => v != null);
-      return vals.length ? round1(mean(vals)) : null;
+      if (!vals.length) return null;
+      // A COUNT rolls up as the SUM of its (integer) section counts — never a fractional
+      // mean (that produced "3.5 students absent"). %/score/ratio roll up as the mean.
+      return kpi.unit === "count"
+        ? Math.round(vals.reduce((a, b) => a + b, 0))
+        : round1(mean(vals));
     }
     const pub = PUBLISHED[kpi.id]?.[level];
     if (pub == null) return null;

@@ -9,7 +9,7 @@ import { Card } from "./atoms";
 import { ChevronDown } from "./Icon";
 import {
   TEACHER_ABSENTEES, ABSENT_BY_GRADE, TEACHER_UNTRACKED, UNTRACKED_BY_GRADE, UNTRACKED_SUMMARY,
-  scopedUntrackedStudents, type AbsentStudent, type UntrackedStudent,
+  scopedUntrackedStudents, scopedAbsentStudents, type AbsentStudent, type UntrackedStudent,
 } from "@/lib/rosterMock";
 
 /**
@@ -51,19 +51,23 @@ export function RosterDetail({
     ? UNTRACKED_SUMMARY[role as "teacher" | "principal"]
     : null;
 
-  // Untracked count scoped to the CURRENT level (§1/§8) — via the shared
-  // `scopedUntrackedStudents` helper, so the homepage card and this detail always agree
-  // for EVERY role, incl. a drilled officer (teacher = own 5; principal/officer = the
-  // school's 82; then filtered to the grade / grade+section). The names LIST is still
-  // privacy-gated below (officers never see names, §5/§23).
+  // Roster scoped to the CURRENT level (§1/§4/§8) — the SINGLE source the headline count
+  // AND the visible list both read, so the count is always an integer equal to the list,
+  // for EVERY role incl. a drilled officer (teacher = own class; principal/officer = the
+  // school's grade-wise breakdown; then filtered to the grade / grade+section). The names
+  // LIST stays privacy-gated below (officers never see names, §5/§6/§23).
   const isSchoolOrBelow = level === "school" || level === "grade" || level === "section";
   const untrackedScoped = kind === "untracked" && isSchoolOrBelow
     ? scopedUntrackedStudents(role, level, gradeNo ?? null, sectionLabel ?? null)
     : null;
-  const untrackedCount = untrackedScoped ? untrackedScoped.length : null;
+  const absentScoped = kind === "absent" && isSchoolOrBelow
+    ? scopedAbsentStudents(role, level, gradeNo ?? null, sectionLabel ?? null)
+    : null;
+  // headline = the visible list length (never a fractional provider aggregate, §4/§10)
+  const scopedCount = untrackedScoped ? untrackedScoped.length : absentScoped ? absentScoped.length : null;
   const scopedInGradeSection = level === "grade" || level === "section";
   // flat names list only for teacher/principal at grade/section (officers → OfficerList)
-  const showScopedNames = isTP && !!untrackedScoped && scopedInGradeSection;
+  const showScopedNames = isTP && scopedInGradeSection && (!!untrackedScoped || !!absentScoped);
 
   const comparePill = tpUntracked ? (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-700 ring-1 ring-primary-200">
@@ -78,21 +82,15 @@ export function RosterDetail({
   const summary = (
     <Card className="card-pad">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        {untrackedCount != null ? (
-          <span className="flex items-baseline gap-1.5">
-            <b className="text-3xl font-extrabold tnum text-neutral-900">{locNum(untrackedCount, lang)}</b>
-            <span className="text-sm font-medium text-neutral-500">{t("roster.untrackedCount")}</span>
+        <span className="flex items-baseline gap-1.5">
+          <b className="text-3xl font-extrabold tnum text-neutral-900">
+            {scopedCount != null ? locNum(scopedCount, lang) : value == null ? "—" : formatValue(value, "count", lang)}
+          </b>
+          {/* concise value-row label (§9) — the full KPI name is already the page heading */}
+          <span className="text-sm font-medium text-neutral-500">
+            {kind === "absent" ? t("roster.studentsAbsentShort") : t("roster.untrackedCount")}
           </span>
-        ) : (
-          <span className="flex items-baseline gap-2">
-            <b className="text-3xl font-extrabold tnum text-neutral-900">
-              {value == null ? "—" : formatValue(value, "count", lang)}
-            </b>
-            <span className="text-sm font-medium text-neutral-500">
-              {kind === "absent" ? t("roster.studentsAbsent") : t("roster.untrackedCount")}
-            </span>
-          </span>
-        )}
+        </span>
         {/* the N+1 pill is a school/state-wide benchmark — hide it when the list is
             already narrowed to a single grade/section (it would compare populations). */}
         {!scopedInGradeSection && comparePill}
@@ -105,6 +103,8 @@ export function RosterDetail({
       {summary}
       {showScopedNames && untrackedScoped ? (
         <ScopedUntrackedList students={untrackedScoped} />
+      ) : showScopedNames && absentScoped ? (
+        <ScopedAbsentList students={absentScoped} />
       ) : isTeacher ? (
         <TeacherList kind={kind} />
       ) : isPrincipal ? (
@@ -129,6 +129,24 @@ function ScopedUntrackedList({ students }: { students: UntrackedStudent[] }) {
         </div>
       ) : (
         <div className="py-4 text-center text-sm text-neutral-400">{t("roster.noUntrackedHere")}</div>
+      )}
+    </Card>
+  );
+}
+
+/** Grade/Section-scoped absentee list (§1/§5) — a flat list of the 7+-day absentees in
+ *  the current grade (or grade+section); names allowed within school scope (§6/§23). */
+function ScopedAbsentList({ students }: { students: AbsentStudent[] }) {
+  const { t } = useT();
+  return (
+    <Card className="card-pad">
+      <div className="text-sm font-bold text-neutral-900">{t("roster.absentInClass")}</div>
+      {students.length ? (
+        <div className="mt-1">
+          {students.map((s, i) => <AbsentRow key={s.name + i} s={s} first={i === 0} showGrade />)}
+        </div>
+      ) : (
+        <div className="py-4 text-center text-sm text-neutral-400">{t("roster.noAbsentHere")}</div>
       )}
     </Card>
   );
@@ -222,14 +240,15 @@ function ClassAccordion({ grade, n, students }: { grade: string; n: number; stud
   );
 }
 
-function AbsentRow({ s, first }: { s: AbsentStudent; first?: boolean }) {
+function AbsentRow({ s, first, showGrade }: { s: AbsentStudent; first?: boolean; showGrade?: boolean }) {
   const { t } = useT();
+  const place = showGrade ? `${s.grade} · ${s.section}` : `Section ${s.section}`;
   return (
     <div className={cn("flex items-start gap-3 py-2.5", !first && "border-t border-line/60")}>
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-50 text-xs font-extrabold text-primary-700">{s.name[0]}</span>
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-bold text-neutral-900">{s.name}</span>
-        <span className="block text-2xs text-neutral-500">{s.section} · {t("roster.absentForDays", { n: s.days })}</span>
+        <span className="block text-2xs text-neutral-500">{place} · {t("roster.absentForDays", { n: s.days })}</span>
         <span className="block text-2xs text-neutral-400">{t("roster.lastPresent", { date: s.lastPresent })}</span>
       </span>
     </div>
