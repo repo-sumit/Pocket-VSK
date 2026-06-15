@@ -4,6 +4,13 @@ import { formatValue, formatValueFull } from "@/lib/format";
 import { useT, type Lang } from "@/i18n";
 import { ChevronRight } from "./Icon";
 
+/** Shared bar-sizing tokens — the single source of truth for vertical bar charts so
+ *  ParakhSubjectChart's grouped bars match these Compare bars exactly (width, track
+ *  height, corner radius, value/label spacing). */
+export const BAR_W = 24;
+export const BAR_TRACK_H = 88;
+export const BAR_RADIUS = "5px 5px 2px 2px";
+
 export interface ChildBar {
   id: string;
   label: string;
@@ -33,7 +40,7 @@ function abbrev(label: string): string {
  * "scroll ›" hint. Tapping a bar drills into that unit. Unit-consistent.
  */
 export function ChildComparisonBars({
-  title, bars, unit = "%", lang = "en", height = 88, lowerBetter = false, maxValue, onOpen, noSort = false, fillFor,
+  title, bars, unit = "%", lang = "en", height = BAR_TRACK_H, lowerBetter = false, maxValue, onOpen, noSort = false, fillFor,
 }: {
   title?: string;
   bars: ChildBar[];
@@ -63,8 +70,7 @@ export function ChildComparisonBars({
   const shouldScroll = count > 8;
   const justifyClass = count <= 1 ? "justify-center" : count <= 4 ? "justify-between" : "justify-around";
   const summary = sorted.map((b) => `${b.label} ${formatValue(b.value, unit, lang)}`).join(", ");
-  // narrow colored bar (≈24px) inside a wider item cell that fits a 2-line label
-  const BAR_W = 24;
+  // narrow colored bar (BAR_W) inside a wider item cell that fits a 2-line label
   const ITEM_W = 54;
 
   return (
@@ -107,7 +113,7 @@ export function ChildComparisonBars({
               {/* bar track — fixed height; fill bottom-aligned to the shared baseline.
                   `fillFor` (GSQAC grade colour) overrides the neutral brand fill. */}
               <span className="flex w-full items-end justify-center" style={{ height }}>
-                <span className="origin-bottom animate-bar-grow bg-primary-400" style={{ width: BAR_W, height: h, borderRadius: "5px 5px 2px 2px", background: fill }} />
+                <span className="origin-bottom animate-bar-grow bg-primary-400" style={{ width: BAR_W, height: h, borderRadius: BAR_RADIUS, background: fill }} />
               </span>
               {/* unit label — below the baseline, up to 2 lines (reserved height), never moves the bar */}
               <span className="line-clamp-2 block min-h-[2.4em] w-full break-words text-center text-2xs font-semibold leading-tight text-neutral-400" title={b.label}>

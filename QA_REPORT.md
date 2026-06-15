@@ -1,5 +1,41 @@
 # Pocket VSK — QA Report
 
+## Parakh detail bars sized to match Compare charts (Pass 50)
+
+The Parakh subject bars on `/app/kpi/assessment_parakh` were thinner (18px) than the Compare
+charts, looking like mini-bars. Made them share the **exact** Compare bar sizing.
+
+### Change
+- `src/components/ui/ComparisonBars.tsx` — hoisted/added exported sizing tokens (single source of
+  truth): `BAR_W = 24`, `BAR_TRACK_H = 88`, `BAR_RADIUS = "5px 5px 2px 2px"`; the Compare chart now
+  consumes them (its hardcoded radius and local `BAR_W` removed; `height` defaults to `BAR_TRACK_H`).
+  No visual change to Compare charts.
+- `src/components/ui/ParakhSubjectChart.tsx` — reuses `BAR_W`/`BAR_TRACK_H`/`BAR_RADIUS` and adopts
+  the Compare row grammar: fixed-height value labels above → fixed-height bar track (`items-end`,
+  shared bottom baseline) → 2-line subject label below (`line-clamp-2 min-h-[2.4em]`, `text-neutral-400`).
+  Each subject still shows two bars: District in the category colour, State in neutral `#C9CFDB`.
+  Spreads across the width (`justify-around`) for ≤4 subjects; `overflow-x-auto` guards against any
+  overflow (page never scrolls sideways).
+
+### Unchanged (per task)
+Parakh route, data, category colours (UDIT orange / UDAY pink / UNNAT blue / UDBHAV green), legend,
+District/State labels, page structure (no trend, no dropdowns). Compare feature, GSQAC charts, and
+all domain cards untouched.
+
+### QC
+- `npx tsc --noEmit` ✓ · `npm run build` ✓ (`built in 11.44s`; only the pre-existing chunk-size warning).
+- **Playwright (real browser) — measured, not just eyeballed:**
+  - Mobile 390×844: all 18 bars render at exactly **24px** wide (= Compare `BAR_W`); 9 tracks at
+    exactly **88px** (`BAR_TRACK_H`); corner radius "5px"; **no page horizontal overflow**.
+  - Desktop 1366×768: bars stay **24px** (not tiny), pair gap 8px, no page overflow.
+  - 0 console errors. Grade 3 (2 subjects) / Grade 6 (3, incl. "The World Around Us") / Grade 9
+    (4) all fit; subject labels wrap to 2 lines; District = category colour, State = neutral grey.
+
+### Files changed
+- `src/components/ui/ComparisonBars.tsx`, `src/components/ui/ParakhSubjectChart.tsx`.
+
+---
+
 ## changes(3) — untracked scoping, GSQAC fallback, Parakh redesign, Grade 10/12 detail (Pass 49)
 
 Mapped + adversarially reviewed via two multi-agent workflows; implemented sequentially (shared
