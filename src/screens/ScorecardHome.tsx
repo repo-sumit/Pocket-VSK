@@ -158,7 +158,7 @@ export default function ScorecardHome() {
           )}
 
           {/* Untracked Students — dedicated Teacher/Principal card (§1/§2): purple icon,
-              untracked + re-enrolled counts, N+1 pill; drills to the role-aware detail. */}
+              untracked count + N+1 pill; drills to the role-aware (grade/section-scoped) detail. */}
           {isTP && user && (
             <UntrackedHomeCard
               role={user.role as "teacher" | "principal"}

@@ -252,6 +252,7 @@ export const gu: Dict = {
     untrackedTitle: "અનટ્રેક કરેલા વિદ્યાર્થીઓ",
     updatedOn: "અપડેટ {date}",
     untrackedStudentsLabel: "અનટ્રેક વિદ્યાર્થીઓ",
+    noUntrackedHere: "આ ધોરણ/વિભાગમાં કોઈ અનટ્રેક વિદ્યાર્થી નથી.",
     reEnrolledThisYear: "આ વર્ષે પુનઃનોંધાયેલ",
     crcVisitsLabel: "આ મહિને CRC/URC મુલાકાતો",
     gradeWise: "ધોરણ મુજબ વિદ્યાર્થી યાદી",
@@ -301,7 +302,11 @@ export const gu: Dict = {
     comparison: "આની સાથે સરખામણી",
     framework: "5 GSQAC ક્ષેત્રોમાં 1000 ગુણમાંથી સ્કોર.",
   },
-  board: { pass: "પાસ", apiPending: "API બાકી", vsYear: "{year} સામે" },
+  board: {
+    pass: "પાસ", apiPending: "API બાકી", vsYear: "{year} સામે",
+    source: "બોર્ડ પરિણામ API બાકી",
+    howCalc: "બોર્ડ પરીક્ષામાં હાજર થયેલા વિદ્યાર્થીઓમાંથી પાસ થયેલા વિદ્યાર્થીઓની ટકાવારી.",
+  },
   parakh: {
     title: "PARAKH જિલ્લા શ્રેણી",
     grade: "PARAKH ધોરણ",
@@ -309,6 +314,10 @@ export const gu: Dict = {
     others: "{grade} માં {band} ની અન્ય જિલ્લાઓ",
     placeholder:
       "ધોરણ 6 અને 9 નું વર્ગીકરણ સત્તાવાર યાદી બાકી હોવાથી સ્થિર પ્લેસહોલ્ડર છે.",
+    assessmentEyebrow: "મૂલ્યાંકન",
+    districtVsState: "જિલ્લા vs રાજ્ય",
+    legendTitle: "શ્રેણીઓ",
+    barKey: "દરેક વિષય: ડાબી પટ્ટી જિલ્લો (શ્રેણી રંગ) · જમણી પટ્ટી રાજ્ય સરેરાશ.",
   },
   atRisk: {
     label: "જોખમમાં",

@@ -8,12 +8,17 @@ import { resolveMetricLabel, locNum } from "@/lib/format";
 import { shouldShowSource, displayFrequency } from "@/lib/displayPolicy";
 import { buildTrend, trendTitleKey, getLastUpdatedLabel } from "@/lib/trend";
 import { gsqacIndicatorById, gsqacIndicatorTrend, gsqacGrade, gsqacStatus } from "@/config/gsqac";
+import {
+  boardResultById, boardTrend, PARAKH_RESULTS, PARAKH_BANDS, PARAKH_PERCENTILE, PARAKH_ORDER,
+  type BoardResult,
+} from "@/config/parakh";
 import { Card, SectionLabel, EmptyNA } from "@/components/ui/atoms";
 import { TrendChart, MultiTrendChart } from "@/components/ui/TrendChart";
 import { RatingBadge } from "@/components/ui/RatingBadge";
 import { FrequencyBadge } from "@/components/ui/DataBadges";
-import { Database } from "@/components/ui/Icon";
+import { Database, ArrowUpRight, ArrowDownRight } from "@/components/ui/Icon";
 import { RosterDetail } from "@/components/ui/RosterDetail";
+import { ParakhSubjectChart } from "@/components/ui/ParakhSubjectChart";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { BackLink } from "@/components/layout/PageHeader";
 
@@ -36,6 +41,12 @@ export default function KpiDetail() {
   // a dedicated detail (score + yearly trend + how-it's-calculated), not a KpiRecord.
   const gsqacInd = gsqacIndicatorById(kpiId);
   if (gsqacInd) return <GsqacIndicatorDetail found={gsqacInd} onBack={() => navigate(-1)} />;
+
+  // PARAKH + board results are self-contained config (not provider KPIs) — dedicated
+  // detail pages (subject grouped bars / yearly trend), resolved before the rec guard.
+  if (kpiId === "assessment_parakh") return <ParakhDetail onBack={() => navigate(-1)} lang={lang} />;
+  const board = boardResultById(kpiId);
+  if (board) return <BoardResultDetail board={board} onBack={() => navigate(-1)} lang={lang} />;
 
   if (!rec || !entity || !user) return null;
   const kpi = rec.kpi;
@@ -84,6 +95,8 @@ export default function KpiDetail() {
           kind={kpi.id === "att_chronic" ? "absent" : "untracked"}
           role={user.role}
           level={entity.level}
+          gradeNo={entity.meta.grade_no ?? null}
+          sectionLabel={entity.meta.section_label ?? null}
           value={rec.value}
           units={children}
           childLevel={childLevel}
@@ -238,6 +251,99 @@ function GsqacIndicatorDetail({
       <Card className="card-pad">
         <SectionLabel>{t("kpi.formula")}</SectionLabel>
         <p className="mt-2 text-sm text-neutral-700">{formula}</p>
+      </Card>
+    </ScreenContainer>
+  );
+}
+
+/**
+ * PARAKH detail (§5) — NO yearly trend (3-year cycle). A category legend + a District/
+ * State bar key, then per grade (3/6/9) a category header pill and a subject-wise grouped
+ * vertical bar chart (District in the grade's category colour, State neutral grey).
+ */
+function ParakhDetail({ onBack, lang }: { onBack: () => void; lang: Lang }) {
+  const { t } = useT();
+  return (
+    <ScreenContainer>
+      <BackLink label={t("common.back")} onClick={onBack} />
+      <div className="pb-2">
+        <p className="text-xs font-semibold text-primary-600">{t("parakh.assessmentEyebrow")}</p>
+        <h1 className="mt-0.5 text-xl font-extrabold leading-snug text-neutral-900">PARAKH</h1>
+        <div className="mt-1.5 text-2xs text-neutral-400">{t("common.sample")} · 2024 · {t("parakh.districtVsState")}</div>
+      </div>
+
+      <Card className="card-pad">
+        <SectionLabel>{t("parakh.legendTitle")}</SectionLabel>
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5">
+          {PARAKH_ORDER.map((id) => (
+            <span key={id} className="inline-flex items-center gap-1.5 text-2xs font-semibold text-neutral-600">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ background: PARAKH_BANDS[id].hex }} />
+              {id} · {PARAKH_PERCENTILE[id]}
+            </span>
+          ))}
+        </div>
+        <p className="mt-2.5 border-t border-line/60 pt-2.5 text-2xs leading-relaxed text-neutral-400">{t("parakh.barKey")}</p>
+      </Card>
+
+      {PARAKH_RESULTS.map((g) => {
+        const b = PARAKH_BANDS[g.category];
+        return (
+          <Card key={g.grade} className="card-pad">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm font-bold text-neutral-900">{g.grade}</span>
+              <span className="inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-2xs font-bold" style={{ background: b.soft, color: b.text }}>
+                {PARAKH_PERCENTILE[g.category]} · {g.category}
+              </span>
+            </div>
+            <ParakhSubjectChart subjects={g.subjects} categoryColor={b.hex} lang={lang} />
+          </Card>
+        );
+      })}
+    </ScreenContainer>
+  );
+}
+
+/**
+ * Grade 10 / Grade 12 board-result detail (§7) — headline pass% + year-on-year delta
+ * pill, a yearly trend graph (last point = current pass%), how-it's-calculated, and the
+ * API-pending source line.
+ */
+function BoardResultDetail({ board, onBack, lang }: { board: BoardResult; onBack: () => void; lang: Lang }) {
+  const { t } = useT();
+  const up = board.delta >= 0;
+  return (
+    <ScreenContainer>
+      <BackLink label={t("common.back")} onClick={onBack} />
+      <div className="pb-2">
+        <p className="text-xs font-semibold text-primary-600">{t("parakh.assessmentEyebrow")}</p>
+        <h1 className="mt-0.5 text-xl font-extrabold leading-snug text-neutral-900">{board.name}</h1>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs text-neutral-400">
+          <FrequencyBadge frequency="Yearly" />
+          <span>· AY {board.year}</span>
+          <span className="inline-flex items-center gap-1 truncate" title={t("board.source")}>
+            <Database size={10} className="shrink-0" /> {t("board.source")}
+          </span>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-4xl font-extrabold tnum leading-none text-neutral-900">{locNum(board.pass, lang)}%</span>
+          <span className="text-sm font-medium text-neutral-500">{t("board.pass")}</span>
+          <span className={cn("inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-2xs font-bold", up ? "bg-rag-greenSoft text-rag-greenText" : "bg-rag-redSoft text-rag-redText")}>
+            {up ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+            {up ? "+" : "−"}{Math.abs(board.delta)} {t("board.vsYear", { year: board.year })}
+          </span>
+        </div>
+      </div>
+
+      <Card className="card-pad">
+        <SectionLabel>{t("kpi.trendYearly")}: {board.name}</SectionLabel>
+        <div className="mt-2">
+          <TrendChart points={boardTrend(board)} unit="%" color={up ? "#16A34A" : "#DC2626"} cadence="yearly" lang={lang} />
+        </div>
+      </Card>
+
+      <Card className="card-pad">
+        <SectionLabel>{t("kpi.formula")}</SectionLabel>
+        <p className="mt-2 text-sm text-neutral-700">{t("board.howCalc")}</p>
       </Card>
     </ScreenContainer>
   );

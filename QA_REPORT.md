@@ -1,5 +1,79 @@
 # Pocket VSK — QA Report
 
+## changes(3) — untracked scoping, GSQAC fallback, Parakh redesign, Grade 10/12 detail (Pass 49)
+
+Mapped + adversarially reviewed via two multi-agent workflows; implemented sequentially (shared
+files). Build green; Playwright mobile QC at 390×844 with 0 console errors.
+
+### 1. Untracked Students — grade/section-scoped list
+`RosterDetail` now takes `gradeNo`/`sectionLabel` (from `entity.meta`, passed by `KpiDetail`) and
+scopes the untracked roster to the current level: **school → full roster** (teacher 5 / principal
+82), **grade → that grade only**, **section → that grade + section only**. The summary count always
+equals the rendered list length. `rosterMock.ts`: `UntrackedStudent` gained `grade`; `section` is
+now a label ("A"/"B"/"C"); `TEACHER_UNTRACKED` + `genUntracked` carry both. The school-level role
+presentation is unchanged (teacher flat list / principal grade accordion); grade/section render a
+flat scoped list (`ScopedUntrackedList`) with a friendly empty state. No re-enrolled anywhere. The
+school/state-wide N+1 pill is suppressed at grade/section (it would compare different populations).
+**Playwright:** principal → Grade 3 → "15 untracked", all rows "Grade 3 · A/B/C", count == list.
+
+### 2. GSQAC at grade/section — school data, no empty state
+`DomainView` hoists `isGsqac = ds?.domain.kind === "output"` above the guard, which is now
+`if (!ds || (!isGsqac && ds.records.length === 0))`. GSQAC area cards come from static `GSQAC_AREAS`
+config, so the School Quality page renders at grade/section even though the `sq_*` KPIs are
+school-and-above (records empty there). Non-GSQAC empty domains still show "No KPIs". The
+`GsqacN1Pill` shows the parent ("School N%") via `peerLevelOf(grade|section)="school"`.
+**Playwright:** principal → Grade 3 → School Quality shows all 5 areas + "School 68.9%" pill.
+
+### 3–6. Parakh redesign + Grade 10/12 detail
+- **Compact Parakh card** (`ParakhSurveyCard` rewritten) — district only (`entity.level==="district"`),
+  3 grade rows (Grade 3 Bottom 25%·UDBHAV / Grade 6 Bottom 50%·UNNAT / Grade 9 Top 50%·UDAY) as
+  category-coloured pills, no dropdowns, whole card → `/app/kpi/assessment_parakh`.
+- **Parakh KPI detail** (`KpiDetail` early-return `ParakhDetail`) — category legend (UDIT/UDAY/UNNAT/
+  UDBHAV + percentile), a District/State bar key, and per grade a category header + a new
+  `ParakhSubjectChart` (grouped vertical bars: District in the category colour, State neutral grey).
+  **No trend chart.** Grade 3 = 2 subjects (Language, Mathematics), Grade 6 = 3 (incl. "The World
+  Around Us"), Grade 9 = 4. Data from new `PARAKH_RESULTS` in `config/parakh.ts` (district + state
+  per subject, exact spec values).
+- **Category colours** reuse the existing `PARAKH_BANDS` (UDIT #EA580C orange · UDAY #DB2777 pink ·
+  UNNAT #2563EB blue · UDBHAV #16A34A green) — NOT the GSQAC grade scale.
+- **Grade 10 / Grade 12 Result** — `BoardCard` made clickable (`onOpen` + chevron); `KpiDetail`
+  early-return `BoardResultDetail`: headline pass% + delta pill + **yearly TrendChart** (`boardTrend`,
+  5 points, last == pass) + how-it's-calculated + "Board result API pending" source + "AY {year}".
+  **Playwright:** Parakh detail shows the 3 grade charts with correct subjects/values; Grade 10
+  detail shows "82.4% pass +1.8 vs 2025" + 2021→2025 trend ending at 82.4.
+
+### Files changed
+- `src/lib/rosterMock.ts`, `src/components/ui/RosterDetail.tsx`, `src/screens/KpiDetail.tsx`,
+  `src/screens/DomainView.tsx`, `src/config/parakh.ts`, `src/components/ui/ParakhSurveyCard.tsx`
+  (rewritten), `src/components/ui/ParakhCards.tsx`, `src/components/ui/ParakhSubjectChart.tsx` (new),
+  `src/screens/ScorecardHome.tsx` (comment), `src/i18n/en.ts`, `src/i18n/gu.ts`.
+
+### QC
+- `npx tsc --noEmit` ✓ · `npm run build` ✓ (~25s; only the pre-existing >1.5 MB `entities`
+  chunk-size warning). i18n en/gu structurally identical (361 leaf paths; all new keys in both).
+- Multi-agent review: all 6 features verified; no blockers; banned terms clean (no Unified Portal /
+  Dropout label / Parent avg / Know more / Tap Compare / Gujarat-as-comparison / avg-in-pill).
+- **Playwright (390×844, real browser, 0 console errors):** District Assessment (compact Parakh +
+  clickable Grade 10/12), Parakh detail (G3/6/9 grouped bars + legend, no trend), Grade 10 detail
+  (yearly trend + AY + API-pending source), Principal → Grade 3 untracked (15 scoped, count==list),
+  Principal → Grade 3 School Quality (5 areas + "School" pill, not empty). Screenshots saved:
+  `qc-c3-assessment-district.png`, `qc-c3-parakh-detail.png`, `qc-c3-gsqac-grade-untracked.png`.
+
+### Known remaining issues / notes
+- **Section-homed alternate teacher seeds** (`u-teacher-0..3`, NOT in the demo-login list): their home
+  card shows the school summary (5) while their default section-scoped detail shows 1/0 — a card↔detail
+  mismatch for those non-demo accounts only. The demo teacher (24000001) is school-homed and fully
+  consistent. Fix (if those logins matter): make `UntrackedHomeCard` scope-aware. Left out of scope.
+- **SAT display names** currently read "Semester Assessment Test 2 (SAT 2)" (no "Avg Score" suffix) —
+  the `kpiCatalog.ts` was modified externally this session (flagged as intentional); the Pass-48
+  "Avg Score" suffix is not present. Not touched (changes(3) doesn't cover SAT names). Re-add if the
+  removal was unintended.
+- `src/config/parakhSurvey.ts` is now orphaned (the old expandable card used it; the `/app/parakh`
+  ParakhScreen uses `config/parakh.ts`). Harmless dead code (tree-shaken); can be deleted in a tidy-up.
+- Playwright run covered 390×844 only; other viewports (360/430/768/1366) not screenshotted.
+
+---
+
 ## Multi-change pass — parity, GSQAC N+1, att_report, untracked, compare, strings, mobile (Pass 48)
 
 Implemented the 13-item change doc. Mapping + adversarial review done via two multi-agent

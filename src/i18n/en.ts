@@ -251,6 +251,7 @@ export const en = {
     untrackedTitle: "Untracked Students",
     updatedOn: "Updated {date}",
     untrackedStudentsLabel: "untracked students",
+    noUntrackedHere: "No untracked students at this grade/section.",
     reEnrolledThisYear: "re-enrolled this year",
     crcVisitsLabel: "CRC/URC visits this month",
     gradeWise: "Grade-wise student list",
@@ -306,7 +307,11 @@ export const en = {
     framework: "Scored out of 1000 marks across 5 GSQAC areas.",
   },
   // §18/§19 — board results + PARAKH district category (district-only)
-  board: { pass: "pass", apiPending: "API pending", vsYear: "vs {year}" },
+  board: {
+    pass: "pass", apiPending: "API pending", vsYear: "vs {year}",
+    source: "Board result API pending",
+    howCalc: "Students passing the board examination as a percentage of those who appeared.",
+  },
   parakh: {
     title: "PARAKH District Category",
     grade: "PARAKH Grade",
@@ -314,6 +319,10 @@ export const en = {
     others: "Other districts in {band} · {grade}",
     placeholder:
       "Grade 6 & 9 classification shown is a static placeholder pending the official per-grade district list.",
+    assessmentEyebrow: "Assessment",
+    districtVsState: "District vs State",
+    legendTitle: "Categories",
+    barKey: "Each subject: left bar District (category colour) · right bar State average.",
   },
   atRisk: {
     label: "At Risk",

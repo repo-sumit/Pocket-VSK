@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { locNum } from "@/lib/format";
 import { useT } from "@/i18n";
 import { PARAKH_BANDS, PARAKH_META, parakhBandOf, type ParakhBandId, type BoardResult } from "@/config/parakh";
 import { Card } from "./atoms";
@@ -49,26 +50,32 @@ export function ParakhCard({ district, onOpen }: { district: string; onOpen: () 
   );
 }
 
-/** Board result card (district-only, §18) — static, API-pending, no drilldown. */
-export function BoardCard({ board }: { board: BoardResult }) {
-  const { t } = useT();
+/** Board result card (district, §18) — static / API-pending; taps through to a KPI
+ *  detail page with the yearly trend. */
+export function BoardCard({ board, onOpen }: { board: BoardResult; onOpen?: () => void }) {
+  const { t, lang } = useT();
   const up = board.delta >= 0;
   return (
     <Card className="card-pad">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-bold text-neutral-900">{board.name}</span>
-        {board.pending && (
-          <span className="rounded-full bg-surface-sunken px-2 py-0.5 text-2xs font-bold text-neutral-400">{t("board.apiPending")}</span>
-        )}
-      </div>
-      <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <span className="text-3xl font-extrabold tnum leading-none text-neutral-900">{board.pass}%</span>
-        <span className="text-sm font-medium text-neutral-500">{t("board.pass")}</span>
-        <span className={cn("inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-2xs font-bold", up ? "bg-rag-greenSoft text-rag-greenText" : "bg-rag-redSoft text-rag-redText")}>
-          {up ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-          {up ? "+" : "−"}{Math.abs(board.delta)} {t("board.vsYear", { year: board.year })}
-        </span>
-      </div>
+      <button onClick={onOpen} className="group flex w-full flex-col text-left">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-bold text-neutral-900">{board.name}</span>
+          <span className="flex shrink-0 items-center gap-2">
+            {board.pending && (
+              <span className="rounded-full bg-surface-sunken px-2 py-0.5 text-2xs font-bold text-neutral-400">{t("board.apiPending")}</span>
+            )}
+            <CardChevron />
+          </span>
+        </div>
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className="text-3xl font-extrabold tnum leading-none text-neutral-900">{locNum(board.pass, lang)}%</span>
+          <span className="text-sm font-medium text-neutral-500">{t("board.pass")}</span>
+          <span className={cn("inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-2xs font-bold", up ? "bg-rag-greenSoft text-rag-greenText" : "bg-rag-redSoft text-rag-redText")}>
+            {up ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+            {up ? "+" : "−"}{Math.abs(board.delta)} {t("board.vsYear", { year: board.year })}
+          </span>
+        </div>
+      </button>
     </Card>
   );
 }

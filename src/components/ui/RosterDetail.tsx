@@ -21,11 +21,15 @@ import {
  *  • officer   → N-1 hierarchy counts (no names, §23)
  */
 export function RosterDetail({
-  kind, role, level, value, units, childLevel, lang,
+  kind, role, level, gradeNo, sectionLabel, value, units, childLevel, lang,
 }: {
   kind: "absent" | "untracked";
   role: Role;
   level: Level;
+  /** current scope's grade number (1..8) and section label ("A"/"B"/"C"), from
+   *  entity.meta — used to scope the untracked list when drilled into a grade/section. */
+  gradeNo?: number | null;
+  sectionLabel?: string | null;
   value: number | null;
   units: Entity[];
   childLevel: Level | null;
@@ -34,6 +38,7 @@ export function RosterDetail({
   const { t } = useT();
   const isTeacher = role === "teacher";
   const isPrincipal = role === "principal";
+  const isTP = isTeacher || isPrincipal;
   const kpiId = kind === "absent" ? "att_chronic" : "ret_dropout";
 
   // N+1 comparison (count → no "avg"), shown as a pill in the summary
@@ -42,9 +47,26 @@ export function RosterDetail({
 
   // Untracked teacher/principal: single-value summary (untracked only) from the shared
   // mock, so the detail matches the homepage card exactly (§2). N+1 from the mock.
-  const tpUntracked = kind === "untracked" && (isTeacher || isPrincipal)
+  const tpUntracked = kind === "untracked" && isTP
     ? UNTRACKED_SUMMARY[role as "teacher" | "principal"]
     : null;
+
+  // Untracked roster scoped to the CURRENT hierarchy level (§1): school → the whole
+  // role roster (teacher = own 5, principal = school 82); grade → that grade only;
+  // section → that grade + section only. The summary count always equals the list length.
+  const untrackedRoster: UntrackedStudent[] = isTeacher
+    ? TEACHER_UNTRACKED
+    : UNTRACKED_BY_GRADE.flatMap((g) => g.students);
+  const gradeStr = gradeNo != null ? `Grade ${gradeNo}` : null;
+  const scopedUntracked = kind !== "untracked" || !isTP
+    ? null
+    : level === "section" && gradeStr
+      ? untrackedRoster.filter((s) => s.grade === gradeStr && s.section === (sectionLabel ?? ""))
+      : level === "grade" && gradeStr
+        ? untrackedRoster.filter((s) => s.grade === gradeStr)
+        : untrackedRoster; // school (and above)
+  const scopedInGradeSection = !!scopedUntracked && (level === "grade" || level === "section");
+  const untrackedCount = scopedUntracked ? scopedUntracked.length : null;
 
   const comparePill = tpUntracked ? (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-700 ring-1 ring-primary-200">
@@ -61,7 +83,7 @@ export function RosterDetail({
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         {tpUntracked ? (
           <span className="flex items-baseline gap-1.5">
-            <b className="text-3xl font-extrabold tnum text-neutral-900">{locNum(tpUntracked.untracked, lang)}</b>
+            <b className="text-3xl font-extrabold tnum text-neutral-900">{locNum(untrackedCount ?? tpUntracked.untracked, lang)}</b>
             <span className="text-sm font-medium text-neutral-500">{t("roster.untrackedCount")}</span>
           </span>
         ) : (
@@ -74,7 +96,9 @@ export function RosterDetail({
             </span>
           </span>
         )}
-        {comparePill}
+        {/* the N+1 pill is a school/state-wide benchmark — hide it when the list is
+            already narrowed to a single grade/section (it would compare populations). */}
+        {!scopedInGradeSection && comparePill}
       </div>
     </Card>
   );
@@ -82,7 +106,9 @@ export function RosterDetail({
   return (
     <div className="flex flex-col gap-3">
       {summary}
-      {isTeacher ? (
+      {scopedInGradeSection && scopedUntracked ? (
+        <ScopedUntrackedList students={scopedUntracked} />
+      ) : isTeacher ? (
         <TeacherList kind={kind} />
       ) : isPrincipal ? (
         <PrincipalList kind={kind} />
@@ -90,6 +116,24 @@ export function RosterDetail({
         <OfficerList kind={kind} childLevel={childLevel} units={units} lang={lang} />
       )}
     </div>
+  );
+}
+
+/** Grade/Section-scoped untracked list (§1) — a flat list of the untracked students in
+ *  the current grade (or grade+section), names allowed within school scope (§23). */
+function ScopedUntrackedList({ students }: { students: UntrackedStudent[] }) {
+  const { t } = useT();
+  return (
+    <Card className="card-pad">
+      <div className="text-sm font-bold text-neutral-900">{t("roster.studentList")}</div>
+      {students.length ? (
+        <div className="mt-1">
+          {students.map((s, i) => <UntrackedRow key={s.name + i} s={s} first={i === 0} showGrade />)}
+        </div>
+      ) : (
+        <div className="py-4 text-center text-sm text-neutral-400">{t("roster.noUntrackedHere")}</div>
+      )}
+    </Card>
   );
 }
 
@@ -109,7 +153,7 @@ function TeacherList({ kind }: { kind: "absent" | "untracked" }) {
       <div className="text-sm font-bold text-neutral-900">{t("roster.studentList")}</div>
       <div className="text-2xs text-neutral-400">{t("roster.untrackedSub")}</div>
       <div className="mt-1">
-        {TEACHER_UNTRACKED.map((s, i) => <UntrackedRow key={s.name + i} s={s} first={i === 0} />)}
+        {TEACHER_UNTRACKED.map((s, i) => <UntrackedRow key={s.name + i} s={s} first={i === 0} showGrade />)}
       </div>
     </Card>
   );
@@ -151,14 +195,16 @@ function UntrackedClassAccordion({ grade, n, students }: { grade: string; n: num
   );
 }
 
-/** One untracked student row — avatar · name · section. */
-function UntrackedRow({ s, first }: { s: UntrackedStudent; first?: boolean }) {
+/** One untracked student row — avatar · name · (grade ·) section. `showGrade` prints
+ *  "Grade 6 · A" for flat lists (teacher / grade-section scoped); inside a grade
+ *  accordion the grade is the header, so it shows just "Section A". */
+function UntrackedRow({ s, first, showGrade }: { s: UntrackedStudent; first?: boolean; showGrade?: boolean }) {
   return (
     <div className={cn("flex items-center gap-3 py-2.5", !first && "border-t border-line/60")}>
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-50 text-xs font-extrabold text-primary-700">{s.name[0]}</span>
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-bold text-neutral-900">{s.name}</span>
-        <span className="block text-2xs text-neutral-400">{s.section}</span>
+        <span className="block text-2xs text-neutral-400">{showGrade ? `${s.grade} · ${s.section}` : `Section ${s.section}`}</span>
       </span>
     </div>
   );

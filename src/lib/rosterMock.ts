@@ -42,6 +42,9 @@ export interface AbsentStudent {
 }
 export interface UntrackedStudent {
   name: string;
+  /** "Grade 1".."Grade 8" — used to scope the list by the current grade/section. */
+  grade: string;
+  /** section label only: "A" | "B" | "C". */
   section: string;
   lastSeen: string;
 }
@@ -85,11 +88,11 @@ export const ABSENT_BY_GRADE: GradeCount[] = [
 
 /** Teacher's own-class untracked list (demo, §3) — untracked students only. */
 export const TEACHER_UNTRACKED: UntrackedStudent[] = [
-  { name: "Rohan B.", section: "Grade 6 · A", lastSeen: "12 Apr" },
-  { name: "Sara K.", section: "Grade 4 · B", lastSeen: "28 Mar" },
-  { name: "Aditya N.", section: "Grade 7 · A", lastSeen: "02 May" },
-  { name: "Naina P.", section: "Grade 3 · A", lastSeen: "19 Apr" },
-  { name: "Yash G.", section: "Grade 8 · A", lastSeen: "07 May" },
+  { name: "Rohan B.", grade: "Grade 6", section: "A", lastSeen: "12 Apr" },
+  { name: "Sara K.", grade: "Grade 4", section: "B", lastSeen: "28 Mar" },
+  { name: "Aditya N.", grade: "Grade 7", section: "A", lastSeen: "02 May" },
+  { name: "Naina P.", grade: "Grade 3", section: "A", lastSeen: "19 Apr" },
+  { name: "Yash G.", grade: "Grade 8", section: "A", lastSeen: "07 May" },
 ];
 
 /** Deterministic per-grade untracked roster (demo) — name · section. Untracked only. */
@@ -101,7 +104,8 @@ function genUntracked(grade: string, n: number): UntrackedStudent[] {
     const lastInitial = pick(LAST, hv >> 4, "K").charAt(0).toUpperCase();
     return {
       name: `${pick(FIRST, hv, "Student")} ${lastInitial}.`,
-      section: `Section ${pick(SECTIONS, hv, "A")}`,
+      grade,
+      section: pick(SECTIONS, hv, "A"),
       lastSeen: pick(LAST_DATES, hv, "1 Jun"),
     };
   });

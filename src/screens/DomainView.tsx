@@ -35,7 +35,11 @@ export default function DomainView() {
 
   if (!sc || !entity) return null;
   const ds = sc.domainScores.find((d) => d.domain.id === domainId);
-  if (!ds || ds.records.length === 0) {
+  const isGsqac = ds?.domain.kind === "output";
+  // GSQAC area cards come from the static GSQAC_AREAS config (not ds.records), so the
+  // School Quality page must still render at grade/section — even though the sq_* KPIs
+  // are school-and-above and get filtered out there, leaving ds.records empty (§2).
+  if (!ds || (!isGsqac && ds.records.length === 0)) {
     return (
       <ScreenContainer>
         <BackLink label={t("nav.home")} onClick={() => navigate("/app")} />
@@ -45,7 +49,6 @@ export default function DomainView() {
   }
 
   const parentName = sc.parent ? tn(sc.parent.entity.name, sc.parent.entity.name_gu) : undefined;
-  const isGsqac = ds.domain.kind === "output";
   // §12/§24 — PARAKH + board results live INSIDE Assessment, for district/state only.
   const isAssessment = ds.domain.id === "assessment";
   const isDistrictState = entity.level === "district" || entity.level === "state";
@@ -112,8 +115,13 @@ export default function DomainView() {
               separate "District Focus" / "Other assessments" heading, §7). */}
           {isAssessment && isDistrictState && (
             <PageGrid cols="domain" className="mt-3">
-              <ParakhSurveyCard districtName={entity.name} isState={entity.level === "state"} lang={lang} />
-              {BOARD_RESULTS.map((b) => <BoardCard key={b.id} board={b} />)}
+              {/* PARAKH — district only (§3); compact card, opens the Parakh KPI detail. */}
+              {entity.level === "district" && (
+                <ParakhSurveyCard onOpen={() => navigate("/app/kpi/assessment_parakh")} />
+              )}
+              {BOARD_RESULTS.map((b) => (
+                <BoardCard key={b.id} board={b} onOpen={() => navigate(`/app/kpi/${b.id}`)} />
+              ))}
             </PageGrid>
           )}
         </PageSection>

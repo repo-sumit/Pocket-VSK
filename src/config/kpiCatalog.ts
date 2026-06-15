@@ -546,8 +546,8 @@ const RAW: Array<
   {
     id: "asm_sat2",
     domain_id: "assessment",
-    name: "Semester Assessment Test 2 (SAT 2) Avg Score",
-    name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 2 (SAT 2) સરેરાશ સ્કોર",
+    name: "Semester Assessment Test 2 (SAT 2)",
+    name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 2 (SAT 2)",
     unit: "%",
     direction: "higher",
     data_source: "Xamta bot",
@@ -569,8 +569,8 @@ const RAW: Array<
   {
     id: "asm_sat1",
     domain_id: "assessment",
-    name: "Semester Assessment Test 1 (SAT 1) Avg Score",
-    name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 1 (SAT 1) સરેરાશ સ્કોર",
+    name: "Semester Assessment Test 1 (SAT 1)",
+    name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 1 (SAT 1)",
     unit: "%",
     direction: "higher",
     data_source: "Xamta bot",

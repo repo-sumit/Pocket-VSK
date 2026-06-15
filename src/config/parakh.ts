@@ -25,6 +25,14 @@ export const PARAKH_BANDS: Record<ParakhBandId, ParakhBand> = {
 
 export const PARAKH_ORDER: ParakhBandId[] = ["UDIT", "UDAY", "UNNAT", "UDBHAV"];
 
+/** Category → percentile label (shown together, e.g. "Bottom 25% · UDBHAV"). */
+export const PARAKH_PERCENTILE: Record<ParakhBandId, string> = {
+  UDIT: "Top 25%",
+  UDAY: "Top 50%",
+  UNNAT: "Bottom 50%",
+  UDBHAV: "Bottom 25%",
+};
+
 // Grade 3 — exact district classification from the official PARAKH 2024 screenshots.
 const GRADE3: Record<ParakhBandId, string[]> = {
   UDIT: ["Ahmedabad", "Dohad", "Dang", "Surendranagar", "Tapi", "Sabar Kantha", "Bhavnagar", "Gandhinagar"],
@@ -71,9 +79,50 @@ export function parakhBandOf(grade: string, district: string): ParakhBandId {
   return PARAKH_ORDER.find((b) => g[b].includes(district)) ?? "UDBHAV";
 }
 
-// §18 — district-only board results. Static / API-pending. No drilldown.
+// §18 — district board results. Static / API-pending. Each opens a KPI detail page
+// with a yearly trend (the trend's last point lands on `pass`).
 export interface BoardResult { id: string; name: string; pass: number; delta: number; year: string; pending: boolean }
 export const BOARD_RESULTS: BoardResult[] = [
   { id: "board10", name: "Grade 10 Result", pass: 82.4, delta: 1.8, year: "2025", pending: true },
   { id: "board12", name: "Grade 12 Result", pass: 78.9, delta: -0.6, year: "2025", pending: true },
+];
+
+export function boardResultById(id?: string): BoardResult | undefined {
+  return BOARD_RESULTS.find((b) => b.id === id);
+}
+/** Deterministic 5-point yearly trend ending exactly at the current pass% (§7). */
+export function boardTrend(b: BoardResult): { x: string; value: number }[] {
+  const r = (hashStr(b.id) % 100) / 100;
+  const years = ["2021", "2022", "2023", "2024", "2025"];
+  const rise = 4 + r * 5; // total climb across the window
+  return years.map((x, i) => {
+    const v = b.pass - (rise * (years.length - 1 - i)) / (years.length - 1);
+    return { x, value: Math.round(Math.max(0, Math.min(100, v)) * 10) / 10 };
+  });
+}
+
+/**
+ * §16 — district-vs-state PARAKH subject results for the compact Assessment card +
+ * the Parakh KPI detail page. Grade 3 (2 subjects), Grade 6 (3), Grade 9 (4). District
+ * scores compared with the State average; the grade category drives the District bar
+ * colour (UDIT/UDAY/UNNAT/UDBHAV). Static demo (PARAKH is a 3-year cycle — no trend).
+ */
+export interface ParakhSubjectScore { subject: string; district: number; state: number }
+export interface ParakhGradeResult { grade: string; category: ParakhBandId; subjects: ParakhSubjectScore[] }
+export const PARAKH_RESULTS: ParakhGradeResult[] = [
+  { grade: "Grade 3", category: "UDBHAV", subjects: [
+    { subject: "Language", district: 57, state: 64 },
+    { subject: "Mathematics", district: 52, state: 60 },
+  ] },
+  { grade: "Grade 6", category: "UNNAT", subjects: [
+    { subject: "Language", district: 51, state: 57 },
+    { subject: "Mathematics", district: 40, state: 46 },
+    { subject: "The World Around Us", district: 45, state: 49 },
+  ] },
+  { grade: "Grade 9", category: "UDAY", subjects: [
+    { subject: "Language", district: 50, state: 54 },
+    { subject: "Mathematics", district: 32, state: 37 },
+    { subject: "Science", district: 38, state: 40 },
+    { subject: "Social Science", district: 37, state: 40 },
+  ] },
 ];
