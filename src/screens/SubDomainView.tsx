@@ -12,7 +12,7 @@ import { PageSection } from "@/components/layout/PageSection";
 /** Sub-domain view — tier 3 of the 3-click drill (Domain › Sub-domain › Indicators). */
 export default function SubDomainView() {
   const { domainId, subId } = useParams();
-  const { entity, currentId } = useScope();
+  const { entity, currentId, user } = useScope();
   const sc = useScorecard(currentId);
   const { t, tn, lang } = useT();
   const { applied: compareApplied } = useCompare();
@@ -49,6 +49,7 @@ export default function SubDomainView() {
               level={entity?.level}
               parentName={parentName}
               currentId={currentId}
+              role={user?.role}
               onClick={() => navigate(`/app/kpi/${r.kpi.id}`)}
             />
           )}

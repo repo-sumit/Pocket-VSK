@@ -1,4 +1,4 @@
-import type { KpiRecord, Level } from "@/types";
+import type { KpiRecord, Level, Role } from "@/types";
 import {
   formatValue,
   resolveMetricLabel,
@@ -102,8 +102,8 @@ function MetricRow({
   const peer = parentLevel ? peerAvg(kpi.id, level!) : null;
   // §10: KPI numbers stay neutral black (delta carries the colour, not the value).
   const tone = na ? "text-rag-naText" : "text-neutral-900";
-  // §15: the below-average sub-metric reads "Students below {Level} avg" — the value
-  // already shows "27%", so the label must not add a second "%".
+  // §15: the below-average sub-metric row reads "28.6% students below {Level} average" —
+  // the value cell shows "28.6%", so the label carries no leading "%" (no doubled percent).
   const isBelowAvg = kpi.id.endsWith("belowHierarchyAvg");
   const label = isBelowAvg
     ? formatBelowLevelLabel(level ?? "school", lang)
@@ -147,6 +147,7 @@ export function KpiCardAuto({
   level,
   parentName,
   currentId,
+  role,
 }: {
   rec: KpiRecord;
   name: string;
@@ -155,15 +156,22 @@ export function KpiCardAuto({
   level?: Level;
   parentName?: string;
   currentId?: string | null;
+  role?: Role;
 }) {
+  const { t } = useT();
   const isMulti = !!rec.kpi.metrics?.length;
   const metrics = useKpiMetrics(isMulti ? rec.kpi.id : undefined, currentId);
-  if (isMulti && metrics.length) {
+  // att_report: a Teacher (no teacher↔class mapping) sees ONLY "Class Sections" — no
+  // Schools row — and a teacher-specific title. Principal/officers keep both + full title.
+  const teacherAtt = rec.kpi.id === "att_report" && role === "teacher";
+  const shownMetrics = teacherAtt ? metrics.filter((m) => m.kpi.id !== "att_report__schools") : metrics;
+  const shownName = teacherAtt ? t("kpi.attReportTeacherTitle") : name;
+  if (isMulti && shownMetrics.length) {
     return (
       <MultiMetricKpiCard
         rec={rec}
-        metrics={metrics}
-        name={name}
+        metrics={shownMetrics}
+        name={shownName}
         onClick={onClick}
         lang={lang}
         level={level}
@@ -174,7 +182,7 @@ export function KpiCardAuto({
   return (
     <KpiCard
       rec={rec}
-      name={name}
+      name={shownName}
       onClick={onClick}
       lang={lang}
       level={level}

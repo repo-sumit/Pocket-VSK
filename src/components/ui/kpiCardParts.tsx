@@ -96,13 +96,13 @@ export function KpiInlineRow({
   divider?: boolean;
 }) {
   return (
-    <div className={cn("flex items-baseline justify-between gap-3 py-2", divider && "border-t border-line/60")}>
-      <span className="min-w-0 flex-1 leading-snug">
+    <div className={cn("flex flex-col items-start gap-1.5 py-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3", divider && "border-t border-line/60")}>
+      <span className="w-full min-w-0 flex-1 break-words leading-snug">
         <b className={cn("align-[-1px] font-extrabold tnum", label && "mr-1.5", descriptor ? "text-3xl" : "text-xl", valueTone ?? "text-neutral-900")}>{value}</b>
         {label && <span className={cn("text-neutral-500", descriptor ? "text-[15px] font-medium" : "text-sm font-semibold")}>{label}</span>}
       </span>
       {(peerLabel || delta) && (
-        <span className={cn("flex shrink-0 items-center gap-2 whitespace-nowrap text-right", descriptor && "self-end")}>
+        <span className={cn("flex shrink-0 flex-wrap items-center gap-2 text-left sm:flex-nowrap sm:whitespace-nowrap sm:text-right", descriptor && "sm:self-end")}>
           {/* N+1 comparison as a bolder, higher-contrast pill (§11) */}
           {peerLabel && <span className="inline-flex items-center rounded-full bg-surface-sunken px-2 py-0.5 text-2xs font-bold tnum text-neutral-700">{peerLabel}</span>}
           {delta}

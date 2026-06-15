@@ -199,14 +199,14 @@ const LEVEL_TITLE_EN: Record<Level, string> = {
 };
 
 /**
- * The value-row descriptor for a "below average" sub-metric — "Students below
- * District avg" (§15). The value already renders as "27%", so this label must NOT
- * carry a second "%" (that produced the "27% % below district average" bug). The
- * level word is capitalised so the row reads cleanly next to the bold value.
+ * The value-row descriptor for a "below average" sub-metric — reads "% students
+ * below District average" (§15). The bold value renders in its own cell ("28.6%"),
+ * so the row reads "28.6% students below District average" without a doubled "%".
+ * The level word is capitalised so the row reads cleanly next to the value.
  */
 export function formatBelowLevelLabel(level: Level, lang: Lang = "en"): string {
   if (lang === "gu") return `${LEVEL_NAME_GU[level]} સરેરાશથી નીચે વિદ્યાર્થીઓ`;
-  return `Students below ${LEVEL_TITLE_EN[level]} avg`;
+  return `students below ${LEVEL_TITLE_EN[level]} average`;
 }
 
 /**

@@ -330,8 +330,8 @@ function resultSubMetrics(
     },
     {
       id: "participation",
-      label: "Participation",
-      label_gu: "સહભાગિતા",
+      label: "Participation rate",
+      label_gu: "સહભાગિતા દર",
       unit: "%",
       direction: "higher",
       formula: "Students participated ÷ total students × 100.",
@@ -546,8 +546,8 @@ const RAW: Array<
   {
     id: "asm_sat2",
     domain_id: "assessment",
-    name: "Semester Assessment Test 2 (SAT 2)",
-    name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 2 (SAT 2)",
+    name: "Semester Assessment Test 2 (SAT 2) Avg Score",
+    name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 2 (SAT 2) સરેરાશ સ્કોર",
     unit: "%",
     direction: "higher",
     data_source: "Xamta bot",
@@ -569,8 +569,8 @@ const RAW: Array<
   {
     id: "asm_sat1",
     domain_id: "assessment",
-    name: "Semester Assessment Test 1 (SAT 1)",
-    name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 1 (SAT 1)",
+    name: "Semester Assessment Test 1 (SAT 1) Avg Score",
+    name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 1 (SAT 1) સરેરાશ સ્કોર",
     unit: "%",
     direction: "higher",
     data_source: "Xamta bot",
@@ -639,8 +639,8 @@ const RAW: Array<
       },
       {
         id: "participation",
-        label: "Participation",
-        label_gu: "સહભાગિતા",
+        label: "Participation rate",
+        label_gu: "સહભાગિતા દર",
         unit: "%",
         direction: "higher",
         formula:
@@ -678,8 +678,8 @@ const RAW: Array<
       },
       {
         id: "participation",
-        label: "Participation",
-        label_gu: "સહભાગિતા",
+        label: "Participation rate",
+        label_gu: "સહભાગિતા દર",
         unit: "%",
         direction: "higher",
         formula:

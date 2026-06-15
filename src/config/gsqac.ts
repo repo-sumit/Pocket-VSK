@@ -348,6 +348,25 @@ export function gsqacCompareValue(childId: string, seedKey: string, base: number
 }
 
 /**
+ * Deterministic N+1 (parent-level) GSQAC score (%) for a card at the current level
+ * (§11) — the pill value, e.g. "Cluster · 72.1%". Keyed by (parentLevel, seedKey) so
+ * it's stable and distinct from the per-child Compare bars. Same FNV hash as
+ * `gsqacCompareValue`. Returns null when there is no parent level (State / leaf).
+ */
+export function gsqacParentValue(parentLevel: string | null, seedKey: string, base: number): number | null {
+  if (!parentLevel) return null;
+  let h = 2166136261;
+  const s = `${parentLevel}|${seedKey}`;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const r = ((h >>> 0) % 1000) / 1000; // 0..1, deterministic
+  const v = base + (r - 0.5) * 14; // ±7 around the card's own score
+  return Math.round(Math.max(20, Math.min(99, v)) * 10) / 10;
+}
+
+/**
  * Deterministic yearly trend for a GSQAC indicator detail page — a gentle 4-point
  * series (years N-3 … N) ending exactly at the current score. No random-on-render.
  */

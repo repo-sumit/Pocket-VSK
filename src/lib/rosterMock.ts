@@ -43,7 +43,6 @@ export interface AbsentStudent {
 export interface UntrackedStudent {
   name: string;
   section: string;
-  status: "untracked" | "reenrolled";
   lastSeen: string;
 }
 export interface GradeCount {
@@ -84,16 +83,16 @@ export const ABSENT_BY_GRADE: GradeCount[] = [
   students: c.grade === "Grade 5" ? TEACHER_ABSENTEES : genStudents(c.grade, c.n),
 }));
 
-/** Teacher's own-class untracked / re-enrolled list (demo, §3). */
+/** Teacher's own-class untracked list (demo, §3) — untracked students only. */
 export const TEACHER_UNTRACKED: UntrackedStudent[] = [
-  { name: "Rohan B.", section: "Grade 6 · A", status: "untracked", lastSeen: "12 Apr" },
-  { name: "Sara K.", section: "Grade 4 · B", status: "untracked", lastSeen: "28 Mar" },
-  { name: "Aditya N.", section: "Grade 7 · A", status: "reenrolled", lastSeen: "02 May" },
-  { name: "Naina P.", section: "Grade 3 · A", status: "untracked", lastSeen: "19 Apr" },
-  { name: "Yash G.", section: "Grade 8 · A", status: "reenrolled", lastSeen: "07 May" },
+  { name: "Rohan B.", section: "Grade 6 · A", lastSeen: "12 Apr" },
+  { name: "Sara K.", section: "Grade 4 · B", lastSeen: "28 Mar" },
+  { name: "Aditya N.", section: "Grade 7 · A", lastSeen: "02 May" },
+  { name: "Naina P.", section: "Grade 3 · A", lastSeen: "19 Apr" },
+  { name: "Yash G.", section: "Grade 8 · A", lastSeen: "07 May" },
 ];
 
-/** Deterministic per-grade untracked roster (demo) — name · section · status. */
+/** Deterministic per-grade untracked roster (demo) — name · section. Untracked only. */
 function genUntracked(grade: string, n: number): UntrackedStudent[] {
   return Array.from({ length: Math.max(0, n) }, (_, i) => {
     const hv = h(grade + "unt" + i);
@@ -103,7 +102,6 @@ function genUntracked(grade: string, n: number): UntrackedStudent[] {
     return {
       name: `${pick(FIRST, hv, "Student")} ${lastInitial}.`,
       section: `Section ${pick(SECTIONS, hv, "A")}`,
-      status: hv % 4 === 0 ? "reenrolled" : "untracked",
       lastSeen: pick(LAST_DATES, hv, "1 Jun"),
     };
   });
@@ -121,17 +119,12 @@ export const UNTRACKED_BY_GRADE: UntrackedGrade[] = [
  *  summary so they always match. Teacher sees their class; principal the whole school. */
 export interface UntrackedSummary {
   untracked: number;
-  reenrolled: number;
   compareLevel: Level;
   compareValue: string;
-  /** No. of CRCC/URC visits to the school this month (max 3 — `vis_CRCC_count`). A
-   *  school-level metric, so identical for the teacher and principal of one school. */
-  crcVisits: number;
-  crcVisitsMax: number;
 }
 export const UNTRACKED_SUMMARY: Record<"teacher" | "principal", UntrackedSummary> = {
-  teacher: { untracked: 5, reenrolled: 2, compareLevel: "school", compareValue: "18", crcVisits: 2, crcVisitsMax: 3 },
-  principal: { untracked: 82, reenrolled: 43, compareLevel: "state", compareValue: "1.2K", crcVisits: 2, crcVisitsMax: 3 },
+  teacher: { untracked: 5, compareLevel: "school", compareValue: "18" },
+  principal: { untracked: 82, compareLevel: "state", compareValue: "1.2K" },
 };
 
 // NOTE: the officer N-1 list is NOT generated here. It reads the SAME canonical

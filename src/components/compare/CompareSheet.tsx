@@ -52,9 +52,10 @@ export function CompareSheet({
 
   const allChecked = sel.length === all.length && all.length > 0;
   const toggle = (id: string) => setSel((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
-  // Primary button: an already-applied comparison emptied to 0 → "Remove comparison"
-  // (enabled). Otherwise "Apply (n)", disabled when nothing is selected.
-  const removeMode = applied && sel.length === 0;
+  // When a comparison is currently active, the footer collapses to a single one-click
+  // "Remove comparison" action (clears selection, hides charts, closes — all via onRemove).
+  // Otherwise it's Cancel + Apply (n).
+  const removeMode = applied;
 
   return createPortal(
     <div
@@ -96,8 +97,9 @@ export function CompareSheet({
 
         <div className="flex items-center justify-between gap-2 px-5 pb-2">
           <span className="text-xs font-bold text-neutral-400">{t("compare.selectedOf", { n: sel.length, total: all.length })}</span>
-          {/* distinct Select all / Clear all pills — Clear all is always reachable so an
-              applied comparison can be emptied → primary becomes "Remove comparison". */}
+          {/* Select all + (when a comparison is active) a one-click "Remove comparison"
+              in place of "Clear all" — removes immediately via onRemove (clears, hides
+              charts, closes). Apply (footer) stays available to re-apply a changed selection. */}
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -107,14 +109,24 @@ export function CompareSheet({
             >
               {t("common.selectAll")}
             </button>
-            <button
-              type="button"
-              onClick={() => setSel([])}
-              disabled={sel.length === 0}
-              className={cn("inline-flex h-11 items-center rounded-full border border-line bg-white px-4 text-sm font-bold transition-colors", sel.length === 0 ? "cursor-not-allowed text-neutral-300" : "text-primary-700 hover:bg-primary-50")}
-            >
-              {t("common.clearAll")}
-            </button>
+            {removeMode ? (
+              <button
+                type="button"
+                onClick={onRemove}
+                className="inline-flex h-11 items-center rounded-full bg-neutral-700 px-4 text-sm font-bold text-white transition-colors hover:bg-neutral-800"
+              >
+                {t("compare.remove")}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setSel([])}
+                disabled={sel.length === 0}
+                className={cn("inline-flex h-11 items-center rounded-full border border-line bg-white px-4 text-sm font-bold transition-colors", sel.length === 0 ? "cursor-not-allowed text-neutral-300" : "text-primary-700 hover:bg-primary-50")}
+              >
+                {t("common.clearAll")}
+              </button>
+            )}
           </div>
         </div>
 
@@ -142,24 +154,17 @@ export function CompareSheet({
         </div>
 
         <div className="flex gap-2.5 border-t border-line px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <button type="button" onClick={onClose} className="flex-1 rounded-full border border-line bg-white py-3 text-sm font-bold text-neutral-600 hover:bg-neutral-50">
+          <button type="button" onClick={onClose} className="min-h-[44px] flex-1 rounded-full border border-line bg-white py-3 text-sm font-bold text-neutral-600 hover:bg-neutral-50">
             {t("common.cancel")}
           </button>
-          {removeMode ? (
-            // comparison already on, user cleared everything → offer to remove it
-            <button type="button" onClick={onRemove} className="flex-[2] rounded-full bg-neutral-700 py-3 text-sm font-bold text-white hover:bg-neutral-800">
-              {t("compare.remove")}
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled={sel.length === 0}
-              onClick={() => sel.length && onApply(sel)}
-              className={cn("flex-[2] rounded-full py-3 text-sm font-bold text-white", sel.length ? "bg-primary-500 hover:bg-primary-600" : "cursor-not-allowed bg-primary-200")}
-            >
-              {t("common.apply")}{sel.length ? ` (${sel.length})` : ""}
-            </button>
-          )}
+          <button
+            type="button"
+            disabled={sel.length === 0}
+            onClick={() => sel.length && onApply(sel)}
+            className={cn("min-h-[44px] flex-[2] rounded-full py-3 text-sm font-bold text-white", sel.length ? "bg-primary-500 hover:bg-primary-600" : "cursor-not-allowed bg-primary-200")}
+          >
+            {t("common.apply")}{sel.length ? ` (${sel.length})` : ""}
+          </button>
         </div>
       </div>
     </div>,

@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useT } from "@/i18n";
+import { useScope } from "@/hooks";
 import { gsqacAreaByKey } from "@/config/gsqac";
 import { Card } from "@/components/ui/atoms";
 import { GsqacSubdomainCard } from "@/components/ui/GsqacCards";
@@ -16,6 +17,7 @@ import { PageSection } from "@/components/layout/PageSection";
  */
 export default function GsqacAreaView() {
   const { areaKey } = useParams();
+  const { entity } = useScope();
   const { t, tn, lang } = useT();
   const navigate = useNavigate();
   const area = gsqacAreaByKey(areaKey);
@@ -43,6 +45,7 @@ export default function GsqacAreaView() {
               key={sub.id}
               sub={sub}
               lang={lang}
+              level={entity?.level}
               onOpen={() => navigate(`/app/gsqac/${area.key}/${sub.id}`)}
             />
           ))}

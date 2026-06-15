@@ -149,7 +149,11 @@ export function getLastUpdatedLabel(
   if (cadence === "monthly" || cadence === "twice" || cadence === "half") {
     return `${months[date.getMonth()]} ${locNum(date.getFullYear(), lang)}`;
   }
-  if (cadence === "yearly") return locNum(date.getFullYear(), lang);
+  if (cadence === "yearly") {
+    const y = locNum(date.getFullYear(), lang);
+    // CPD cards label the year as the academic year ("AY 2026"); other yearly KPIs stay bare.
+    return kpi.sub_domain === "adm_cpd" ? `AY ${y}` : y;
+  }
   return "";
 }
 

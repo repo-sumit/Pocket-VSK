@@ -27,7 +27,7 @@ import { PageSection, PageGrid } from "@/components/layout/PageSection";
  */
 export default function DomainView() {
   const { domainId } = useParams();
-  const { entity, currentId } = useScope();
+  const { entity, currentId, user } = useScope();
   const sc = useScorecard(currentId);
   const { t, tn, lang } = useT();
   const { applied: compareApplied } = useCompare();
@@ -62,7 +62,7 @@ export default function DomainView() {
           <PageSection title={t("gsqac.areas")}>
             <PageGrid cols="domain">
               {GSQAC_AREAS.map((a) => (
-                <GsqacAreaCard key={a.key} area={a} lang={lang} onOpen={() => navigate(`/app/gsqac/${a.key}`)} />
+                <GsqacAreaCard key={a.key} area={a} lang={lang} level={entity.level} onOpen={() => navigate(`/app/gsqac/${a.key}`)} />
               ))}
             </PageGrid>
           </PageSection>
@@ -103,6 +103,7 @@ export default function DomainView() {
                 level={entity.level}
                 parentName={parentName}
                 currentId={currentId}
+                role={user?.role}
                 onClick={() => navigate(`/app/kpi/${r.kpi.id}`)}
               />
             )}

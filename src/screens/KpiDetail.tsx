@@ -47,7 +47,12 @@ export default function KpiDetail() {
   const isMulti = metricRecs.length > 0;
   const isGsqac = kpi.id.startsWith("sq_");
 
-  const name = tn(kpi.name, kpi.name_gu);
+  // att_report: a Teacher sees the Class-Sections-only title + metric/graph (no Schools), §3.
+  const teacherAttReport = kpi.id === "att_report" && user.role === "teacher";
+  const name = teacherAttReport ? t("kpi.attReportTeacherTitle") : tn(kpi.name, kpi.name_gu);
+  const visibleMetricRecs = teacherAttReport
+    ? metricRecs.filter((mr) => mr.kpi.id !== "att_report__schools")
+    : metricRecs;
 
   const trend = na || kpi.noTrend ? null : buildTrend(rec, lang);
   const luLabel = getLastUpdatedLabel(kpi, new Date(), lang);
@@ -88,7 +93,7 @@ export default function KpiDetail() {
         isGsqac ? (
           <GsqacMultiTrend recs={metricRecs} name={name} level={entity.level} lang={lang} />
         ) : (
-          metricRecs.map((mr) => <MetricTrendCard key={mr.kpi.id} rec={mr} level={entity.level} lang={lang} />)
+          visibleMetricRecs.map((mr) => <MetricTrendCard key={mr.kpi.id} rec={mr} level={entity.level} lang={lang} />)
         )
       ) : na ? (
         <EmptyNA hint={t("kpi.noData")} />
@@ -106,7 +111,7 @@ export default function KpiDetail() {
         <Card className="card-pad">
           <SectionLabel>{t("kpi.formula")}</SectionLabel>
           <dl className="mt-2 space-y-2.5">
-            {metricRecs.map((mr) => (
+            {visibleMetricRecs.map((mr) => (
               <div key={mr.kpi.id}>
                 <dt className="text-xs font-bold text-neutral-800">
                   {resolveMetricLabel(mr.kpi.name, mr.kpi.name_gu, entity.level, lang)}

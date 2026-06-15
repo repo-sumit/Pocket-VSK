@@ -155,8 +155,10 @@ sec0 = next(e for e in entities if e["level"] == "section" and e["id"].startswit
 prin_id = STATE_CODE + str(900000001 + principal_seq)[1:]  # 10-digit principal id
 
 def add(u): app_users.append(u); demo.append(u)
+# Teacher home = the SCHOOL (no teacher↔class mapping exists), so teacher & principal
+# share the same school-level view and can drill down to grade/section. (login id stays the section's teacher_id)
 add({"id": "u-teacher", "login_id": sec0["meta"]["teacher_id"], "name": sec0["meta"]["teacher_name"], "name_gu": "",
-     "role": "teacher", "designation": "Teacher", "entity_id": sec0["id"], "school_id": s0["meta"]["code"], "active": True})
+     "role": "teacher", "designation": "Teacher", "entity_id": s0["id"], "school_id": s0["meta"]["code"], "active": True})
 add({"id": "u-principal", "login_id": prin_id, "name": person("prin0"), "name_gu": "",
      "role": "principal", "designation": "Principal", "entity_id": s0["id"], "school_id": s0["meta"]["code"], "active": True})
 add({"id": "u-crc", "login_id": c0["meta"]["code"], "name": person("crc"), "name_gu": "", "role": "crc",

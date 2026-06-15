@@ -1,8 +1,10 @@
 import { cn } from "@/lib/cn";
 import { rag, GSQAC_BAND_HEX } from "@/lib/colors";
 import { locNum } from "@/lib/format";
+import type { Level } from "@/types";
+import { peerLevelOf } from "@/lib/peer";
 import { useT, type Lang } from "@/i18n";
-import { GSQAC_OVERALL, gsqacGrade, gsqacStatus, gsqacCompareValue, type GsqacArea, type GsqacSubdomain, type GsqacIndicator } from "@/config/gsqac";
+import { GSQAC_OVERALL, gsqacGrade, gsqacStatus, gsqacCompareValue, gsqacParentValue, type GsqacArea, type GsqacSubdomain, type GsqacIndicator } from "@/config/gsqac";
 import { useCompare } from "@/components/compare/CompareContext";
 import { Card } from "./atoms";
 import { RatingBadge } from "./RatingBadge";
@@ -45,8 +47,23 @@ export function GsqacCompareSection({ seedKey, base, lang, className }: { seedKe
   );
 }
 
+/** N+1 parent-comparison pill for GSQAC cards — same look as DomainInsightCard's
+ *  N1Chip (level word + value, no "avg", §11). Renders nothing at State / leaf. */
+function GsqacN1Pill({ level, seedKey, base, lang }: { level?: Level; seedKey: string; base: number; lang: Lang }) {
+  const { t } = useT();
+  const parentLevel = level ? peerLevelOf(level) : null;
+  const value = gsqacParentValue(parentLevel, seedKey, base);
+  if (!parentLevel || value == null) return null;
+  return (
+    <span className="mt-2.5 inline-flex w-fit items-center gap-2 rounded-full bg-primary-50 px-3 py-1.5 ring-1 ring-primary-200">
+      <span className="text-xs font-bold text-primary-700">{t(`levels.${parentLevel}`)}</span>
+      <span className="text-base font-extrabold tnum text-primary-700">{locNum(value, lang)}%</span>
+    </span>
+  );
+}
+
 /** Overall GSQAC score card — % · grade · marks out of 1000. */
-export function GsqacOverallCard({ lang }: { lang: Lang }) {
+export function GsqacOverallCard({ lang, level }: { lang: Lang; level?: Level }) {
   const { t } = useT();
   const grade = gsqacGrade(GSQAC_OVERALL.percent);
   const c = rag(gsqacStatus(GSQAC_OVERALL.percent));
@@ -66,13 +83,14 @@ export function GsqacOverallCard({ lang }: { lang: Lang }) {
         </div>
         <RatingBadge grade={grade} size="md" className="shrink-0" />
       </div>
+      <GsqacN1Pill level={level} seedKey="gsqac_overall" base={GSQAC_OVERALL.percent} lang={lang} />
       <GsqacCompareSection seedKey="gsqac_overall" base={GSQAC_OVERALL.percent} lang={lang} />
     </Card>
   );
 }
 
 /** One GSQAC area score card (Teaching & Learning, …): score · grade · sub-domain count. */
-export function GsqacAreaCard({ area, lang, onOpen }: { area: GsqacArea; lang: Lang; onOpen: () => void }) {
+export function GsqacAreaCard({ area, lang, level, onOpen }: { area: GsqacArea; lang: Lang; level?: Level; onOpen: () => void }) {
   const { t, tn } = useT();
   const grade = gsqacGrade(area.percent);
   const c = rag(gsqacStatus(area.percent));
@@ -94,6 +112,7 @@ export function GsqacAreaCard({ area, lang, onOpen }: { area: GsqacArea; lang: L
           <span className="tnum">{t("gsqac.outOf", { got: locNum(area.got, lang), max: locNum(area.max, lang) })}</span>
         </div>
       </button>
+      <GsqacN1Pill level={level} seedKey={area.key} base={area.percent} lang={lang} />
       <GsqacCompareSection seedKey={area.key} base={area.percent} lang={lang} />
     </Card>
   );
@@ -101,7 +120,7 @@ export function GsqacAreaCard({ area, lang, onOpen }: { area: GsqacArea; lang: L
 
 /** A GSQAC sub-domain navigation card — score · grade · indicator count · chevron.
  *  Tapping opens the sub-domain page (indicator cards). Supports embedded Compare. */
-export function GsqacSubdomainCard({ sub, lang, onOpen }: { sub: GsqacSubdomain; lang: Lang; onOpen: () => void }) {
+export function GsqacSubdomainCard({ sub, lang, level, onOpen }: { sub: GsqacSubdomain; lang: Lang; level?: Level; onOpen: () => void }) {
   const { t, tn } = useT();
   const c = rag(gsqacStatus(sub.score));
   const grade = gsqacGrade(sub.score);
@@ -119,6 +138,7 @@ export function GsqacSubdomainCard({ sub, lang, onOpen }: { sub: GsqacSubdomain;
         </div>
         <div className="mt-2 text-2xs font-medium text-neutral-400">{locNum(n, lang)} {t("scorecard.indicators")}</div>
       </button>
+      <GsqacN1Pill level={level} seedKey={sub.id} base={sub.score} lang={lang} />
       <GsqacCompareSection seedKey={sub.id} base={sub.score} lang={lang} />
     </Card>
   );
@@ -128,7 +148,7 @@ export function GsqacSubdomainCard({ sub, lang, onOpen }: { sub: GsqacSubdomain;
  *  chevron top-right · large score + grade badge below), so the Indicators list reads
  *  as full cards, not thin rows. Tapping opens the KPI detail page (/app/kpi/:id).
  *  Supports the same embedded grade-coloured Compare chart. */
-export function GsqacIndicatorCard({ indicator, lang, onOpen }: { indicator: GsqacIndicator; lang: Lang; onOpen: () => void }) {
+export function GsqacIndicatorCard({ indicator, lang, level, onOpen }: { indicator: GsqacIndicator; lang: Lang; level?: Level; onOpen: () => void }) {
   const c = rag(gsqacStatus(indicator.score));
   const grade = gsqacGrade(indicator.score);
   return (
@@ -143,6 +163,7 @@ export function GsqacIndicatorCard({ indicator, lang, onOpen }: { indicator: Gsq
           <RatingBadge grade={grade} size="sm" />
         </div>
       </button>
+      <GsqacN1Pill level={level} seedKey={indicator.id} base={indicator.score} lang={lang} />
       <GsqacCompareSection seedKey={indicator.id} base={indicator.score} lang={lang} />
     </Card>
   );

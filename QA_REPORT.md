@@ -1,5 +1,100 @@
 # Pocket VSK — QA Report
 
+## Multi-change pass — parity, GSQAC N+1, att_report, untracked, compare, strings, mobile (Pass 48)
+
+Implemented the 13-item change doc. Mapping + adversarial review done via two multi-agent
+workflows; implementation applied sequentially (shared files). Build green; Playwright mobile QC
+performed at 390×844.
+
+### Changes
+
+1. **Teacher/Principal parity.** Root cause: the demo teacher's seed `entity_id` was a *section*
+   (leaf), locking them below school; the card logic was already role-symmetric (`isTP`). Fix:
+   teacher home = the school. `src/data/seed/appUsers.json` (u-teacher `entity_id` →
+   `sch-24010100101`) + `scripts/generateSeed.py` (demo teacher → `s0["id"]`). Teacher now opens at
+   school level with the same 4 cards as principal (Attendance · Assessment · School Quality ·
+   Untracked) and can drill to grade/section. (Verified in-browser.)
+2. **GSQAC N+1 pills on every card/layer.** New `gsqacParentValue(parentLevel, seedKey, base)` in
+   `config/gsqac.ts` (deterministic, null at state/leaf) + new `GsqacN1Pill` in `GsqacCards.tsx`
+   (level word + `value%`, **no "avg"**, matches `N1Chip`) on the Area / Sub-domain / Indicator /
+   Overall cards. `level` threaded from `DomainView`, `GsqacAreaView`, `GsqacSubDomainView`
+   (`useScope`). Home GSQAC card already showed an N+1 pill (`DomainInsightCard` OutputHead).
+3. **att_report teacher view.** `KpiCardAuto` (card) + `KpiDetail` (page) — for `role==="teacher"`
+   only: title → `kpi.attReportTeacherTitle` ("Class Sections Submitting Attendance") and the
+   `att_report__schools` metric/row/graph is dropped; principal/officers keep both rows + full
+   title. `role` passed from `DomainView`/`SubDomainView`. New i18n key (en + gu).
+4. **Principal Untracked card — CRC/URC row removed.** Deleted the CRC/URC block from
+   `UntrackedHomeCard.tsx` (officer Administration domain card keeps its CRC/URC KPI — out of scope).
+5. **ret_dropout page — untracked-only.** `RosterDetail` summary shows only the untracked count;
+   `UntrackedRow` lost its status pill; `rosterMock.ts` made untracked-only (dropped `status`,
+   `reenrolled`, `crcVisits`, `crcVisitsMax`); grade counts still sum to 82, teacher list = 5.
+6. **Principal grade accordion expanded by default** — `UntrackedClassAccordion` `useState(true)`
+   (the absent `ClassAccordion` stays collapsed); collapsible.
+7. **Compare "Remove comparison" one-click.** When a comparison is active, the action row shows
+   "Remove comparison" (→ `onRemove`, which clears + hides charts + closes) in place of "Clear all";
+   the footer keeps Cancel + Apply so a changed selection can still be re-applied. `CompareSheet.tsx`.
+8. **SAT titles** → "Semester Assessment Test 2 (SAT 2) Avg Score" / "(SAT 1) Avg Score" (name +
+   name_gu), `kpiCatalog.ts`.
+9. **"Participation" → "Participation rate"** (label + label_gu) for the generic resultSubMetrics
+   metric (SAT/FLN) + CET + CGMS, `kpiCatalog.ts`.
+10. **Below-hierarchy label** → `formatBelowLevelLabel` returns "students below {Level} average"
+    (lowercase, **no leading %**), so the row renders "28.6% students below School average" with a
+    single %. `format.ts`.
+11. **CPD yearly date** → "AY {year}" gated on `kpi.sub_domain === "adm_cpd"` (cpd_hours, cpd_50);
+    all other daily/monthly/yearly labels unaffected. `trend.ts`.
+12. **Mobile multi-metric clipping.** Shared `KpiInlineRow` (`kpiCardParts.tsx`) now stacks on
+    mobile: `flex-col … sm:flex-row sm:justify-between`; value+label cell `w-full min-w-0
+    break-words`; pill+delta cell `flex-wrap text-left sm:flex-nowrap sm:whitespace-nowrap
+    sm:text-right`; `descriptor` uses `sm:self-end`. Fixes all three card families at once
+    (no fixed widths / absolute pills were present). Desktop layout unchanged (`sm:` breakpoint).
+13. **No "avg" in N+1 card pills** — reconfirmed across KpiCard, MultiMetricKpiCard, DomainInsightCard,
+    GsqacCards (rendered pills are level + value only). Plus fixed a stale teacher-list subtitle
+    that still said "Untracked **& re-enrolled**" → "Untracked students in your class…" (en + gu).
+
+### QC
+
+- `npm run build` ✓ (`tsc --noEmit` + `vite build`, ~18s; only the pre-existing >1.5 MB `entities`
+  chunk-size warning). `npm run typecheck` ✓. `npm run lint` is a stub (no eslint); there is no
+  `test` script. `npm run verify` is a Playwright E2E harness needing the dev server (run separately).
+- **Mapping + adversarial review** via two 8-/5-agent workflows: all 13 items verified OK; i18n
+  en/gu structurally identical (354 leaf paths, zero divergence); banned terms (Unified Portal,
+  Dropout label, Parent avg, Know more, Tap Compare to view, Gujarat-as-comparison) — none rendered;
+  no regressions (absent roster, officer N-1 list, non-teacher att_report, GSQAC compare bars,
+  single-metric cards all intact).
+- **Playwright (390×844, mobile):** logged in as Teacher → homepage shows all 4 cards at **school
+  level** ("Chher Nani Primary School"), Untracked card = "5 untracked students / School 18" (no
+  CRC/URC, no re-enrolled); Assessment domain page shows "… (SAT 2) Avg Score", "28.6% students
+  below School average" (single %), "95.5% Participation rate", FLN card, all N+1 pills "Cluster ·
+  N%" with **no "avg"**, labels not clipped. **0 console errors.** Screenshots: `qc-teacher-home-390.png`,
+  `qc-assessment-mobile-390.png`.
+
+### Files changed
+
+- Data/config: `src/data/seed/appUsers.json`, `scripts/generateSeed.py`, `src/config/kpiCatalog.ts`,
+  `src/config/gsqac.ts`.
+- Lib: `src/lib/format.ts`, `src/lib/trend.ts`, `src/lib/rosterMock.ts`.
+- Components: `src/components/ui/GsqacCards.tsx`, `src/components/ui/MultiMetricKpiCard.tsx`,
+  `src/components/ui/kpiCardParts.tsx`, `src/components/ui/UntrackedHomeCard.tsx`,
+  `src/components/ui/RosterDetail.tsx`, `src/components/compare/CompareSheet.tsx`.
+- Screens: `src/screens/DomainView.tsx`, `src/screens/SubDomainView.tsx`,
+  `src/screens/GsqacAreaView.tsx`, `src/screens/GsqacSubDomainView.tsx`, `src/screens/KpiDetail.tsx`.
+- i18n: `src/i18n/en.ts`, `src/i18n/gu.ts`.
+
+### Known remaining issues (non-blocking)
+
+- **Section-homed alternate teacher seed accounts** (`u-teacher-0..3`, not the demo login) still home
+  at a section; their GSQAC home card would 404-fallback to null at section level. The demo teacher
+  (24000001) is fixed. Robust fix (if those logins matter): resolve the school ancestor for the GSQAC
+  home fallback instead of `homeId`. Left out of scope.
+- A few now-unused i18n keys remain (`roster.reenrolled`, `roster.reEnrolledCount`,
+  `roster.reEnrolledThisYear`, `roster.crcVisitsLabel`) — harmless (never rendered; en/gu shapes still
+  match). Can be deleted in a tidy-up.
+- ParakhSurveyCard's "State avg N" label is unchanged (PARAKH is in the do-not-change list).
+- Existing-session caveat: an already-logged-in teacher keeps the old section `scopeId` until a fresh
+  login (read-side clamp honours an in-subtree id). New logins open at school correctly.
+
+---
+
 ## Fix Vercel build break — mangled `asm_sat1`/`asm_sat2` identifiers (Pass 47)
 
 ### Symptom

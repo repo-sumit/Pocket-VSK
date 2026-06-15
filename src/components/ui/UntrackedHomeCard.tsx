@@ -8,8 +8,7 @@ import { Users } from "./Icon";
 /**
  * Teacher/Principal homepage "Untracked Students" card (§1). Same domain-card grammar
  * (purple/lavender icon · title · Updated date · big neutral count · N+1 pill · right
- * chevron), plus a second school-observation metric — No. of CRC/URC visits — below a
- * divider. Values come from the shared `UNTRACKED_SUMMARY` mock so the card and the
+ * chevron). Values come from the shared `UNTRACKED_SUMMARY` mock so the card and the
  * detail summary always match (§2). Tapping opens the untracked detail.
  */
 export function UntrackedHomeCard({ role, onOpen }: { role: "teacher" | "principal"; onOpen: () => void }) {
@@ -42,17 +41,6 @@ export function UntrackedHomeCard({ role, onOpen }: { role: "teacher" | "princip
           <span className="text-xs font-bold text-primary-700">{t(`levels.${d.compareLevel}`)}</span>
           <span className="text-base font-extrabold tnum text-primary-700">{d.compareValue}</span>
         </span>
-
-        {/* divider → second metric: No. of CRC/URC visits (school observation). Shown
-            only for the principal — teachers have no access to the Administration domain. */}
-        {role === "principal" && (
-          <p className="mt-3 border-t border-line/60 pt-3 text-sm font-semibold leading-snug text-neutral-700">
-            <span className="mr-1.5 align-baseline text-2xl font-extrabold tnum text-neutral-900">
-              {locNum(d.crcVisits, lang)}<span className="font-bold text-neutral-400"> / {locNum(d.crcVisitsMax, lang)}</span>
-            </span>
-            {t("roster.crcVisitsLabel")}
-          </p>
-        )}
       </button>
     </Card>
   );

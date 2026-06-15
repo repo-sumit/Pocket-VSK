@@ -40,8 +40,8 @@ export function RosterDetail({
   const parentLevel = peerLevelOf(level);
   const peer = parentLevel ? peerAvg(kpiId, level) : null;
 
-  // Untracked teacher/principal: two-value summary (untracked + re-enrolled) from the
-  // shared mock, so the detail matches the homepage card exactly (§2). N+1 from the mock.
+  // Untracked teacher/principal: single-value summary (untracked only) from the shared
+  // mock, so the detail matches the homepage card exactly (§2). N+1 from the mock.
   const tpUntracked = kind === "untracked" && (isTeacher || isPrincipal)
     ? UNTRACKED_SUMMARY[role as "teacher" | "principal"]
     : null;
@@ -60,15 +60,9 @@ export function RosterDetail({
     <Card className="card-pad">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         {tpUntracked ? (
-          <span className="flex items-baseline gap-6">
-            <span className="flex items-baseline gap-1.5">
-              <b className="text-3xl font-extrabold tnum text-neutral-900">{locNum(tpUntracked.untracked, lang)}</b>
-              <span className="text-sm font-medium text-neutral-500">{t("roster.untrackedCount")}</span>
-            </span>
-            <span className="flex items-baseline gap-1.5">
-              <b className="text-3xl font-extrabold tnum text-neutral-900">{locNum(tpUntracked.reenrolled, lang)}</b>
-              <span className="text-sm font-medium text-neutral-500">{t("roster.reEnrolledCount")}</span>
-            </span>
+          <span className="flex items-baseline gap-1.5">
+            <b className="text-3xl font-extrabold tnum text-neutral-900">{locNum(tpUntracked.untracked, lang)}</b>
+            <span className="text-sm font-medium text-neutral-500">{t("roster.untrackedCount")}</span>
           </span>
         ) : (
           <span className="flex items-baseline gap-2">
@@ -140,10 +134,11 @@ function PrincipalList({ kind }: { kind: "absent" | "untracked" }) {
   );
 }
 
-/** Expandable grade row → untracked/re-enrolled student roster (§4). */
+/** Expandable grade row → untracked student roster (§4). Expanded by default for the
+ *  principal so the full grade-wise list is visible without tapping; collapsible. */
 function UntrackedClassAccordion({ grade, n, students }: { grade: string; n: number; students: UntrackedStudent[] }) {
   const { t } = useT();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   return (
     <div className="border-t border-line/60 first:border-t-0">
       <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center gap-3 py-3 text-left" aria-expanded={open}>
@@ -156,18 +151,14 @@ function UntrackedClassAccordion({ grade, n, students }: { grade: string; n: num
   );
 }
 
-/** One untracked/re-enrolled student row — avatar · name · section · status pill. */
+/** One untracked student row — avatar · name · section. */
 function UntrackedRow({ s, first }: { s: UntrackedStudent; first?: boolean }) {
-  const { t } = useT();
   return (
     <div className={cn("flex items-center gap-3 py-2.5", !first && "border-t border-line/60")}>
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-50 text-xs font-extrabold text-primary-700">{s.name[0]}</span>
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-bold text-neutral-900">{s.name}</span>
         <span className="block text-2xs text-neutral-400">{s.section}</span>
-      </span>
-      <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-2xs font-bold", s.status === "reenrolled" ? "bg-rag-greenSoft text-rag-greenText" : "bg-surface-sunken text-neutral-600")}>
-        {s.status === "reenrolled" ? t("roster.reenrolled") : t("roster.untracked")}
       </span>
     </div>
   );

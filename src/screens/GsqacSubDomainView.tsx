@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useT } from "@/i18n";
+import { useScope } from "@/hooks";
 import { gsqacSubdomainById } from "@/config/gsqac";
 import { Card } from "@/components/ui/atoms";
 import { GsqacIndicatorCard } from "@/components/ui/GsqacCards";
@@ -15,6 +16,7 @@ import { PageSection } from "@/components/layout/PageSection";
  */
 export default function GsqacSubDomainView() {
   const { areaKey, subId } = useParams();
+  const { entity } = useScope();
   const { t, tn, lang } = useT();
   const navigate = useNavigate();
   const found = gsqacSubdomainById(subId);
@@ -39,7 +41,7 @@ export default function GsqacSubDomainView() {
       <PageSection title={t("scorecard.indicators")}>
         <div className="flex flex-col gap-2.5">
           {sub.indicators.map((ind) => (
-            <GsqacIndicatorCard key={ind.id} indicator={ind} lang={lang} onOpen={() => navigate(`/app/kpi/${ind.id}`)} />
+            <GsqacIndicatorCard key={ind.id} indicator={ind} lang={lang} level={entity?.level} onOpen={() => navigate(`/app/kpi/${ind.id}`)} />
           ))}
         </div>
       </PageSection>
