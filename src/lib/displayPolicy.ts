@@ -6,7 +6,7 @@ import { cadenceOf } from "@/lib/trend";
  * what a KPI CARD may show. Screens/components never re-derive these rules.
  *
  * Delta on cards is allowed ONLY for:
- *  • Assessment: SAT1 · SAT2 · CET · CGMS (incl. their sub-metrics) — never FLN/ORF
+ *  • Assessment: SAT 1 · SAT 2 · CET · CGMS (incl. their sub-metrics) — never FLN/ORF
  *  • School Quality: the GSQAC score only — never the D1–D5 domain indicators
  * Everything else — every Daily indicator, all of Attendance, all of
  * Administration (School Observation included) — shows its as-on date instead.
@@ -15,9 +15,14 @@ import { cadenceOf } from "@/lib/trend";
  * tables) — never on cards.
  */
 
-const ASSESSMENT_DELTA_PARENTS = new Set(["asm_sat1", "asm_sat2", "asm_cet", "asm_cgms"]);
+const ASSESSMENT_DELTA_PARENTS = new Set([
+  "asm_SAT 1",
+  "asm_SAT 2",
+  "asm_cet",
+  "asm_cgms",
+]);
 
-/** parent indicator id of a (possibly synthesized) sub-metric id — `asm_sat1__avgScore` → `asm_sat1`. */
+/** parent indicator id of a (possibly synthesized) sub-metric id — `asm_SAT 1__avgScore` → `asm_SAT 1`. */
 export function parentKpiId(kpiId: string): string {
   return kpiId.split("__")[0];
 }
@@ -26,13 +31,16 @@ export function parentKpiId(kpiId: string): string {
  * May this KPI (or synthesized sub-metric record) show a delta on a CARD?
  * Detail-page trend charts are unaffected — this gates card chrome only.
  */
-export function shouldShowCardDelta(kpi: Pick<KpiDef, "id" | "domain_id" | "frequency" | "suppressDelta">): boolean {
+export function shouldShowCardDelta(
+  kpi: Pick<KpiDef, "id" | "domain_id" | "frequency" | "suppressDelta">,
+): boolean {
   if (kpi.suppressDelta) return false;
   if (cadenceOf(kpi.frequency) === "daily") return false;
   const parent = parentKpiId(kpi.id);
   // sq_d5's CET/CGMS rows reuse asm_* series but live in School Quality — the
   // domain check keeps them delta-free (GSQAC delta is for the score only).
-  if (kpi.domain_id === "assessment") return ASSESSMENT_DELTA_PARENTS.has(parent);
+  if (kpi.domain_id === "assessment")
+    return ASSESSMENT_DELTA_PARENTS.has(parent);
   if (kpi.domain_id === "school_quality") return parent === "sq_gsqac";
   return false;
 }
@@ -61,7 +69,9 @@ export function isRetentionKpi(kpiId: string): boolean {
 }
 
 /** Re-enrolment is shown as "Daily" (latest rule); everything else keeps its real frequency. */
-export function displayFrequency(kpi: Pick<KpiDef, "id" | "frequency">): Frequency | undefined {
+export function displayFrequency(
+  kpi: Pick<KpiDef, "id" | "frequency">,
+): Frequency | undefined {
   return kpi.id === "ret_reenroll" ? "Daily" : kpi.frequency;
 }
 

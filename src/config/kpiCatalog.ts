@@ -13,7 +13,7 @@ import type {
  * KPI are intentionally absent; they are not in the sheet). Sheet rows with multiple
  * formulas are modelled as multi-metric indicators (`metrics`): Teacher attendance
  * (Present/Submitted), Student attendance (Present/Submitted), attendance submission
- * (Schools/Class sections), SAT1/SAT2/ORF/CET/CGMS, and Average CPD Time Per Teacher
+ * (Schools/Class sections), SAT 1/SAT 2/ORF/CET/CGMS, and Average CPD Time Per Teacher
  * (Average CPD time / Teachers engaged in CPD).
  *
  * 4A: Attendance · Assessment · Administration (CPD / Visits & Observations /
@@ -55,7 +55,7 @@ const BASE_PUBLISHED: Record<string, Pub> = {
   // att_report is multi-metric — parent anchor not used directly (sub-metrics resolve via METRIC_PUBLISHED)
   att_report: { school: 92, cluster: 91, block: 93, district: 94, state: 95 },
   // Assessment — all classroom-level (down to section); CET/CGMS hidden from teacher via roleVisibility.
-  asm_sat1: {
+  asm_SAT 1: {
     section: 72,
     school: 74,
     cluster: 76,
@@ -63,7 +63,7 @@ const BASE_PUBLISHED: Record<string, Pub> = {
     district: 81,
     state: 83,
   },
-  asm_sat2: {
+  asm_SAT 2: {
     section: 74,
     school: 76,
     cluster: 78,
@@ -170,7 +170,7 @@ const BASE_PUBLISHED: Record<string, Pub> = {
 
 /**
  * Per-SUB-METRIC anchors for the multi-metric indicators (Teacher/Student attendance,
- * att_report, SAT1/SAT2/ORF/CET/CGMS, Average CPD Time Per Teacher).
+ * att_report, SAT 1/SAT 2/ORF/CET/CGMS, Average CPD Time Per Teacher).
  * Keyed `<parentId>__<metricId>` so the provider/peer helpers resolve them through
  * the same machinery as a normal indicator — no UI hardcoding (§9, §12). The primary
  * metric reuses the parent's published anchor; the secondary metrics get their own
@@ -178,9 +178,9 @@ const BASE_PUBLISHED: Record<string, Pub> = {
  * up the hierarchy (bigger units cluster tighter, so fewer fall below the mean).
  */
 const METRIC_PUBLISHED: Record<string, Pub> = {
-  // SAT1 — Avg score (= parent), students below hierarchy avg (lower better), participation
-  asm_sat1__avgScore: BASE_PUBLISHED.asm_sat1,
-  asm_sat1__belowHierarchyAvg: {
+  // SAT 1 — Avg score (= parent), students below hierarchy avg (lower better), participation
+  asm_SAT 1__avgScore: BASE_PUBLISHED.asm_SAT 1,
+  asm_SAT 1__belowHierarchyAvg: {
     section: 34,
     school: 32,
     cluster: 30,
@@ -188,7 +188,7 @@ const METRIC_PUBLISHED: Record<string, Pub> = {
     district: 24,
     state: 21,
   },
-  asm_sat1__participation: {
+  asm_SAT 1__participation: {
     section: 88,
     school: 89,
     cluster: 90,
@@ -196,9 +196,9 @@ const METRIC_PUBLISHED: Record<string, Pub> = {
     district: 92,
     state: 93,
   },
-  // SAT2
-  asm_sat2__avgScore: BASE_PUBLISHED.asm_sat2,
-  asm_sat2__belowHierarchyAvg: {
+  // SAT 2
+  asm_SAT 2__avgScore: BASE_PUBLISHED.asm_SAT 2,
+  asm_SAT 2__belowHierarchyAvg: {
     section: 33,
     school: 31,
     cluster: 29,
@@ -206,7 +206,7 @@ const METRIC_PUBLISHED: Record<string, Pub> = {
     district: 23,
     state: 20,
   },
-  asm_sat2__participation: {
+  asm_SAT 2__participation: {
     section: 89,
     school: 90,
     cluster: 91,
@@ -544,10 +544,10 @@ const RAW: Array<
       "Gyan Prabhav generates a SAT report card per classroom; this is the share of classrooms that downloaded it.",
   },
   {
-    id: "asm_sat2",
+    id: "asm_SAT 2",
     domain_id: "assessment",
-    name: "Semester Assessment Test 2 (SAT2)",
-    name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 2 (SAT2)",
+    name: "Semester Assessment Test 2 (SAT 2)",
+    name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 2 (SAT 2)",
     unit: "%",
     direction: "higher",
     data_source: "Xamta bot",
@@ -556,21 +556,21 @@ const RAW: Array<
     hero: true,
     scheduleNote: "March",
     metrics: resultSubMetrics(
-      "SAT2",
+      "SAT 2",
       "%",
       "avgScore",
       "Avg score",
       "સરેરાશ સ્કોર",
     ),
     formula:
-      "Latest SAT Result % (SAT2, current year); year-on-year change vs the previous SAT2.",
+      "Latest SAT Result % (SAT 2, current year); year-on-year change vs the previous SAT 2.",
     description: "Latest SAT result — the result-first Assessment headline.",
   },
   {
-    id: "asm_sat1",
+    id: "asm_SAT 1",
     domain_id: "assessment",
-    name: "Semester Assessment Test 1 (SAT1)",
-    name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 1 (SAT1)",
+    name: "Semester Assessment Test 1 (SAT 1)",
+    name_gu: "સેમેસ્ટર મૂલ્યાંકન કસોટી 1 (SAT 1)",
     unit: "%",
     direction: "higher",
     data_source: "Xamta bot",
@@ -578,14 +578,14 @@ const RAW: Array<
     displayStrategy: "snapshot_latest",
     scheduleNote: "September",
     metrics: resultSubMetrics(
-      "SAT1",
+      "SAT 1",
       "%",
       "avgScore",
       "Avg score",
       "સરેરાશ સ્કોર",
     ),
     formula:
-      "SAT1 Result % (current year); year-on-year change vs the previous SAT1.",
+      "SAT 1 Result % (current year); year-on-year change vs the previous SAT 1.",
     description: "Semester Assessment Test 1 — held every September.",
   },
   // ORF runs annually (sometimes 2–3 cycles a year), never monthly — modelled as Yearly

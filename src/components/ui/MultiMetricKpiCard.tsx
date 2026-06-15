@@ -1,5 +1,9 @@
 import type { KpiRecord, Level } from "@/types";
-import { formatValue, resolveMetricLabel, formatBelowLevelLabel } from "@/lib/format";
+import {
+  formatValue,
+  resolveMetricLabel,
+  formatBelowLevelLabel,
+} from "@/lib/format";
 import { peerAvg, peerLevelOf } from "@/lib/peer";
 import { buildTrend, getLastUpdatedLabel } from "@/lib/trend";
 import { shouldShowCardDelta, displayFrequency } from "@/lib/displayPolicy";
@@ -11,14 +15,20 @@ import { KpiCompareSection } from "./KpiCompareSection";
 import { KpiCard } from "./KpiCard";
 
 /**
- * Multi-metric indicator card (Teacher/Student attendance · att_report · SAT1/SAT2/ORF/
+ * Multi-metric indicator card (Teacher/Student attendance · att_report · SAT 1/SAT 2/ORF/
  * CET/CGMS · Average CPD Time Per Teacher) — compact, graph-free score table. Each
  * metric is one inline `KpiInlineRow` (value + resolved label · N+1 · policy-gated delta).
  * "% below hierarchy average" resolves to the current scope ("% below block average").
  * No source on cards; charts live on the KPI detail page only.
  */
 export function MultiMetricKpiCard({
-  rec, metrics, name, onClick, lang = "en", level, parentName,
+  rec,
+  metrics,
+  name,
+  onClick,
+  lang = "en",
+  level,
+  parentName,
 }: {
   rec: KpiRecord;
   metrics: KpiRecord[];
@@ -33,14 +43,34 @@ export function MultiMetricKpiCard({
   const lastUpdated = getLastUpdatedLabel(kpi, new Date(), lang);
 
   return (
-    <KpiCardShell onClick={onClick} compare={<KpiCompareSection kpi={kpi} />} metrics={metrics.length || 1}>
-      <KpiCardHeader title={name} frequency={displayFrequency(kpi)} context={lastUpdated} chevron={!!onClick} />
+    <KpiCardShell
+      onClick={onClick}
+      compare={<KpiCompareSection kpi={kpi} />}
+      metrics={metrics.length || 1}
+    >
+      <KpiCardHeader
+        title={name}
+        frequency={displayFrequency(kpi)}
+        context={lastUpdated}
+        chevron={!!onClick}
+      />
 
       <div className="mt-2">
         {metrics.length ? (
-          metrics.map((m, i) => <MetricRow key={m.kpi.id} rec={m} level={level} parentName={parentName} lang={lang} divider={i > 0} />)
+          metrics.map((m, i) => (
+            <MetricRow
+              key={m.kpi.id}
+              rec={m}
+              level={level}
+              parentName={parentName}
+              lang={lang}
+              divider={i > 0}
+            />
+          ))
         ) : (
-          <span className="block py-2 text-2xs text-neutral-400">{t("common.notTracked")}</span>
+          <span className="block py-2 text-2xs text-neutral-400">
+            {t("common.notTracked")}
+          </span>
         )}
       </div>
     </KpiCardShell>
@@ -50,8 +80,18 @@ export function MultiMetricKpiCard({
 /** One metric row — inline `value + label`, label resolved to the current scope
  *  level, delta only where allowed. Divider drawn above every row after the first. */
 function MetricRow({
-  rec, level, parentName, lang, divider,
-}: { rec: KpiRecord; level?: Level; parentName?: string; lang: Lang; divider?: boolean }) {
+  rec,
+  level,
+  parentName,
+  lang,
+  divider,
+}: {
+  rec: KpiRecord;
+  level?: Level;
+  parentName?: string;
+  lang: Lang;
+  divider?: boolean;
+}) {
   const { t } = useT();
   const kpi = rec.kpi;
   const na = rec.value == null;
@@ -75,10 +115,22 @@ function MetricRow({
       label={label}
       value={na ? "—" : formatValue(rec.value, kpi.unit, lang)}
       valueTone={tone}
-      peerLabel={parentName && peer != null && parentLevel ? `${t(`levels.${parentLevel}`)} · ${formatValue(peer, kpi.unit, lang)}` : null}
-      delta={delta != null && delta !== 0 ? (
-        <FrequencyDelta delta={delta} unit={kpi.unit} direction={kpi.direction} cadence={trend!.cadence} lang={lang} />
-      ) : null}
+      peerLabel={
+        parentName && peer != null && parentLevel
+          ? `${t(`levels.${parentLevel}`)} · ${formatValue(peer, kpi.unit, lang)}`
+          : null
+      }
+      delta={
+        delta != null && delta !== 0 ? (
+          <FrequencyDelta
+            delta={delta}
+            unit={kpi.unit}
+            direction={kpi.direction}
+            cadence={trend!.cadence}
+            lang={lang}
+          />
+        ) : null
+      }
     />
   );
 }
@@ -88,7 +140,13 @@ function MetricRow({
  * Hook is always called (with undefined id for single-metric) to preserve stable order.
  */
 export function KpiCardAuto({
-  rec, name, onClick, lang = "en", level, parentName, currentId,
+  rec,
+  name,
+  onClick,
+  lang = "en",
+  level,
+  parentName,
+  currentId,
 }: {
   rec: KpiRecord;
   name: string;
@@ -101,7 +159,26 @@ export function KpiCardAuto({
   const isMulti = !!rec.kpi.metrics?.length;
   const metrics = useKpiMetrics(isMulti ? rec.kpi.id : undefined, currentId);
   if (isMulti && metrics.length) {
-    return <MultiMetricKpiCard rec={rec} metrics={metrics} name={name} onClick={onClick} lang={lang} level={level} parentName={parentName} />;
+    return (
+      <MultiMetricKpiCard
+        rec={rec}
+        metrics={metrics}
+        name={name}
+        onClick={onClick}
+        lang={lang}
+        level={level}
+        parentName={parentName}
+      />
+    );
   }
-  return <KpiCard rec={rec} name={name} onClick={onClick} lang={lang} level={level} parentName={parentName} />;
+  return (
+    <KpiCard
+      rec={rec}
+      name={name}
+      onClick={onClick}
+      lang={lang}
+      level={level}
+      parentName={parentName}
+    />
+  );
 }

@@ -51,7 +51,7 @@ The product solves three problems:
 ### KPI Cards (Domain View)
 
 - **Single-metric cards** — headline label (Rate / Count / Score / Latest), large value, delta chip, parent average, and source line.
-- **Multi-metric cards** — SAT1, SAT2, ORF, CET, CGMS each show 2–3 aligned metric rows (Avg score · Below hierarchy avg · Participation) in a single compact table.
+- **Multi-metric cards** — SAT 1, SAT 2, ORF, CET, CGMS each show 2–3 aligned metric rows (Avg score · Below hierarchy avg · Participation) in a single compact table.
 - **Equal-height grid rows** — all cards in a grid row stretch to the same height (`sm:auto-rows-fr`).
 - **No card-level graphs** — trend charts appear only on the KPI detail page; cards are for status scanning.
 
@@ -347,8 +347,8 @@ app/
 
 | ID                | Name                                 | Unit  | Frequency          | Sub-metrics                                     |
 | ----------------- | ------------------------------------ | ----- | ------------------ | ----------------------------------------------- |
-| `asm_sat1`        | SAT 1 Results                        | %     | Twice a Year (Sep) | Avg score · Below hierarchy avg · Participation |
-| `asm_sat2`        | SAT 2 Results                        | %     | Twice a Year (Mar) | Avg score · Below hierarchy avg · Participation |
+| `asm_SAT 1`       | SAT 1 Results                        | %     | Twice a Year (Sep) | Avg score · Below hierarchy avg · Participation |
+| `asm_SAT 2`       | SAT 2 Results                        | %     | Twice a Year (Mar) | Avg score · Below hierarchy avg · Participation |
 | `asm_orf`         | Oral Reading Fluency (ORF)           | score | Twice a Year       | CWPM · Below hierarchy avg · Participation      |
 | `asm_cet`         | CET Results                          | %     | Yearly             | Result · Participation                          |
 | `asm_cgms`        | NMMS / CGMS Results                  | %     | Yearly             | Result · Participation                          |
@@ -404,7 +404,7 @@ app/
 
 ### Multi-metric Architecture
 
-For indicators with `metrics: KpiMetricDef[]`, sub-metric data is anchored separately in `METRIC_PUBLISHED` using keys of the form `<parentId>__<metricId>` (e.g. `asm_sat1__belowHierarchyAvg`). `metricKpiDef()` synthesizes a full `KpiDef` for each sub-metric so the existing engine / provider / peer machinery works without modification. `useKpiMetrics` is always called (even for single-metric KPIs) to preserve stable hook order.
+For indicators with `metrics: KpiMetricDef[]`, sub-metric data is anchored separately in `METRIC_PUBLISHED` using keys of the form `<parentId>__<metricId>` (e.g. `asm_SAT 1__belowHierarchyAvg`). `metricKpiDef()` synthesizes a full `KpiDef` for each sub-metric so the existing engine / provider / peer machinery works without modification. `useKpiMetrics` is always called (even for single-metric KPIs) to preserve stable hook order.
 
 ---
 
@@ -590,7 +590,7 @@ This filter persists in the session store and affects every screen.
 ### Mock / Demo Data
 
 - All values are deterministic from a seeded PRNG anchored to published per-level figures. They are not real school data.
-- Sub-metric anchors (SAT1/SAT2/ORF sub-metrics) are hard-coded in `METRIC_PUBLISHED`; the live Supabase provider will need a real schema for these.
+- Sub-metric anchors (SAT 1/SAT 2/ORF sub-metrics) are hard-coded in `METRIC_PUBLISHED`; the live Supabase provider will need a real schema for these.
 - `att_report` / `asm_remediation` display as "as on {date}" with `suppressDelta: true` — delta is not tracked for these indicators.
 
 ### Domain Weightages
@@ -769,7 +769,7 @@ chore/<short-description>       Build, config, tooling
 Use short imperative subject lines (≤72 chars). No trailing periods. Body is optional but encouraged for non-obvious changes.
 
 ```
-feat: add multi-metric KPI card for SAT1/SAT2
+feat: add multi-metric KPI card for SAT 1/SAT 2
 
 fix: remove duplicate period label on SAT cards
 

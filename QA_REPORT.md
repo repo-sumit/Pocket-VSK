@@ -23,7 +23,7 @@ Together these match the spec's `canShowAdministrationCompare = applied && level
 ### Result
 
 - School/Grade/Section: Administration card is compact — KPI rows + N+1 pills only (`7 untracked
-  Students` / `Cluster · 22`, `1.4 No of CRC/URC Visits per school` / `Cluster · 1.6`), no
+Students` / `Cluster · 22`, `1.4 No of CRC/URC Visits per school` / `Cluster · 1.6`), no
   Compare by, no "Not tracked".
 - Cluster/Block/District/State: unchanged — Compare by chips + comparison chart still show when
   Compare is applied and data exists.
@@ -39,7 +39,7 @@ Together these match the spec's `canShowAdministrationCompare = applied && level
 ### Verification
 
 - `npx tsc --noEmit` ✓ clean · `npm run build` ✓ (`built in 16.01s`; only the pre-existing
-  >1.5 MB `entities` chunk-size warning).
+  > 1.5 MB `entities` chunk-size warning).
 - No changes to Administration KPI values, untracked / CRC-URC logic, N+1 pills, compare sheet,
   other domain cards, domain/KPI-detail pages, or header/filter/share behaviour.
 
@@ -77,7 +77,7 @@ exactly three card components; fixed at the source (no per-card hacks):
 ### Verification
 
 - `npx tsc --noEmit` ✓ clean · `npm run build` ✓ (`built in 26.79s`; only the pre-existing
-  >1.5 MB `entities` chunk-size warning).
+  > 1.5 MB `entities` chunk-size warning).
 - Grep confirms **zero** remaining `common.avg` / `peerIsAvg` usages in `src/`.
 - No changes to login/header/filter/share-export behaviour, compare sheet, GSQAC pages, assessment
   ordering, Parakh, chart logic, or KPI values/formulas.
@@ -164,7 +164,7 @@ the new `compare.crcVisits` = "CRC/URC Visits", en + gu).
 ### Verification
 
 - `npx tsc --noEmit` ✓ clean · `npm run build` ✓ (`built in 27.88s`; only the pre-existing
-  >1.5 MB `entities` chunk-size warning).
+  > 1.5 MB `entities` chunk-size warning).
 - Reference values confirmed: `ret_dropout` district 260, `vis_CRCC_count` district 1.8 →
   pills "District · 260" and "District avg · 1.8".
 - No changes to login/header/filter/share-export/compare sheet behaviour, GSQAC, assessment
@@ -179,7 +179,7 @@ the new `compare.crcVisits` = "CRC/URC Visits", en + gu).
 On the homepage domain cards, the embedded "… COMPARISON" bars always rendered the **domain
 score percent** (`leaderboard.domainPercents[domainId]`) with a hardcoded `unit="%"` /
 `maxValue={100}`. So the Attendance card — whose hero is a **count** ("225 students absent") —
-showed cluster bars as `87.9% … 92.8%` (the attendance *score*), not the absent-student counts.
+showed cluster bars as `87.9% … 92.8%` (the attendance _score_), not the absent-student counts.
 The N+1 pill ("District 790") was already a count; only the bars disagreed.
 
 ### Fix
@@ -199,7 +199,7 @@ The bars now follow the **hero indicator's own unit**, mirroring the already-cor
 
 Net: Attendance/Administration (count heroes) show counts; Assessment (% hero) shows %; GSQAC
 shows the score %. Verified hero units — `att_chronic` count·lower, admin untracked count·lower,
-`asm_sat2` %·higher.
+`asm_SAT 2` %·higher.
 
 ### Files changed
 
@@ -211,7 +211,7 @@ shows the score %. Verified hero units — `att_chronic` count·lower, admin unt
 ### Verification
 
 - `npx tsc --noEmit` ✓ clean · `npm run build` ✓ (`built in 16.01s`; only the pre-existing
-  >1.5 MB `entities` chunk-size warning).
+  > 1.5 MB `entities` chunk-size warning).
 - No changes to login/routing, header, filter/compare sheets, GSQAC scoring, assessment ordering,
   or Parakh. KPI values/formulas unchanged; this only changes which series the bars plot.
 
@@ -245,7 +245,7 @@ teachers).
 ### Verification
 
 - `npx tsc --noEmit` ✓ clean · `npm run build` ✓ (`built in 10.51s`; only the pre-existing
-  >1.5 MB `entities` chunk-size warning).
+  > 1.5 MB `entities` chunk-size warning).
 - `vis_CRCC_count` confirmed published at school→state, `lowestLevel: school`,
   `roleVisibility: NON_TEACHER` — so the record is present (with a value) for officers at every
   level, and never for teachers.
@@ -258,7 +258,7 @@ teachers).
 Three focused homepage tweaks:
 
 1. **Remove "re-enrolled this year" from the Untracked card.** `UntrackedHomeCard` no longer
-   renders the secondary re-enrolled line. (The re-enrolled count is still shown in the *detail*
+   renders the secondary re-enrolled line. (The re-enrolled count is still shown in the _detail_
    summary, and `UNTRACKED_SUMMARY.reenrolled` is kept — only the home card line was dropped.)
 
 2. **Drop the "vs" prefix from every N+1 hierarchy comparison pill.** The pills now read
@@ -268,8 +268,8 @@ Three focused homepage tweaks:
    - `components/ui/KpiCard.tsx` and `components/ui/MultiMetricKpiCard.tsx` (KPI-listing peer label)
    - `components/ui/RosterDetail.tsx` (both the untracked and the count comparison pills)
    - `components/ui/UntrackedHomeCard.tsx`
-   The `common.vs` i18n key is left defined (harmless, keeps the en/gu shape aligned) but is now
-   unused. The "avg" suffix on percent/score comparisons (§22) is unchanged.
+     The `common.vs` i18n key is left defined (harmless, keeps the en/gu shape aligned) but is now
+     unused. The "avg" suffix on percent/score comparisons (§22) is unchanged.
 
 3. **Add "No. of CRC/URC visits" to the Untracked card with a line separator.** Below a divider,
    the card now shows the school's CRC/URC school-observation count for the month
@@ -289,7 +289,7 @@ Three focused homepage tweaks:
 ### Verification
 
 - `npx tsc --noEmit` ✓ clean · `npm run build` ✓ (`built in 10.85s`; only the pre-existing
-  >1.5 MB `entities` chunk-size warning).
+  > 1.5 MB `entities` chunk-size warning).
 - Grep confirms **zero** remaining `common.vs` usages in `src/`.
 - No changes to login/routing, header, filter/compare sheets, GSQAC, assessment ordering, or Parakh.
 
@@ -304,7 +304,7 @@ After login the app crashed with `Uncaught TypeError: Cannot read properties of 
 the surname initial:
 
 ```ts
-name: `${FIRST[hv % FIRST.length]} ${LAST[(hv >> 4) % LAST.length][0]}.`
+name: `${FIRST[hv % FIRST.length]} ${LAST[(hv >> 4) % LAST.length][0]}.`;
 ```
 
 The hash `h()` returns an **unsigned** 32-bit int (`x >>> 0`, up to ~4.29B). But `hv >> 4` is an
@@ -590,8 +590,8 @@ chunk-size warning). Playwright not run, per standing instruction.
 
 `GsqacOverallCard` is now unused (kept exported in `GsqacCards.tsx`, harmless) since the overall
 score is no longer shown on the listing page. Area/sub-domain pages keep a one-line **title** for
-orientation — the spec allows the page title to carry context; only the large *score/comparison
-summary cards* were removed.
+orientation — the spec allows the page title to carry context; only the large _score/comparison
+summary cards_ were removed.
 
 ---
 
@@ -643,7 +643,7 @@ equivalent to the spec's nested paths, no existing routes broken (§1). New rout
   accordions).
 - **`KpiDetail`**: detects a GSQAC indicator id (`gsqacIndicatorById`) and renders a dedicated
   **`GsqacIndicatorDetail`** — area eyebrow · indicator name · `Yearly · 2024–25 · GSQAC
-  Dashboard` meta · big score + grade · **yearly trend line chart** · "How it's calculated".
+Dashboard` meta · big score + grade · **yearly trend line chart** · "How it's calculated".
   No embedded Compare on the detail page; Compare button stays hidden on `/app/kpi/*` (§5, §9).
 
 ### Visual / chart rules
@@ -745,7 +745,7 @@ in the latest iteration.
   `kpiCardParts.tsx` `KnowMore` → `CardChevron`; `KpiCardHeader` gains `chevron` (was
   `showKnowMore`); updated every caller (`KpiCard`, `MultiMetricKpiCard`, `DomainInsightCard`,
   `GsqacCards`, `ParakhCards`, `DomainView` sub-domain rows).
-- **KPI numbers are neutral black (§10).** Removed RAG/delta colouring from KPI *values* —
+- **KPI numbers are neutral black (§10).** Removed RAG/delta colouring from KPI _values_ —
   only GSQAC scores keep status colour, and delta stays the separate coloured pill.
   (`KpiCard`, `MultiMetricKpiCard` metric rows, `DomainInsightCard` input hero.)
 - **Single-metric short grammar (§5).** The home Attendance hero reads "**225** students absent"
@@ -773,14 +773,15 @@ applied-then-cleared → **Remove comparison** primary-button behaviour was alre
 
 `/app/kpi/att_chronic` and `/app/kpi/ret_dropout` now replace the trend chart with **role-aware
 lists** (`RosterDetail.tsx` + deterministic demo data in `lib/rosterMock.ts`):
+
 - **Teacher** → own-class **student list** (name · section · "Absent for N days" · last present;
   untracked shows status pills). Names only at teacher scope (§23).
 - **Principal** → **class-wise accordion** (Grade → count, expands to the roster); untracked →
   grade-wise number list.
 - **Officer** (Cluster/Block/District/State) → **N-1 hierarchy counts** (child unit → number),
   **no names**.
-Each view leads with a neutral count summary + the N+1 count tag. Graph-first is avoided for
-teacher/principal (§18.2). New `roster.*` i18n block (en/gu).
+  Each view leads with a neutral count summary + the N+1 count tag. Graph-first is avoided for
+  teacher/principal (§18.2). New `roster.*` i18n block (en/gu).
 
 ### 5. Assessment (§3, §13, §15)
 
@@ -815,7 +816,7 @@ Field label is the single static **"Teacher ID / User ID"** (en/gu); welcome tex
 
 ### Files changed
 
-`i18n/en.ts`, `i18n/gu.ts` (avg, roster.*, login label), `lib/format.ts`
+`i18n/en.ts`, `i18n/gu.ts` (avg, roster.\*, login label), `lib/format.ts`
 (`formatBelowLevelLabel`), `lib/rosterMock.ts` (new), `components/ui/kpiCardParts.tsx`
 (CardChevron), `components/ui/KpiCard.tsx`, `components/ui/MultiMetricKpiCard.tsx`,
 `components/ui/DomainInsightCard.tsx`, `components/ui/GsqacCards.tsx`,
@@ -927,7 +928,7 @@ Implemented the latest Claude Design output (`-HL5VTkjAIpB3_W6_dwunw`, `ui_kits/
 
 ### Assessment result-first (§14)
 
-- The **latest SAT result (SAT2)** is now the Assessment hero; **"SAT reports downloaded in classrooms"** moved to the end of the domain (no longer the hero). The below-average sub-metric stays level-aware ("% below <level> average").
+- The **latest SAT result (SAT 2)** is now the Assessment hero; **"SAT reports downloaded in classrooms"** moved to the end of the domain (no longer the hero). The below-average sub-metric stays level-aware ("% below <level> average").
 
 ### PARAKH district category (§19) — new
 
@@ -1188,7 +1189,7 @@ Focused visibility fix: the top-bar **Compare** control (button + `Compare · N`
 
 **Build:** `npm run build` ✓ (`tsc --noEmit` clean; only the pre-existing entities-seed chunk-size warning).
 
-**Manual checks:** `/app/kpi/sq_gsqac`, `/app/kpi/att_chronic`, `/app/kpi/asm_sat1` → no Compare button; `/app/domain/*` and the home scorecard → Compare button still present; Export / language / All Schools / logout unaffected.
+**Manual checks:** `/app/kpi/sq_gsqac`, `/app/kpi/att_chronic`, `/app/kpi/asm_SAT 1` → no Compare button; `/app/domain/*` and the home scorecard → Compare button still present; Export / language / All Schools / logout unaffected.
 
 ---
 
@@ -1227,7 +1228,7 @@ Focused update on the existing design (no redesign). Eight targeted changes, all
 - **Level-specific + resets on scope change** (`CompareContext`): applying compares the selected n-1 units; changing scope (drill up/down) resets the selection and re-preselects the new scope's children, so a District's block selection never leaks into a Block's clusters.
 - **After Apply** each card reveals an embedded bar chart of the selected units only, worst-first, RAG-coloured, value labels, abbreviated unit labels, tap-a-bar to drill. Chart strips scroll horizontally inside the card (a "scroll ›" hint appears beyond six bars); **the page never scrolls horizontally** (verified at 375 px after fixing an action-row overflow by letting it wrap on mobile).
 - **Unit consistency (critical):** the chart uses the KPI/metric's OWN unit, never a mismatched %. New `engine.getKpiChildSeries` computes each selected child's value in the KPI's unit (count→count, %→%, visits→`ratio`, score→score). Verified: "Students absent · 225" → count bars (64/62/56/53/53), not percentages; CRCC/URC visits cap at 3; GSQAC/score in score; % KPIs in %.
-- **Multi-metric KPI cards** (Teacher/Student attendance, SAT1/SAT2/ORF, CET, CGMS, attendance submission, GSQAC D5) show **"Compare by [metric]" chips**; switching a chip re-renders the chart in that metric's unit (one chart at a time — no mixed-unit stacks). Verified Present↔Submitted switching.
+- **Multi-metric KPI cards** (Teacher/Student attendance, SAT 1/SAT 2/ORF, CET, CGMS, attendance submission, GSQAC D5) show **"Compare by [metric]" chips**; switching a chip re-renders the chart in that metric's unit (one chart at a time — no mixed-unit stacks). Verified Present↔Submitted switching.
 - **Standalone bottom comparison panel removed** from domain pages (`ChildComparisonPanel` deleted); all comparison now lives inside the cards.
 - Preserved: KPI values/IDs/formulas, hierarchy + drill-down navigator, PM SHRI filter, language toggle, Export action, N+1 peer chips, RAG-status headlines, no source on cards, no line/sparkline graphs on cards.
 
@@ -1363,7 +1364,7 @@ Mobile + desktop reference layouts (1, 2, 12, 13) · smart navigator replaces br
 
 ### 3. KPI card display policy (central, in `src/lib/displayPolicy.ts`)
 
-- **`shouldShowCardDelta(kpi)`** — single arbiter for card deltas: `suppressDelta` → false; Daily cadence → false; assessment domain → only SAT1/SAT2/CET/CGMS (and their sub-metrics; FLN/ORF excluded); school_quality → only the GSQAC score; everything else (all of Attendance by cadence, all of Administration incl. School Observation) → false. Edge handled: sq_d5's CET/CGMS rows reuse `asm_cet__participation`/`asm_cgms__participation` series but keep `domain_id: school_quality`, so they stay delta-free. Consumed by `KpiCard`, `MultiMetricKpiCard`, `DomainSummaryCard` and both Export delta paths.
+- **`shouldShowCardDelta(kpi)`** — single arbiter for card deltas: `suppressDelta` → false; Daily cadence → false; assessment domain → only SAT 1/SAT 2/CET/CGMS (and their sub-metrics; FLN/ORF excluded); school_quality → only the GSQAC score; everything else (all of Attendance by cadence, all of Administration incl. School Observation) → false. Edge handled: sq_d5's CET/CGMS rows reuse `asm_cet__participation`/`asm_cgms__participation` series but keep `domain_id: school_quality`, so they stay delta-free. Consumed by `KpiCard`, `MultiMetricKpiCard`, `DomainSummaryCard` and both Export delta paths.
 - **`shouldShowSource(context)`** — source renders only on the KPI detail page (title meta: `Yearly · Sep 2025 · Xamta bot`) and in the Export tables; **no card shows source** (the `KpiSourceLine`/`KpiContextTile` parts, `SourceBadge` and `KpiMetaRow` were deleted so no card can grow one back).
 - **No "Parent avg" label** — peer comparison is `Kachchh · 94%` everywhere (Export summary tiles now use the same `{parent name} · {value}` grammar).
 - **No RATE/LATEST/COUNT/SCORE labels** (i18n keys deleted), **no graphs/sparklines in cards** (`Sparkline.tsx` deleted; recharts only in detail-page `TrendChart`).
@@ -1409,7 +1410,7 @@ All four domain pages (`/domain/attendance`, `assessment`, `administration`, `sc
 ### 11. Build & verification
 
 - `npm run build` ✓ (`tsc --noEmit` clean; only the pre-existing entities-seed chunk-size warning).
-- Visual pass in-browser (state login `24`/`0000`): home (desktop+mobile, EN+ગુ), attendance/assessment/school-quality domain pages at state & district scope, `att_chronic`/`asm_sat1`/`sq_d5` detail, Export — all matched the spec.
+- Visual pass in-browser (state login `24`/`0000`): home (desktop+mobile, EN+ગુ), attendance/assessment/school-quality domain pages at state & district scope, `att_chronic`/`asm_SAT 1`/`sq_d5` detail, Export — all matched the spec.
 - Adversarial multi-agent verification over the 24 acceptance criteria: 42 checks confirmed; 1 blocker found and fixed (Gujarati branch of `resolveMetricLabel` could leak the literal word "hierarchy" in detail formulas — resolver made language-proof + `formula_gu` propagated), plus minor fixes (language toggle moved into the filter row per the preferred top-bar order; Export summary tile peer grammar; `shouldShowSource` actually wired into KpiDetail/Export; bar-chart label-height constant corrected; stale gu `scorecard.inputs` translation; dead exports pruned).
 
 ### 12. Assumptions
@@ -1518,12 +1519,12 @@ Every sheet row whose Formula/Logic defines ≥2 formulas is now a single multi-
 
 All five already multi-metric; metrics confirmed to match the latest sheet:
 
-| Indicator                           | Metrics                                              |
-| ----------------------------------- | ---------------------------------------------------- |
-| SAT1 / SAT2 (`asm_sat1`/`asm_sat2`) | Avg score · Below `<hierarchy>` avg · Participation  |
-| FLN-ORF (`asm_orf`)                 | CWPM score · Below `<hierarchy>` avg · Participation |
-| CET (`asm_cet`)                     | Result · Participation (Class-5 present / enrolled)  |
-| CGMS (`asm_cgms`)                   | Result · Participation (Class-8 present / enrolled)  |
+| Indicator                               | Metrics                                              |
+| --------------------------------------- | ---------------------------------------------------- |
+| SAT 1 / SAT 2 (`asm_SAT 1`/`asm_SAT 2`) | Avg score · Below `<hierarchy>` avg · Participation  |
+| FLN-ORF (`asm_orf`)                     | CWPM score · Below `<hierarchy>` avg · Participation |
+| CET (`asm_cet`)                         | Result · Participation (Class-5 present / enrolled)  |
+| CGMS (`asm_cgms`)                       | Result · Participation (Class-8 present / enrolled)  |
 
 ORF source kept as display alias "Oral Reading Fluency (ORF) Bot" (sheet: `ORFBot`); CET "Common Entrance Test (CET) Portal" (sheet: `CET Portal`); CGMS "CGMS Portal". No metric changes needed.
 
@@ -1599,7 +1600,7 @@ ORF source kept as display alias "Oral Reading Fluency (ORF) Bot" (sheet: `ORFBo
 - [ ] Student attendance card shows **Present** and **Submitted**
 - [ ] Attendance submission card shows **Schools** and **Class sections**
 - [ ] Average CPD Time Per Teacher shows **Average CPD time** (hrs) and **Teachers engaged in CPD** (%)
-- [ ] SAT1/SAT2/ORF show Avg score · Below {level} avg · Participation; CET/CGMS show Result · Participation
+- [ ] SAT 1/SAT 2/ORF show Avg score · Below {level} avg · Participation; CET/CGMS show Result · Participation
 - [ ] Single-metric KPIs unchanged (MDM, dropout, visits, observations, etc.)
 - [ ] Absentee KPI reads "Students absent from past 7+ **consecutive** days"
 - [ ] "Below hierarchy avg" never visible — resolves to "Below block avg" etc.
@@ -1662,8 +1663,8 @@ No value row, no metric summary columns, no N+1 tiles, no delta pills above the 
 
 ### Manual QA checklist
 
-- [ ] SAT1 detail page: no 3-column metric summary strip at top
-- [ ] SAT2 detail page: no metric summary strip
+- [ ] SAT 1 detail page: no 3-column metric summary strip at top
+- [ ] SAT 2 detail page: no metric summary strip
 - [ ] ORF / CET / CGMS detail pages: no metric summary strip
 - [ ] Attendance KPI detail pages: no top value summary
 - [ ] Administration KPI detail pages: no top value summary
@@ -1890,7 +1891,7 @@ Reverted the previous Operational-Indicator / Assessment-Outcomes split. The Ass
 - **Split logic removed** ([DomainView.tsx](app/src/screens/DomainView.tsx)): dropped the `operational` / `outcomes` partition, the `splitView` branch, the two `PageSection`s and the `OperationalKpiCard` import. The non-sub-domain branch is once again a single `PageSection` + `PageGrid cols="kpi"` over `ds.records`. No `Operational Indicator` / `Assessment Outcomes` labels remain.
 - **Compact card removed**: `OperationalKpiCard.tsx` was created only for that experiment and is now unused, so it was deleted. `SAT reports downloaded in classrooms` keeps its normal single-metric card treatment — title, Daily badge, value, N+1, `as on <date>` (instead of delta), sparkline, chevron — all unchanged.
 - **i18n cleanup**: removed the now-unused `domain.operationalIndicator` / `domain.assessmentOutcomes` keys (en + gu) to keep the `Dict` shape in sync.
-- No change to KPI catalog, values, formulas, names, multi-metric SAT1/SAT2/ORF/CET/CGMS logic, delta/N+1/date/frequency logic, access control, routing, homepage, Export, Compare, Leaderboard, GSQAC, or provider architecture.
+- No change to KPI catalog, values, formulas, names, multi-metric SAT 1/SAT 2/ORF/CET/CGMS logic, delta/N+1/date/frequency logic, access control, routing, homepage, Export, Compare, Leaderboard, GSQAC, or provider architecture.
 
 **Files changed:** `screens/DomainView.tsx`, `components/ui/OperationalKpiCard.tsx` (deleted), `i18n/en.ts`, `i18n/gu.ts`, `QA_REPORT.md`.
 
@@ -1900,11 +1901,11 @@ Reverted the previous Operational-Indicator / Assessment-Outcomes split. The Ass
 
 ## Assessment IA split — Operational Indicator vs Assessment Outcomes
 
-Forcing the single-metric operational KPI into the same tall analytical card as the SAT1/SAT2/ORF/CET/CGMS outcome cards still read wrong. Fixed by **information architecture**, not more height tuning: the Assessment domain page now splits into two labelled sections, and the operational KPI gets a purpose-built compact card. Scoped to the Assessment domain page only — Attendance, Administration, School Quality, Export, Compare, Leaderboard and KPI detail are untouched.
+Forcing the single-metric operational KPI into the same tall analytical card as the SAT 1/SAT 2/ORF/CET/CGMS outcome cards still read wrong. Fixed by **information architecture**, not more height tuning: the Assessment domain page now splits into two labelled sections, and the operational KPI gets a purpose-built compact card. Scoped to the Assessment domain page only — Attendance, Administration, School Quality, Export, Compare, Leaderboard and KPI detail are untouched.
 
 - **Two sections** ([DomainView.tsx](app/src/screens/DomainView.tsx)): a domain with no sub-domains that carries **both** single-metric and multi-metric indicators now renders **`Operational Indicator`** (compact card stack) above **`Assessment Outcomes`** (the multi-metric grid). The split is config-driven by `kpi.metrics` (only Assessment has the mix today), so every other domain keeps its single uniform grid. No catalog/metadata change.
 - **Compact operational card** ([OperationalKpiCard.tsx](app/src/components/ui/OperationalKpiCard.tsx), new): a slim full-width horizontal row for `SAT reports downloaded in classrooms` — left: title + `Daily` + `as on 9 Jun`; right: the value + N+1 (`Gujarat · 86%`), with a small sparkline between on wide screens. No footer tile grid, no blank middle, ~one-row height. Reuses the shared atoms (FrequencyBadge, ValueDisplay, NPlusOneLine, FrequencyDelta, Sparkline) so typography stays in the same family. Keeps value, N+1, and the as-on date.
-- **Outcome cards unchanged**: SAT1/SAT2/ORF/CET/CGMS keep the analytical `MultiMetricKpiCard` (title, frequency/date, primary metric, N+1, delta, trend, secondary tiles) and stay equal-height within their grid.
+- **Outcome cards unchanged**: SAT 1/SAT 2/ORF/CET/CGMS keep the analytical `MultiMetricKpiCard` (title, frequency/date, primary metric, N+1, delta, trend, secondary tiles) and stay equal-height within their grid.
 - **i18n**: `domain.operationalIndicator` / `domain.assessmentOutcomes` (en + gu).
 
 **Result:** the oversized sparse first card is gone; the operational health-check and the analytical outcomes are visually and conceptually separated, and the outcome grid aligns cleanly on its own.
@@ -1919,12 +1920,12 @@ Forcing the single-metric operational KPI into the same tall analytical card as 
 
 ## KPI card shell + composition (single = multi card family)
 
-The earlier equal-height pass stretched rows but left short cards sparse: `SAT reports downloaded in classrooms` had a big blank middle while SAT1/SAT2/ORF looked dense, so they read as different card types. This pass fixes the **internal composition** so every KPI card is the same component, not just the same height.
+The earlier equal-height pass stretched rows but left short cards sparse: `SAT reports downloaded in classrooms` had a big blank middle while SAT 1/SAT 2/ORF looked dense, so they read as different card types. This pass fixes the **internal composition** so every KPI card is the same component, not just the same height.
 
 - **One canonical shell** ([kpiCardParts.tsx](app/src/components/ui/kpiCardParts.tsx), new): `KpiCardShell` (h-full, `min-h-[16.5rem]`, flex-col) → `KpiCardHeader` (title `line-clamp-2` with a reserved `min-h-[2.5rem]` so every header is the same height, + frequency·last-updated chip) → `KpiPrimary` (flex-1, centred, so modest content fills instead of leaving a gap) → `KpiFooter` (`mt-auto`, 2-up grid pinned to the bottom). Both card types now compose from these pieces, so header / primary / trend / footer rhythm and outer height are identical.
 - **Single-metric cards fill the footer intelligently** ([KpiCard.tsx](app/src/components/ui/KpiCard.tsx)): rebuilt on the shell. Header has a headline metric label (Rate / Count / Score / Latest, by unit — matches the multi cards' sub-metric label rhythm without inventing data), the big value + delta or `as on <date>`, then the trend. The footer is **always two compact context tiles** drawn from already-available data: `Parent avg` (N+1), `Source`, falling back to `Updated`. No blank middle, no oversized first card.
 - **`SAT reports downloaded in classrooms`** now reads: header `Daily`, primary `RATE / 76.5% / as on 9 Jun` + sparkline, footer `Parent avg · Gujarat · 86%` + `Source · Gyan Prabhav bot`. Same density and height as its neighbours; the date appears once (no header/primary/footer triplication).
-- **Multi-metric cards** ([MultiMetricKpiCard.tsx](app/src/components/ui/MultiMetricKpiCard.tsx)): rebuilt on the same shell. Triple-metric (SAT1/SAT2/ORF) keep primary + 2 sub-metric tiles; **dual-metric (CET/CGMS)** fill the spare footer slot with a `Source` context tile so they're the same height as the triple cards (no obvious empty box, §4). Sub-metric tiles, N+1, deltas and micro-sparklines are unchanged.
+- **Multi-metric cards** ([MultiMetricKpiCard.tsx](app/src/components/ui/MultiMetricKpiCard.tsx)): rebuilt on the same shell. Triple-metric (SAT 1/SAT 2/ORF) keep primary + 2 sub-metric tiles; **dual-metric (CET/CGMS)** fill the spare footer slot with a `Source` context tile so they're the same height as the triple cards (no obvious empty box, §4). Sub-metric tiles, N+1, deltas and micro-sparklines are unchanged.
 - **Typography unified** (§8): title, chip, metric label (`uppercase 2xs muted`), primary value (`size lg`), N+1, delta and the primary sparkline (height 32 on every card) share one scale across single and multi cards.
 - **Grid** ([PageSection.tsx](app/src/components/layout/PageSection.tsx)) keeps `sm:auto-rows-fr` as row-alignment support; the real fix is the card internals, so the target height is set by the dense SAT/ORF card, not the sparse single card.
 
@@ -1938,16 +1939,16 @@ The earlier equal-height pass stretched rows but left short cards sparse: `SAT r
 
 ## Equal-height KPI cards (layout consistency pass)
 
-Multi-metric cards (SAT1/SAT2/ORF) were taller than dual-metric (CET/CGMS) and single-metric (SAT reports) cards, so the Assessment page looked uneven across rows. Made every KPI card in a grid row share one height, with balanced internal spacing. **Layout only — no KPI logic, values, formulas, deltas, N+1, graph data, provider, routing, access, Compare/Export, or GSQAC changes.**
+Multi-metric cards (SAT 1/SAT 2/ORF) were taller than dual-metric (CET/CGMS) and single-metric (SAT reports) cards, so the Assessment page looked uneven across rows. Made every KPI card in a grid row share one height, with balanced internal spacing. **Layout only — no KPI logic, values, formulas, deltas, N+1, graph data, provider, routing, access, Compare/Export, or GSQAC changes.**
 
 - **Grid equalises rows** ([PageSection.tsx](app/src/components/layout/PageSection.tsx)): the `cols="kpi"` grid gained **`sm:auto-rows-fr`** (`grid-cols-1 sm:grid-cols-2 sm:auto-rows-fr xl:grid-cols-3`). From the 2-up breakpoint up, every row track is equal height so cards stretch to match the tallest in the row. Deliberately **omitted at the 1-col mobile breakpoint** so phone cards keep their natural full-width height (§1). Only the KPI grid is touched — the homepage `domain` grid and the sub-domain `two` grid are unchanged.
 - **Shared sizing contract** — both card types now use `h-full flex flex-col` so they fill the row track:
   - [KpiCard.tsx](app/src/components/ui/KpiCard.tsx) (single-metric): header pinned top, **value + sparkline wrapped in a `flex-1` centred region**, N+1 pinned to the foot. A short card (e.g. "SAT reports downloaded") fills the shared height with balanced spacing instead of leaving blank white space — content stays centred, nothing clipped (§4).
-  - [MultiMetricKpiCard.tsx](app/src/components/ui/MultiMetricKpiCard.tsx) (SAT1/SAT2/ORF/CET/CGMS): header top, **primary metric block in a `flex-1` region**, secondary compact tiles pinned to the foot. The secondary `grid-cols-2` keeps a **dual-metric card (one tile) the same height as a triple-metric card (two tiles)** — the empty cell reserves the slot (§3/§6).
+  - [MultiMetricKpiCard.tsx](app/src/components/ui/MultiMetricKpiCard.tsx) (SAT 1/SAT 2/ORF/CET/CGMS): header top, **primary metric block in a `flex-1` region**, secondary compact tiles pinned to the foot. The secondary `grid-cols-2` keeps a **dual-metric card (one tile) the same height as a triple-metric card (two tiles)** — the empty cell reserves the slot (§3/§6).
 - **Consistent card system everywhere** ([SubDomainView.tsx](app/src/screens/SubDomainView.tsx)): switched from `KpiCard` to the same `KpiCardAuto` selector used by DomainView, so Administration sub-domain cards share the identical sizing path (they're single-metric, so they render via KpiCard exactly as before, now with `h-full`).
 - **Typography untouched** (§7): title/badge/primary-value/secondary-label/N+1/delta/sparkline sizes and the chevron position are all unchanged. No one-off large/small cards.
 
-**Assessment page result:** SAT1 = SAT2, CET = CGMS, ORF and the single-metric SAT-reports card all align to the row height; cards in a row align vertically.
+**Assessment page result:** SAT 1 = SAT 2, CET = CGMS, ORF and the single-metric SAT-reports card all align to the row height; cards in a row align vertically.
 
 **Files changed:** `components/layout/PageSection.tsx`, `components/ui/KpiCard.tsx`, `components/ui/MultiMetricKpiCard.tsx`, `screens/SubDomainView.tsx`, `QA_REPORT.md`.
 
@@ -1971,20 +1972,20 @@ The sheet's Delta column is blank for this row, so it now shows **`as on 9 Jun`*
 
 ### 3 · `Show Last Updated on UI` column drives the date/month/year label
 
-New shared helper [`getLastUpdatedLabel(kpi, date, lang)`](app/src/lib/trend.ts) maps cadence → label: **Daily → `9 Jun`** (working date) · **Monthly → `Jun 2026`** · **SAT1/SAT2 (scheduleNote) → `Sep 2025` / `Mar 2026`** · **Twice/Half-yearly → cycle month + year** · **Yearly/Annual → `2026`** · else → `Latest available`. The sheet flag `showLastUpdatedOnUi` (column H = Yes) gates whether the chip shows. Wired into `KpiCard`, `MultiMetricKpiCard`, and `KpiDetail` headers. No `Latest: 1 Jun` is shown anywhere (`kpi.latestOn` is unused).
+New shared helper [`getLastUpdatedLabel(kpi, date, lang)`](app/src/lib/trend.ts) maps cadence → label: **Daily → `9 Jun`** (working date) · **Monthly → `Jun 2026`** · **SAT 1/SAT 2 (scheduleNote) → `Sep 2025` / `Mar 2026`** · **Twice/Half-yearly → cycle month + year** · **Yearly/Annual → `2026`** · else → `Latest available`. The sheet flag `showLastUpdatedOnUi` (column H = Yes) gates whether the chip shows. Wired into `KpiCard`, `MultiMetricKpiCard`, and `KpiDetail` headers. No `Latest: 1 Jun` is shown anywhere (`kpi.latestOn` is unused).
 
-### 4–7 · Multi-metric indicator cards (SAT1 / SAT2 + ORF / CET / CGMS)
+### 4–7 · Multi-metric indicator cards (SAT 1 / SAT 2 + ORF / CET / CGMS)
 
 Indicators whose Formula/Logic carries 2–3 metrics now render as a single **[MultiMetricKpiCard](app/src/components/ui/MultiMetricKpiCard.tsx)** instead of separate top-level cards:
 
-- **Schema** ([types/index.ts](app/src/types/index.ts)): `KpiMetricDef { id, label, label_gu, unit, direction, formula }` + `KpiDef.metrics?`. Config-driven — `SAT1/SAT2` → `Avg score · Below hierarchy avg · Participation`; `ORF` → `CWPM score · Below hierarchy avg · Participation`; `CET/CGMS` → `Result · Participation`. Re-audited from the sheet (not hardcoded to SAT only).
+- **Schema** ([types/index.ts](app/src/types/index.ts)): `KpiMetricDef { id, label, label_gu, unit, direction, formula }` + `KpiDef.metrics?`. Config-driven — `SAT 1/SAT 2` → `Avg score · Below hierarchy avg · Participation`; `ORF` → `CWPM score · Below hierarchy avg · Participation`; `CET/CGMS` → `Result · Participation`. Re-audited from the sheet (not hardcoded to SAT only).
 - **Data** ([kpiCatalog.ts](app/src/config/kpiCatalog.ts) `METRIC_PUBLISHED`, [mockProvider.ts](app/src/data/provider/mockProvider.ts)): each sub-metric has its own per-level anchor under `<parentId>__<metricId>` and flows through the **existing** value/benchmark/trend/PM-Shri machinery. No values hardcoded in UI components (§9/§12). [score.ts `metricKpiDef`](app/src/engine/score.ts) synthesises a single-value KpiDef per metric; [engine `getKpiMetricRecords`](app/src/engine/index.ts) + [`useKpiMetrics`](app/src/hooks/index.ts) expose them.
 - **Card layout**: title → `Yearly · Sep 2025` chip → a primary metric row (label · big value · N+1 · delta · one sparkline) → the secondary metrics in a compact 2-up grid (small type, own N+1, direction-aware delta, tiny micro-sparkline). Each metric shows **value + N+1 + delta + compact trend**; calm palette (status hue for the primary spark, muted slate for the micro-sparks) to avoid clutter/colour overload.
 - **Lower-is-better** (§8): `Below hierarchy avg` uses `direction: "lower"`, so a fall reads **green** and a rise **red** (shared `deltaToneClass`). `Students absent 7+ days`, `Identified Dropout Students` keep their existing lower-is-better logic.
 
 ### 8–10 · KPI detail for multi-metric indicators
 
-[KpiDetail.tsx](app/src/screens/KpiDetail.tsx): for SAT1/SAT2/ORF/CET/CGMS the page shows a **compact 3-up metric summary** at top, then **one trend chart per metric** (never a single chart that hides the others), then a clean **`How it's calculated`** breakdown listing each metric's plain-language formula (Avg % score / Below hierarchy avg / Participation). Frequency, source and last-updated stay visible. Single-metric detail pages are unchanged.
+[KpiDetail.tsx](app/src/screens/KpiDetail.tsx): for SAT 1/SAT 2/ORF/CET/CGMS the page shows a **compact 3-up metric summary** at top, then **one trend chart per metric** (never a single chart that hides the others), then a clean **`How it's calculated`** breakdown listing each metric's plain-language formula (Avg % score / Below hierarchy avg / Participation). Frequency, source and last-updated stay visible. Single-metric detail pages are unchanged.
 
 ### KPI / domain name reconciliation (per the latest sheet)
 
@@ -1995,7 +1996,7 @@ Indicators whose Formula/Logic carries 2–3 metrics now render as a single **[M
 
 **Build:** `npm run build` passes (`tsc --noEmit` clean; only the pre-existing entities-seed chunk-size warning).
 
-**Assumptions:** (a) `Show Last Updated on UI` (Yes/No) gates _whether_ to show the label; the cadence/`scheduleNote` decides the _format_. (b) SAT/ORF/CET/CGMS sub-metric demo numbers are deterministic anchors (avg = parent value; below-hierarchy ~20–34%; participation ~84–95%) since the live data lake isn't wired — kept config-driven so swapping in real values is a data change. (c) `metrics` was applied to every Assessment indicator that clearly carries multiple formulas, not only SAT1/SAT2 (§6). No changes to access control, routing, PM-Shri, login, Compare selection, Export structure (only labels/date-context), GSQAC score/grade/D1–D5 logic, provider architecture, or the homepage top-indicator split.
+**Assumptions:** (a) `Show Last Updated on UI` (Yes/No) gates _whether_ to show the label; the cadence/`scheduleNote` decides the _format_. (b) SAT/ORF/CET/CGMS sub-metric demo numbers are deterministic anchors (avg = parent value; below-hierarchy ~20–34%; participation ~84–95%) since the live data lake isn't wired — kept config-driven so swapping in real values is a data change. (c) `metrics` was applied to every Assessment indicator that clearly carries multiple formulas, not only SAT 1/SAT 2 (§6). No changes to access control, routing, PM-Shri, login, Compare selection, Export structure (only labels/date-context), GSQAC score/grade/D1–D5 logic, provider architecture, or the homepage top-indicator split.
 
 ---
 
@@ -2096,7 +2097,7 @@ Re-parsed the latest sheet (re-uploaded over `GJ _ Unified App KPIs.xlsx`, modif
 **Names + data sources + frequency (catalog [kpiCatalog.ts](app/src/config/kpiCatalog.ts), all per sheet):**
 
 - Attendance (src "Attendance bot", Daily): Students absent from past 7+ consecutive days (HP) · Teachers present today · Students present today · Students consuming Mid-day Meal (MDM) · Schools submitting Attendance.
-- Assessment: SAT reports downloaded in classrooms (HP, src "Gyan Prabhav bot", **now Daily**) · Semester Assessment Test 1 (SAT1) · SAT2 (src "Xamta bot", **Yearly**) · **FLN - Oral Reading Fluency** (src "Oral Reading Fluency (ORF) Bot", Monthly) · **Common Entrance Test (CET)** (Yearly) · **Chief Minister Gyan Sadhna Merit Scholarship (CGMS)** (Yearly). The old ORF/CET/CGMS participation+improvement pairs were **collapsed to one each** (ids `asm_orf`/`asm_cet`/`asm_cgms`); `asm_below` ("Students below avg") and `Assessment result %` are **removed** (not in sheet).
+- Assessment: SAT reports downloaded in classrooms (HP, src "Gyan Prabhav bot", **now Daily**) · Semester Assessment Test 1 (SAT 1) · SAT 2 (src "Xamta bot", **Yearly**) · **FLN - Oral Reading Fluency** (src "Oral Reading Fluency (ORF) Bot", Monthly) · **Common Entrance Test (CET)** (Yearly) · **Chief Minister Gyan Sadhna Merit Scholarship (CGMS)** (Yearly). The old ORF/CET/CGMS participation+improvement pairs were **collapsed to one each** (ids `asm_orf`/`asm_cet`/`asm_cgms`); `asm_below` ("Students below avg") and `Assessment result %` are **removed** (not in sheet).
 - Administration (sub-domains now School Observation · **Classroom Observation** (new) · Student Retention · CPD): renamed all to sheet wording — No of CRCC/URC Visits per school (HP), School observations completed by CRCC/URC, ICT Lab usage in Schools, Library/Urinals & Toilets/Handwash/Drinking Water/SMC, Schools Visited for Classroom Observation, Classrooms following monthly lesson plans, Classrooms with Completed Teacher Diaries, **Identified Dropout Students**, Re-enrolment of Out-of-School Students, **Average CPD Time Per Teacher**, Teachers Achieving the 50-Hour CPD Target. Sources updated to SMA / CTS + EWS / PLC.
 
 **Source labels** shortened to sheet values everywhere (catalog `data_source` → KPI-detail badge / Export tables): "Attendance Monitoring System (Attendance Bot)" → "Attendance bot", "Student Monitoring App (SMA)…" → "SMA", etc.
@@ -2107,7 +2108,7 @@ Re-parsed the latest sheet (re-uploaded over `GJ _ Unified App KPIs.xlsx`, modif
 
 **Frequency wording** stays sheet-driven: Daily → "today", Monthly → "this month", Yearly → "this year", Half-yearly → "this half-year". No "this week"/"Weekly" on any KPI.
 
-**SAT1/SAT2** — now annual (`Yearly`), `noTrend` removed → they show the trend graph + delta + N+1 + frequency badge like other cards, with a schedule note (**SAT1 "September", SAT2 "March"**, via new `KpiDef.scheduleNote`, rendered on KpiCard + KpiDetail).
+**SAT 1/SAT 2** — now annual (`Yearly`), `noTrend` removed → they show the trend graph + delta + N+1 + frequency badge like other cards, with a schedule note (**SAT 1 "September", SAT 2 "March"**, via new `KpiDef.scheduleNote`, rendered on KpiCard + KpiDetail).
 
 **Absentee KPI** unchanged in logic — `Students absent from past 7+ consecutive days` stays an absolute count (no per-school average), Daily → "today", down = green.
 
@@ -2127,7 +2128,7 @@ The per-KPI delta/context wording is i18n-driven through one path — `Frequency
 - `kpi.pTime` (Half-yearly) "this time" → **"this half-year"** (gu "આ અર્ધવર્ષ")
 - unchanged (already correct): Monthly → "this month", Twice-a-year → "this cycle", Yearly → "this year".
 
-So every Daily KPI (Teacher/Student Attendance, MDM served %, Students absent from past 7+ consecutive days, Attendance reporting compliance %) now reads e.g. "Latest: 1 Jun" + "↗ +3.4% **today**"; SAT-reports (Monthly) → "this month"; dropout/re-enrolment (Half-yearly) → "this half-year"; SAT1/SAT2 (Twice-a-year, snapshot) → "this cycle"; GSQAC (Yearly) → "this year". Date context for Daily details unchanged ("Latest: {date}"). Frequency badges already drive off the catalog `frequency` (no "Weekly" KPI exists, so no Weekly badge renders); the dead `Weekly` i18n key is unused. Doc comment in [FrequencyDelta.tsx](app/src/components/ui/FrequencyDelta.tsx) updated.
+So every Daily KPI (Teacher/Student Attendance, MDM served %, Students absent from past 7+ consecutive days, Attendance reporting compliance %) now reads e.g. "Latest: 1 Jun" + "↗ +3.4% **today**"; SAT-reports (Monthly) → "this month"; dropout/re-enrolment (Half-yearly) → "this half-year"; SAT 1/SAT 2 (Twice-a-year, snapshot) → "this cycle"; GSQAC (Yearly) → "this year". Date context for Daily details unchanged ("Latest: {date}"). Frequency badges already drive off the catalog `frequency` (no "Weekly" KPI exists, so no Weekly badge renders); the dead `Weekly` i18n key is unused. Doc comment in [FrequencyDelta.tsx](app/src/components/ui/FrequencyDelta.tsx) updated.
 
 **Assumption / out of scope:** the Leaderboard "Top movers this week" and the school-risk-table "this week" are composite **week-over-week** movements (the scorecard periods are weekly), not a single daily KPI's frequency — left as-is (correct for the weekly comparison; not a per-KPI frequency label). Legacy unused strings (`scorecard.whatChanged`, `kpi.deltaWeek`, `kpi.weeklyTrend`, `ogm.thisWeek`) are not rendered anywhere and were left untouched.
 
@@ -2144,21 +2145,21 @@ So every Daily KPI (Teacher/Student Attendance, MDM served %, Students absent fr
 
 ---
 
-## Assessment: SAT1/SAT2 replace "Assessment result %" (snapshot, no trend)
+## Assessment: SAT 1/SAT 2 replace "Assessment result %" (snapshot, no trend)
 
 Per the latest `GJ _ Unified App KPIs.xlsx` (Assessment focus area), "Assessment result %" is gone; the sheet defines two SAT result indicators.
 
 - **Removed** `asm_result` ("Assessment result %") from the catalog (`PUBLISHED` + KPI def). It was only referenced in the catalog (provider is config-driven), so it disappears from Domain/KPI-detail/Compare/Leaderboard/Export automatically.
 - **Added** [kpiCatalog.ts](app/src/config/kpiCatalog.ts):
-  - `asm_sat1` — **"Semester Assessment Test 1 (SAT1)"** (gu "સેમેસ્ટર મૂલ્યાંકન કસોટી 1 (SAT1)")
-  - `asm_sat2` — **"Semester Assessment Test 2 (SAT2)"** (gu "સેમેસ્ટર મૂલ્યાંકન કસોટી 2 (SAT2)")
-  - Sheet metadata: domain Assessment, data source **Xamta Bot**, DL yes, PM-Shri yes, **visible to teacher** (no `roleVisibility`), direction higher, unit %, `frequency: "Twice a Year"`, `displayStrategy: "snapshot_latest"`. `PUBLISHED` result-% values added per level (SAT1 72→83, SAT2 74→84) so all hierarchy levels resolve.
-- **No graph for SAT1/SAT2** — new `KpiDef.noTrend` flag. [KpiCard](app/src/components/ui/KpiCard.tsx) skips the sparkline and shows a cycle context line ("Current cycle") instead; [KpiDetail](app/src/screens/KpiDetail.tsx) renders no trend chart (and no EmptyNA), keeping the snapshot summary (value + N+1 + cycle label + formula/source/frequency). The KPI-detail summary label already reads "Current cycle" (cadence = twice). New `snapshotContextKey` helper in [trend.ts](app/src/lib/trend.ts).
-- **Domain page order** (Assessment): SAT1 · SAT2 · Students below `<hierarchy>` avg · ORF participation/improvement · CET participation/improvement · CGMS participation/improvement · SAT reports downloaded in classrooms — matches the sheet/task order (asm_result replaced in-place, so SAT1/SAT2 lead).
-- **Homepage Assessment card** unchanged — still "SAT reports downloaded in classrooms" (the sheet's Home-Page indicator); SAT1/SAT2 are normal indicators (`hero:false`).
-- **Compare/Export/Leaderboard** inherit the catalog: SAT1/SAT2 appear as separate rows/cards, no "Assessment result %", and (being `noTrend`) no sparkline.
+  - `asm_SAT 1` — **"Semester Assessment Test 1 (SAT 1)"** (gu "સેમેસ્ટર મૂલ્યાંકન કસોટી 1 (SAT 1)")
+  - `asm_SAT 2` — **"Semester Assessment Test 2 (SAT 2)"** (gu "સેમેસ્ટર મૂલ્યાંકન કસોટી 2 (SAT 2)")
+  - Sheet metadata: domain Assessment, data source **Xamta Bot**, DL yes, PM-Shri yes, **visible to teacher** (no `roleVisibility`), direction higher, unit %, `frequency: "Twice a Year"`, `displayStrategy: "snapshot_latest"`. `PUBLISHED` result-% values added per level (SAT 1 72→83, SAT 2 74→84) so all hierarchy levels resolve.
+- **No graph for SAT 1/SAT 2** — new `KpiDef.noTrend` flag. [KpiCard](app/src/components/ui/KpiCard.tsx) skips the sparkline and shows a cycle context line ("Current cycle") instead; [KpiDetail](app/src/screens/KpiDetail.tsx) renders no trend chart (and no EmptyNA), keeping the snapshot summary (value + N+1 + cycle label + formula/source/frequency). The KPI-detail summary label already reads "Current cycle" (cadence = twice). New `snapshotContextKey` helper in [trend.ts](app/src/lib/trend.ts).
+- **Domain page order** (Assessment): SAT 1 · SAT 2 · Students below `<hierarchy>` avg · ORF participation/improvement · CET participation/improvement · CGMS participation/improvement · SAT reports downloaded in classrooms — matches the sheet/task order (asm_result replaced in-place, so SAT 1/SAT 2 lead).
+- **Homepage Assessment card** unchanged — still "SAT reports downloaded in classrooms" (the sheet's Home-Page indicator); SAT 1/SAT 2 are normal indicators (`hero:false`).
+- **Compare/Export/Leaderboard** inherit the catalog: SAT 1/SAT 2 appear as separate rows/cards, no "Assessment result %", and (being `noTrend`) no sparkline.
 
-**Assumptions** (documented): SAT date isn't in the mock, so the context line shows the cycle ("Current cycle") rather than a literal date; frequency set to "Twice a Year" (the sheet's free-text "SAT1 to SAT1 …" describes a per-cycle YoY comparison); value shown as the SAT result % snapshot (no fabricated previous-cycle delta). Gujarati labels translated (not English fallback).
+**Assumptions** (documented): SAT date isn't in the mock, so the context line shows the cycle ("Current cycle") rather than a literal date; frequency set to "Twice a Year" (the sheet's free-text "SAT 1 to SAT 1 …" describes a per-cycle YoY comparison); value shown as the SAT result % snapshot (no fabricated previous-cycle delta). Gujarati labels translated (not English fallback).
 
 **Files:** `types/index.ts` (`noTrend`), `kpiCatalog.ts`, `trend.ts`, `KpiCard.tsx`, `KpiDetail.tsx`, `QA_REPORT.md`. **Build:** `npm run build` passes clean.
 
@@ -2420,13 +2421,13 @@ Single source of truth added in [lib/colors.ts](app/src/lib/colors.ts): `valueTo
 
 Every indicator now carries a **frequency-appropriate trend graph** (on the cards and the detail) plus a **delta tag whose wording is derived from `frequency`** — never a weekly axis or a "Δ this week" tag for non-daily data. All driven from one engine ([lib/trend.ts](app/src/lib/trend.ts)), so cadence + tag are config, not per-card.
 
-| Frequency                                                                  | Graph x-axis (verified)                                   | Delta tag (verified) |
-| -------------------------------------------------------------------------- | --------------------------------------------------------- | -------------------- |
-| **Daily** (Student attendance, Chronic absentees)                          | last 30 days — daily line (3 May…1 Jun)                   | **Δ this week**      |
-| **Monthly** (CRCC/URC visits, School observation, Data-Driven Remediation) | Jan…Jun (months); CRCC plotted on a 0–2 axis              | **Δ this month**     |
-| **Twice a Year** (Assessment result/SAT, Students-below)                   | SAT1'23 · SAT2'23 · SAT1'24 · SAT2'24 · SAT1'25 · SAT2'25 | **Δ this cycle**     |
-| **Half yearly** (Reduction in dropout, Re-enrolment)                       | Sept'23 · Mar'24 · Sept'24 · Mar'25 · Sept'25 · Mar'26    | **Δ this time**      |
-| **Yearly** (GSQAC, CET, CGMS, ORF, CPD)                                    | 2021 · 2022 · 2023 · 2024 · 2025 (+ GSQAC grade)          | **Δ this year**      |
+| Frequency                                                                  | Graph x-axis (verified)                                         | Delta tag (verified) |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------- |
+| **Daily** (Student attendance, Chronic absentees)                          | last 30 days — daily line (3 May…1 Jun)                         | **Δ this week**      |
+| **Monthly** (CRCC/URC visits, School observation, Data-Driven Remediation) | Jan…Jun (months); CRCC plotted on a 0–2 axis                    | **Δ this month**     |
+| **Twice a Year** (Assessment result/SAT, Students-below)                   | SAT 1'23 · SAT 2'23 · SAT 1'24 · SAT 2'24 · SAT 1'25 · SAT 2'25 | **Δ this cycle**     |
+| **Half yearly** (Reduction in dropout, Re-enrolment)                       | Sept'23 · Mar'24 · Sept'24 · Mar'25 · Sept'25 · Mar'26          | **Δ this time**      |
+| **Yearly** (GSQAC, CET, CGMS, ORF, CPD)                                    | 2021 · 2022 · 2023 · 2024 · 2025 (+ GSQAC grade)                | **Δ this year**      |
 
 - **History** is believable dummy data (gently trends, can dip), deterministic (seeded by kpi + entity), and **pinned to the real current value** at the latest point, so the headline number and the graph agree. The delta = current minus one tag-period back (≈7 days for daily, 1 point otherwise).
 - **Clarification applied:** annual / half-yearly indicators **now get a graph** (with yearly / half-year x-points) — consistent with the earlier "no fake weekly line for annual data" rule; GSQAC also keeps its **snapshot + grade**.

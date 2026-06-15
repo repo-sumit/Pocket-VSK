@@ -136,11 +136,11 @@ export interface SubDomainDef {
 }
 
 /**
- * One logical metric inside a MULTI-METRIC indicator (e.g. SAT1 carries Avg score,
+ * One logical metric inside a MULTI-METRIC indicator (e.g. SAT 1 carries Avg score,
  * Below-hierarchy-avg and Participation in its Formula/Logic column). Config-driven:
  * a sub-metric is rendered as a compact row/tile inside the parent indicator's card,
  * never as a separate top-level indicator. `id` is suffixed onto the parent KPI id
- * (`asm_sat1__participation`) so the provider can resolve a deterministic series for it.
+ * (`asm_SAT 1__participation`) so the provider can resolve a deterministic series for it.
  */
 export interface KpiMetricDef {
   id: string;
@@ -216,7 +216,7 @@ export interface KpiDef {
   /** snapshot/cycle indicator — suppress the time-trend chart + sparkline; show a
    *  date/cycle context line instead. */
   noTrend?: boolean;
-  /** a fixed schedule/month note shown as context (e.g. SAT1 "September", SAT2 "March"). */
+  /** a fixed schedule/month note shown as context (e.g. SAT 1 "September", SAT 2 "March"). */
   scheduleNote?: string;
   /** MULTI-METRIC indicator: 2–3 logical metrics inside one indicator card (the
    *  sheet's Formula/Logic column). When present the indicator renders as a

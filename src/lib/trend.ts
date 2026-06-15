@@ -11,7 +11,7 @@ import type { Lang } from "@/i18n";
  *
  *   Daily       → ~30 daily points (date x-labels)            · Δ "this week"  (vs ~7 days back)
  *   Monthly     → 6 months (Jan…Jun)                          · Δ "this month"
- *   Twice a Year→ 6 cycles (SAT1'23 … SAT2'25)                · Δ "this cycle"
+ *   Twice a Year→ 6 cycles (SAT 1'23 … SAT 2'25)                · Δ "this cycle"
  *   Half yearly → 6 half-years (Sept'23 … Mar'26)             · Δ "this time"
  *   Yearly      → 5 years (2021 … 2025)                       · Δ "this year"
  *
@@ -118,7 +118,7 @@ function monthIndexOf(note: string): number {
  * on UI` column says WHETHER to show it; the cadence (+ `scheduleNote`) says HOW:
  *   Daily   → working date    e.g. "9 Jun"   (Sat/Sun → previous Fri)
  *   Monthly → month + year    e.g. "Jun 2026"
- *   SAT1/SAT2 (scheduleNote)  → schedule month + cycle year  e.g. "Sep 2025" / "Mar 2026"
+ *   SAT 1/SAT 2 (scheduleNote)  → schedule month + cycle year  e.g. "Sep 2025" / "Mar 2026"
  *   Twice / Half-yearly       → latest cycle month + year
  *   Yearly / Annual           → year            e.g. "2026"
  *   Latest / unknown          → "" (caller falls back to "Latest available")
@@ -136,7 +136,7 @@ export function getLastUpdatedLabel(
   const cadence = cadenceOf(kpi.frequency);
   const months = lang === "gu" ? MONTHS_GU : MONTHS_EN;
   if (cadence === "daily") return getWorkingDateLabel(date, lang);
-  // an explicit schedule month (SAT1 September, SAT2 March) wins for snapshot tests:
+  // an explicit schedule month (SAT 1 September, SAT 2 March) wins for snapshot tests:
   // pick the most-recent occurrence of that month relative to today.
   if (kpi.scheduleNote) {
     const mi = monthIndexOf(kpi.scheduleNote);
@@ -269,7 +269,7 @@ function labelsFor(cadence: Cadence, n: number, lang: Lang): string[] {
     });
   }
   if (cadence === "twice") {
-    // newest = SAT2 of (year-1); step back one semester each time
+    // newest = SAT 2 of (year-1); step back one semester each time
     const out: string[] = [];
     let y = year - 1,
       sem = 2;
