@@ -15,7 +15,7 @@ import { ParakhSurveyCard } from "@/components/ui/ParakhSurveyCard";
 import { BoardCard } from "@/components/ui/ParakhCards";
 import { BOARD_RESULTS } from "@/config/parakh";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
-import { BackLink } from "@/components/layout/PageHeader";
+import { RouteBreadcrumb } from "@/components/layout/RouteBreadcrumb";
 import { PageSection, PageGrid } from "@/components/layout/PageSection";
 
 /**
@@ -43,7 +43,7 @@ export default function DomainView() {
   if (!ds || (!isGsqac && ds.records.length === 0)) {
     return (
       <ScreenContainer>
-        <BackLink label={t("nav.home")} onClick={() => navigate("/app")} />
+        <RouteBreadcrumb items={[{ label: t("nav.breadcrumbHome"), to: "/app" }]} />
         <Card className="card-pad text-center text-sm text-neutral-500">{t("domain.noKpis")}</Card>
       </ScreenContainer>
     );
@@ -58,7 +58,7 @@ export default function DomainView() {
 
   return (
     <ScreenContainer>
-      <BackLink label={t("nav.home")} onClick={() => navigate("/app")} />
+      <RouteBreadcrumb items={[{ label: t("nav.breadcrumbHome"), to: "/app" }, { label: tn(ds.domain.name, ds.domain.name_gu) }]} />
 
       {isGsqac ? (
         /* ── School Quality (GSQAC) — area cards only (no redundant overall card, §2) ── */

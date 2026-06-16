@@ -16,23 +16,31 @@ import {
 import { CompareSheet } from "@/components/compare/CompareSheet";
 import { HeaderNav } from "./HierarchyNavigator";
 import { FilterSheet } from "./FilterSheet";
-import { Share, FunnelFilter, BarCompare } from "../ui/Icon";
+import { Share, FunnelFilter, BarCompare, LogoutArrow } from "../ui/Icon";
 
 /**
  * App shell (latest design) — one clean header on every page:
- *   [logo]   ‹ entity · level ›   [share] [filter]
- * No logout, no large "Pocket VSK" mobile title, no role/designation, no
- * second action row. School-type + Language live in the Filter sheet; Export is
- * the Share icon; Compare is a desktop header button and a mobile floating action
- * (bottom-right). Compare is hidden on KPI detail pages.
+ *   [logo]   ‹ entity · level ›   [compare] [share] [filter] [logout]
+ * No large "Pocket VSK" mobile title, no role/designation, no second action
+ * row. School-type + Language live in the Filter sheet; Export is the Share
+ * icon; Compare is a desktop header button and a mobile floating action
+ * (bottom-right, hidden on KPI detail pages). Logout clears the session and
+ * returns to /login, and is always shown (Share · Filter · Logout on mobile).
  */
 export function AppShell() {
   const user = useSession((s) => s.user);
   const scopeId = useSession((s) => s.scopeId);
   const resetScope = useSession((s) => s.resetScope);
+  const logout = useSession((s) => s.logout);
   const { t } = useT();
   const navigate = useNavigate();
   const [filterOpen, setFilterOpen] = useState(false);
+
+  // Clear the session (zustand-persist wipes the auth keys in localStorage) → /login.
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   // ACCESS CONTROL: repair a tampered/stale persisted scope that points outside
   // the user's subtree (client-side guard only; production enforces server-side).
@@ -78,7 +86,7 @@ export function AppShell() {
             {/* center — hierarchy navigator (entity · level with drill arrows) */}
             <HeaderNav className="min-w-0 flex-1" />
 
-            {/* right — desktop Compare, Share (export), Filter */}
+            {/* right — desktop Compare, then Share (export) · Filter · Logout */}
             <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
               <CompareHeaderButton />
               <IconButton
@@ -92,6 +100,9 @@ export function AppShell() {
                 onClick={() => setFilterOpen(true)}
               >
                 <FunnelFilter size={18} />
+              </IconButton>
+              <IconButton label={t("nav.logout")} onClick={handleLogout}>
+                <LogoutArrow size={18} />
               </IconButton>
             </div>
           </div>

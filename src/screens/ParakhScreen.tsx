@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useScope } from "@/hooks";
 import { useT } from "@/i18n";
 import { cn } from "@/lib/cn";
@@ -9,7 +8,7 @@ import {
 import { Card } from "@/components/ui/atoms";
 import { ParakhBadge } from "@/components/ui/ParakhCards";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
-import { BackLink } from "@/components/layout/PageHeader";
+import { RouteBreadcrumb } from "@/components/layout/RouteBreadcrumb";
 import { PageSection } from "@/components/layout/PageSection";
 
 /**
@@ -20,7 +19,6 @@ import { PageSection } from "@/components/layout/PageSection";
 export default function ParakhScreen() {
   const { entity, trail } = useScope();
   const { t } = useT();
-  const navigate = useNavigate();
   const [grade, setGrade] = useState("Grade 3");
 
   // the district being viewed (the district node on the trail, else the current entity)
@@ -32,7 +30,7 @@ export default function ParakhScreen() {
 
   return (
     <ScreenContainer>
-      <BackLink label={t("nav.home")} onClick={() => navigate("/app")} />
+      <RouteBreadcrumb items={[{ label: t("nav.breadcrumbHome"), to: "/app" }, { label: t("parakh.title") }]} />
       <p className="text-2xs font-bold uppercase tracking-wide text-neutral-400">{t("parakh.title")}</p>
 
       {/* grade selector */}

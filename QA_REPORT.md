@@ -1,5 +1,62 @@
 # Pocket VSK — QA Report
 
+## Slash breadcrumb navigation + header logout button (Pass 53)
+
+Navigation-UX + logout only. No redesign — cards, charts, compare, data provider, KPI values,
+GSQAC flow, homepage layout, share/filter all untouched. (The Claude Design file
+`api.anthropic.com/v1/design/...` returned HTTP 404 to the fetcher — an authenticated endpoint —
+so both features were built to the written spec.)
+
+### 1 · Header logout button (from Docs/logout-svgrepo-com.svg)
+- New `LogoutArrow` icon in `components/ui/Icon.tsx`, drawn 1:1 from `Docs/logout-svgrepo-com.svg`
+  (fill-based, `currentColor`), matching the existing custom-icon pattern.
+- Added a 4th circular `IconButton` in `AppShell.tsx`, same 36px style family as Share/Filter.
+  Order: Share · Filter · Logout (mobile and desktop). Compare is **unchanged** — still the desktop
+  header pill + mobile FAB (not moved). Logout is always visible (KPI detail too, where Compare is
+  hidden), so there is no layout shift when Compare is absent.
+- `handleLogout` calls the store's existing `logout()` (zustand-persist nulls `user`/`scopeId` in
+  localStorage) then `navigate("/login", { replace: true })`. `aria-label`/`title` = `t("nav.logout")`.
+
+### 2 · Slash breadcrumb (`RouteBreadcrumb`)
+- New `components/layout/RouteBreadcrumb.tsx` — a slim row (not a card): a Back arrow + a
+  `Home / … / Current` slash trail. Home + ancestor levels are muted-blue links; the current page
+  is plain dark text (not a link); `/` separators. The trail scrolls horizontally **inside its own
+  row** (back arrow pinned, page never overflows) and the current label truncates on mobile.
+  Back navigates to the route-aware immediate parent (a real `<Link>`/`navigate`, NOT
+  `history.back()`), so it is correct on deep-links/refresh. New i18n key `nav.breadcrumbHome`
+  ("Home" / "હોમ") added to en + gu.
+- Replaced the old `← Scorecard` / `← Back` `BackLink` on every drilldown screen with full
+  route-aware trails (no page shows both affordances):
+  - DomainView → `Home / <Domain>`; SubDomainView → `Home / <Domain> / <Sub-domain>`.
+  - KpiDetail (provider KPI) → `Home / <Domain> / <KPI>`; `ret_dropout` (Untracked) backs to Home
+    at school/grade/section (Administration is hidden there).
+  - GsqacAreaView → `Home / School Quality / <Area>`; GsqacSubDomainView →
+    `Home / School Quality / <Area> / <Sub-domain>`; GSQAC indicator detail →
+    `Home / School Quality / <Area> / <Sub-domain> / <Indicator>` (each level → its list page).
+  - ParakhDetail / BoardResultDetail → `Home / Assessment / <name>`; ParakhScreen → `Home / PARAKH`.
+  - Labels are human-readable config names (never raw ids). Export keeps its own back link
+    (not a drilldown page); homepage + /login have no breadcrumb.
+
+### QC
+- `npm run typecheck` ✓ · `npm run build` ✓ (~26s; only the pre-existing `entities` chunk-size
+  warning). `npm run lint` is a stub (no eslint configured).
+- **Playwright (real browser, 0 console errors)** at 390×844 mobile:
+  - Header order Share · Filter · Logout; logout → `/login`, session cleared (`user:null`),
+    `/app` deep-link redirects to login, demo login works again afterwards.
+  - Breadcrumb hidden on homepage + login. `Home / Attendance` (domain),
+    `Home / Attendance / Students absent from …` (KPI, current label truncates), and the full
+    deep GSQAC chain `Home / School Quality / Teaching and Learning / Periodic / Formative Tests /
+    Checking answer sheets of periodic tests` (deep-linked) all render on one slim row.
+  - Verified chip navigation (Teaching and Learning → area list) and Back arrow (area → School
+    Quality). Confirmed via JS: page has **no** horizontal overflow (scrollWidth 390 = clientWidth);
+    the breadcrumb row scrolls internally (792 > 314).
+- Adversarial multi-agent review (breadcrumb / logout+scope / build-hygiene dimensions, each
+  finding independently verified): **0 confirmed defects**.
+
+### Known issues
+- None introduced. Pre-existing React-Router v7 future-flag warnings + the `entities` bundle
+  chunk-size warning remain (both unrelated).
+
 ## Fix "3.5 students absent" — integer count + headline/list consistency (Pass 52)
 
 ### Root cause (three layers, all fixed)

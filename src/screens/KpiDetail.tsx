@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import type { KpiRecord, Level } from "@/types";
 import { useScope, useKpiRecord, useKpiMetrics, useFramework } from "@/hooks";
 import { useT, type Lang } from "@/i18n";
@@ -20,7 +20,7 @@ import { Database, ArrowUpRight, ArrowDownRight } from "@/components/ui/Icon";
 import { RosterDetail } from "@/components/ui/RosterDetail";
 import { ParakhSubjectChart } from "@/components/ui/ParakhSubjectChart";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
-import { BackLink } from "@/components/layout/PageHeader";
+import { RouteBreadcrumb, type BreadcrumbItem } from "@/components/layout/RouteBreadcrumb";
 
 /**
  * KPI / indicator detail — the ONLY place source is shown (title meta line),
@@ -35,18 +35,55 @@ export default function KpiDetail() {
   const rec = useKpiRecord(kpiId, currentId);
   const metricRecs = useKpiMetrics(kpiId, currentId);
   const { t, tn, lang } = useT();
-  const navigate = useNavigate();
+
+  // Breadcrumb roots resolved from config so the labels are human-readable + localized.
+  const homeLabel = t("nav.breadcrumbHome");
+  const sqDomain = fw.domains.find((d) => d.id === "school_quality");
+  const sqLabel = sqDomain ? tn(sqDomain.name, sqDomain.name_gu) : "School Quality";
+  const asmDomain = fw.domains.find((d) => d.id === "assessment");
+  const asmLabel = asmDomain ? tn(asmDomain.name, asmDomain.name_gu) : "Assessment";
 
   // GSQAC indicators live in a self-contained config (not the provider), so they get
   // a dedicated detail (score + yearly trend + how-it's-calculated), not a KpiRecord.
   const gsqacInd = gsqacIndicatorById(kpiId);
-  if (gsqacInd) return <GsqacIndicatorDetail found={gsqacInd} onBack={() => navigate(-1)} />;
+  if (gsqacInd) {
+    const { area, sub, indicator } = gsqacInd;
+    const items: BreadcrumbItem[] = [
+      { label: homeLabel, to: "/app" },
+      { label: sqLabel, to: "/app/domain/school_quality" },
+      { label: tn(area.name, area.name_gu), to: `/app/gsqac/${area.key}` },
+      { label: tn(sub.name, sub.name_gu ?? sub.name), to: `/app/gsqac/${area.key}/${sub.id}` },
+      { label: indicator.name },
+    ];
+    return <GsqacIndicatorDetail found={gsqacInd} items={items} />;
+  }
 
   // PARAKH + board results are self-contained config (not provider KPIs) — dedicated
   // detail pages (subject grouped bars / yearly trend), resolved before the rec guard.
-  if (kpiId === "assessment_parakh") return <ParakhDetail onBack={() => navigate(-1)} lang={lang} />;
+  if (kpiId === "assessment_parakh")
+    return (
+      <ParakhDetail
+        lang={lang}
+        items={[
+          { label: homeLabel, to: "/app" },
+          { label: asmLabel, to: "/app/domain/assessment" },
+          { label: "PARAKH" },
+        ]}
+      />
+    );
   const board = boardResultById(kpiId);
-  if (board) return <BoardResultDetail board={board} onBack={() => navigate(-1)} lang={lang} />;
+  if (board)
+    return (
+      <BoardResultDetail
+        board={board}
+        lang={lang}
+        items={[
+          { label: homeLabel, to: "/app" },
+          { label: asmLabel, to: "/app/domain/assessment" },
+          { label: board.name },
+        ]}
+      />
+    );
 
   if (!rec || !entity || !user) return null;
   const kpi = rec.kpi;
@@ -69,9 +106,18 @@ export default function KpiDetail() {
   const luLabel = getLastUpdatedLabel(kpi, new Date(), lang);
   const resolveCopy = (s: string, s_gu?: string) => resolveMetricLabel(s, s_gu ?? s, entity.level, lang);
 
+  // Logical-parent breadcrumb: a provider KPI backs to its domain page; ret_dropout is
+  // surfaced via the dedicated Untracked home card at school/grade/section (Administration
+  // is hidden there), so it backs to Home instead.
+  const atSchoolOrBelow = entity.level === "school" || entity.level === "grade" || entity.level === "section";
+  const crumbs: BreadcrumbItem[] = [{ label: homeLabel, to: "/app" }];
+  if (domain && !(kpi.id === "ret_dropout" && atSchoolOrBelow))
+    crumbs.push({ label: tn(domain.name, domain.name_gu), to: `/app/domain/${domain.id}` });
+  crumbs.push({ label: name });
+
   return (
     <ScreenContainer>
-      <BackLink label={t("common.back")} onClick={() => navigate(-1)} />
+      <RouteBreadcrumb items={crumbs} />
 
       {/* ── compact page header — title + meta (frequency · date · SOURCE) ── */}
       <div className="pb-2">
@@ -207,23 +253,22 @@ function MetricTrendCard({ rec, level, lang }: { rec: KpiRecord; level: Level; l
  */
 function GsqacIndicatorDetail({
   found,
-  onBack,
+  items,
 }: {
   found: NonNullable<ReturnType<typeof gsqacIndicatorById>>;
-  onBack: () => void;
+  items: BreadcrumbItem[];
 }) {
   const { t, tn, lang } = useT();
   const { area, sub, indicator } = found;
   const c = rag(gsqacStatus(indicator.score));
   const points = gsqacIndicatorTrend(indicator.id, indicator.score);
-  const subName = tn(sub.name, sub.name_gu ?? sub.name);
   const formula =
     lang === "gu"
       ? `"${sub.name}" (${tn(area.name, area.name_gu)}) અંતર્ગત આ સૂચક માટેનો GSQAC ક્ષેત્ર-મૂલ્યાંકન સ્કોર, સત્તાવાર શાળા ગુણવત્તા રૂબ્રિક પર 0–100%.`
       : `GSQAC field-assessment score for this indicator under ${sub.name} (${area.name}), rated 0–100% on the official School Quality rubric.`;
   return (
     <ScreenContainer>
-      <BackLink label={subName} onClick={onBack} />
+      <RouteBreadcrumb items={items} />
 
       <div className="pb-2">
         <p className="text-xs font-semibold text-primary-600">{tn(area.name, area.name_gu)}</p>
@@ -261,11 +306,11 @@ function GsqacIndicatorDetail({
  * State bar key, then per grade (3/6/9) a category header pill and a subject-wise grouped
  * vertical bar chart (District in the grade's category colour, State neutral grey).
  */
-function ParakhDetail({ onBack, lang }: { onBack: () => void; lang: Lang }) {
+function ParakhDetail({ items, lang }: { items: BreadcrumbItem[]; lang: Lang }) {
   const { t } = useT();
   return (
     <ScreenContainer>
-      <BackLink label={t("common.back")} onClick={onBack} />
+      <RouteBreadcrumb items={items} />
       <div className="pb-2">
         <p className="text-xs font-semibold text-primary-600">{t("parakh.assessmentEyebrow")}</p>
         <h1 className="mt-0.5 text-xl font-extrabold leading-snug text-neutral-900">PARAKH</h1>
@@ -308,12 +353,12 @@ function ParakhDetail({ onBack, lang }: { onBack: () => void; lang: Lang }) {
  * pill, a yearly trend graph (last point = current pass%), how-it's-calculated, and the
  * API-pending source line.
  */
-function BoardResultDetail({ board, onBack, lang }: { board: BoardResult; onBack: () => void; lang: Lang }) {
+function BoardResultDetail({ board, items, lang }: { board: BoardResult; items: BreadcrumbItem[]; lang: Lang }) {
   const { t } = useT();
   const up = board.delta >= 0;
   return (
     <ScreenContainer>
-      <BackLink label={t("common.back")} onClick={onBack} />
+      <RouteBreadcrumb items={items} />
       <div className="pb-2">
         <p className="text-xs font-semibold text-primary-600">{t("parakh.assessmentEyebrow")}</p>
         <h1 className="mt-0.5 text-xl font-extrabold leading-snug text-neutral-900">{board.name}</h1>

@@ -124,6 +124,7 @@ export const gu: Dict = {
   },
   nav: {
     home: "સ્કોરકાર્ડ",
+    breadcrumbHome: "હોમ",
     export: "નિકાસ",
     share: "શેર કરો",
     filter: "ફિલ્ટર",

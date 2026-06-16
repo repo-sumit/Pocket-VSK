@@ -121,6 +121,7 @@ export const en = {
   },
   nav: {
     home: "Scorecard",
+    breadcrumbHome: "Home",
     export: "Export",
     share: "Share",
     filter: "Filter",

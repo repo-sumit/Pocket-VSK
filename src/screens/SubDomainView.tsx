@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/atoms";
 import { KpiCardAuto } from "@/components/ui/MultiMetricKpiCard";
 import { BalancedKpiGrid, getKpiCardLayoutWeight } from "@/components/ui/BalancedKpiGrid";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
-import { BackLink } from "@/components/layout/PageHeader";
+import { RouteBreadcrumb } from "@/components/layout/RouteBreadcrumb";
 import { PageSection } from "@/components/layout/PageSection";
 
 /** Sub-domain view — tier 3 of the 3-click drill (Domain › Sub-domain › Indicators). */
@@ -24,7 +24,7 @@ export default function SubDomainView() {
   if (!ds || !ss) {
     return (
       <ScreenContainer>
-        <BackLink label={ds ? tn(ds.domain.name, ds.domain.name_gu) : t("nav.home")} onClick={() => navigate(`/app/domain/${domainId}`)} />
+        <RouteBreadcrumb items={ds ? [{ label: t("nav.breadcrumbHome"), to: "/app" }, { label: tn(ds.domain.name, ds.domain.name_gu), to: `/app/domain/${domainId}` }] : [{ label: t("nav.breadcrumbHome"), to: "/app" }]} />
         <Card className="card-pad text-center text-sm text-neutral-500">{t("domain.noKpis")}</Card>
       </ScreenContainer>
     );
@@ -34,7 +34,7 @@ export default function SubDomainView() {
 
   return (
     <ScreenContainer>
-      <BackLink label={tn(ds.domain.name, ds.domain.name_gu)} onClick={() => navigate(`/app/domain/${domainId}`)} />
+      <RouteBreadcrumb items={[{ label: t("nav.breadcrumbHome"), to: "/app" }, { label: tn(ds.domain.name, ds.domain.name_gu), to: `/app/domain/${domainId}` }, { label: tn(ss.sub.name, ss.sub.name_gu) }]} />
 
       <PageSection title={t("scorecard.indicators")}>
         <BalancedKpiGrid
