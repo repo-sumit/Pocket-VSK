@@ -111,8 +111,16 @@ export default function KpiDetail() {
   // is hidden there), so it backs to Home instead.
   const atSchoolOrBelow = entity.level === "school" || entity.level === "grade" || entity.level === "section";
   const crumbs: BreadcrumbItem[] = [{ label: homeLabel, to: "/app" }];
-  if (domain && !(kpi.id === "ret_dropout" && atSchoolOrBelow))
+  if (domain && !(kpi.id === "ret_dropout" && atSchoolOrBelow)) {
     crumbs.push({ label: tn(domain.name, domain.name_gu), to: `/app/domain/${domain.id}` });
+    // Administration KPIs are reached via a sub-domain page (Domain → Sub-domain → KPI), so
+    // include that level and let Back return to the sub-domain the user came from. Skip it when
+    // the sub-domain name equals the KPI name (e.g. Untracked Students) to avoid a duplicate crumb.
+    const subDef = kpi.sub_domain ? domain.sub_domains?.find((s) => s.id === kpi.sub_domain) : undefined;
+    const subLabel = subDef ? tn(subDef.name, subDef.name_gu) : null;
+    if (subDef && subLabel && subLabel !== name)
+      crumbs.push({ label: subLabel, to: `/app/domain/${domain.id}/${subDef.id}` });
+  }
   crumbs.push({ label: name });
 
   return (

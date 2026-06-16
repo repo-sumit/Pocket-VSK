@@ -1,5 +1,13 @@
 # Pocket VSK — QA Report
 
+## Agents/Skills Documentation
+
+- Created `AGENTS_SKILLS_EXPLAINED.md` (in `app/`, alongside this report and `.agents/`).
+- Inspected `app/.agents/skills` — 14 skill folders (~33 MB total; ~32 MB is `huashu-design` media).
+- Summarized each skill's purpose, files, usage, benefits, risks, and future usage patterns, with Pocket VSK-specific prompt examples and a keep/remove guide.
+- Security scan: no real secrets (only `.env.example` placeholders + LLM/design-"token" matches).
+- App code not changed (analysis/documentation only).
+
 ## Slash breadcrumb navigation + header logout button (Pass 53)
 
 Navigation-UX + logout only. No redesign — cards, charts, compare, data provider, KPI values,
@@ -51,7 +59,15 @@ so both features were built to the written spec.)
     Quality). Confirmed via JS: page has **no** horizontal overflow (scrollWidth 390 = clientWidth);
     the breadcrumb row scrolls internally (792 > 314).
 - Adversarial multi-agent review (breadcrumb / logout+scope / build-hygiene dimensions, each
-  finding independently verified): **0 confirmed defects**.
+  finding independently verified): **1 confirmed defect, fixed.** The Administration domain has a
+  sub-domain tier (Domain → Sub-domain → KPI), but the provider-KPI breadcrumb skipped it, so the
+  Back arrow landed on the domain page instead of the sub-domain the user came from. Fixed: when a
+  KPI's `sub_domain` resolves to a real sub-domain def, that level is inserted as a clickable chip
+  (Back now targets the sub-domain page) — with a guard to skip it when the sub-domain name equals
+  the KPI name (avoids a `Untracked Students / Untracked Students` duplicate). Re-verified in the
+  browser as District Officer: `Home / Administration / School Observation / No of CRCC/URC Visits
+  per school` (Back → …/adm_visits), and `ret_dropout` → `Home / Administration / Untracked
+  Students` (no duplicate). Attendance/Assessment KPIs (no sub-domains) stay `Home / Domain / KPI`.
 
 ### Known issues
 - None introduced. Pre-existing React-Router v7 future-flag warnings + the `entities` bundle
