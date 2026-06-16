@@ -11,7 +11,12 @@ dist-ssr
 verify-shots
 scripts/
 supabase
-.agents/skills/brandkit/SKILL.md
+# QA / test / Playwright MCP artifacts (generated scratch)
+*.log
+coverage/
+playwright-report/
+test-results/
+.playwright-mcp/
 .agents/skills/design-taste-frontend/SKILL.md
 .agents/skills/design-taste-frontend-v1/SKILL.md
 .agents/skills/full-output-enforcement/SKILL.md
@@ -186,3 +191,4 @@ supabase
 .agents/skills/stitch-design-taste/DESIGN.md
 .agents/skills/stitch-design-taste/SKILL.md
 skills-lock.json
+.agents/skills/brandkit/SKILL.md
